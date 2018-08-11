@@ -11,7 +11,7 @@ import utils.net as net_utils
 
 
 class VGG_CNN_M_1024_conv5_body():
-    def __init__(self, block_counts):
+    def __init__(self):
         super().__init__()
 
         self.conv1 = nn.Sequential(nn.Conv2d(3, 96, 7, padding=0, stride=2),
