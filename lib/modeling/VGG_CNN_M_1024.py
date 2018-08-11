@@ -10,7 +10,7 @@ import nn as mynn
 import utils.net as net_utils
 
 
-def VGG_CNN_M_1024_conv5_body():
+class VGG_CNN_M_1024_conv5_body():
     def __init__(self, block_counts):
         super().__init__()
 
@@ -43,7 +43,6 @@ def VGG_CNN_M_1024_conv5_body():
 
         # freeze gradients for first bottom convolutional blocks
         freeze_params(self.conv1)
-
 
     def detectron_weight_mapping(self):
         mapping_to_detectron = {}

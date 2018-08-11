@@ -10,7 +10,7 @@ import nn as mynn
 import utils.net as net_utils
 
 
-def VGG16_conv5_body():
+class VGG16_conv5_body():
     def __init__(self, block_counts):
         super().__init__()
 
