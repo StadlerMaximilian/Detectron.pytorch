@@ -971,7 +971,7 @@ __C.EXPECTED_RESULTS_EMAIL = ''
 
 # ------------------------------
 # Data directory
-__C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data'))
+__C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data/datasets'))
 
 # [Deprecate]
 __C.POOLING_MODE = 'crop'
