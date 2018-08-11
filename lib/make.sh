@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CUDA_PATH=/usr/local/cuda-9.2/
+CUDA_PATH=/usr/local/cuda-9.0/
 
 python3 setup.py build_ext --inplace
 rm -rf build
