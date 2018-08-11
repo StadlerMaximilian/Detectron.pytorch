@@ -55,7 +55,7 @@ def evaluate_masks(
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
 
-    os.environ['CITYSCAPES_DATASET'] = DATASETS[json_dataset.name][RAW_DIR]
+    os.environ['CITYSCAPES_DATASET'] = _DATASETS[json_dataset.name][_RAW_DIR]
     os.environ['CITYSCAPES_RESULTS'] = output_dir
 
     # Load the Cityscapes eval script *after* setting the required env vars,
