@@ -33,18 +33,18 @@ from __future__ import unicode_literals
 from collections import defaultdict
 import cv2
 import numpy as np
-import cocoapi.PythonAPI.pycocotools.mask as mask_util
+import pycocotools.mask as mask_util
 
 from torch.autograd import Variable
 import torch
 
-from lib.core.config import cfg
-from lib.utils.timer import Timer
-import lib.utils.boxes as box_utils
-import lib.utils.blob as blob_utils
-import lib.utils.fpn as fpn_utils
-import lib.utils.image as image_utils
-import lib.utils.keypoints as keypoint_utils
+from core.config import cfg
+from utils.timer import Timer
+import utils.boxes as box_utils
+import utils.blob as blob_utils
+import utils.fpn as fpn_utils
+import utils.image as image_utils
+import utils.keypoints as keypoint_utils
 
 
 def im_detect_all(model, im, box_proposals=None, timers=None):

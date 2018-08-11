@@ -28,13 +28,13 @@ from core.config import cfg
 _DATA_DIR = cfg.DATA_DIR
 
 # Required dataset entry keys
-IM_DIR = 'image_directory'
-ANN_FN = 'annotation_file'
+_IM_DIR = 'image_directory'
+_ANN_FN = 'annotation_file'
 
 # Optional dataset entry keys
-IM_PREFIX = 'image_prefix'
-DEVKIT_DIR = 'devkit_directory'
-RAW_DIR = 'raw_dir'
+_IM_PREFIX = 'image_prefix'
+_DEVKIT_DIR = 'devkit_directory'
+_RAW_DIR = 'raw_dir'
 
 # Available datasets
 # Available datasets

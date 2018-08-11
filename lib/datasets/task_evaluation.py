@@ -40,11 +40,11 @@ import logging
 import os
 import pprint
 
-from lib.core.config import cfg
-from lib.utils.logging import send_email
-import lib.datasets.cityscapes_json_dataset_evaluator as cs_json_dataset_evaluator
-import lib.datasets.json_dataset_evaluator as json_dataset_evaluator
-import lib.datasets.voc_dataset_evaluator as voc_dataset_evaluator
+from core.config import cfg
+from utils.logging import send_email
+import datasets.cityscapes_json_dataset_evaluator as cs_json_dataset_evaluator
+import datasets.json_dataset_evaluator as json_dataset_evaluator
+import datasets.voc_dataset_evaluator as voc_dataset_evaluator
 
 logger = logging.getLogger(__name__)
 

@@ -28,9 +28,9 @@ import cv2
 import os
 import sys
 
-from lib.core.config import cfg
-from lib.datasets.json_dataset import JsonDataset
-import lib.utils.vis as vis_utils
+from core.config import cfg
+from datasets.json_dataset import JsonDataset
+import utils.vis as vis_utils
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
 # thread safe and causes unwanted GPU memory allocations.

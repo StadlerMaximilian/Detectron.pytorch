@@ -10,8 +10,8 @@ import lib.utils.env as envu
 envu.set_up_matplotlib()
 import matplotlib.pyplot as plt
 
-from cocoapi.PythonAPI.pycocotools.coco import COCO
-from lib.core.config import cfg
+from pycocotools.coco import COCO
+from core.config import cfg
 
 plt.rcParams['pdf.fonttype'] = 42  # For editing in Adobe Illustrator
 
