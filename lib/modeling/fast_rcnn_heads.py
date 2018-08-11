@@ -4,9 +4,9 @@ import torch.nn.functional as F
 import torch.nn.init as init
 from torch.autograd import Variable
 
-from lib.core.config import cfg
-import lib.nn as mynn
-import lib.utils.net as net_utils
+from core.config import cfg
+import nn as mynn
+import utils.net as net_utils
 
 
 class fast_rcnn_outputs(nn.Module):
