@@ -63,7 +63,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         sys.exit("Need a CUDA device to run the code.")
 
-    logger = lib.utils.logging.setup_logging(__name__)
+    logger = utils.logging.setup_logging(__name__)
     args = parse_args()
     logger.info('Called with args:')
     logger.info(args)
