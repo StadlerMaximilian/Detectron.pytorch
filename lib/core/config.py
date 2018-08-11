@@ -16,8 +16,8 @@ import torch.nn as nn
 from torch.nn import init
 import yaml
 
-import nn as mynn
-from utils.collections import AttrDict
+import lib.nn as mynn
+from lib.utils.collections import AttrDict
 
 __C = AttrDict()
 # Consumers can get config by:
@@ -395,6 +395,11 @@ __C.MODEL = AttrDict()
 # The string must match a function in the modeling.model_builder module
 # (e.g., 'generalized_rcnn', 'mask_rcnn', ...)
 __C.MODEL.TYPE = ''
+__C.MODEL.BACKBONE_TYPE = 'CNN_M_1024' # or 'VGG16' or 'ResNet'
+__C.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS = False
+__C.MODEL.PRETRAINED_BACKBONE_WEIGHTS = ''
+__C.MODEL.LOAD_PRETRAINED_DETECTRON_WEIGHTS = False
+__C.MODEL.PRETRAINED_DETECTRON_WEIGHTS = ''
 
 # The backbone conv body to use
 __C.MODEL.CONV_BODY = ''
@@ -445,10 +450,6 @@ __C.MODEL.RPN_ONLY = False
 # are shared from box head or not.
 __C.MODEL.SHARE_RES5 = False
 
-# Whether to load imagenet pretrained weights
-# If True, path to the weight file must be specified.
-# See: __C.RESNETS.IMAGENET_PRETRAINED_WEIGHTS
-__C.MODEL.LOAD_IMAGENET_PRETRAINED_WEIGHTS = True
 
 # ---------------------------------------------------------------------------- #
 # Unsupervise Pose
@@ -895,10 +896,6 @@ __C.RESNETS.RES5_DILATION = 1
 # be fixed.
 __C.RESNETS.FREEZE_AT = 2
 
-# Path to pretrained resnet weights on ImageNet.
-# If start with '/', then it is treated as a absolute path.
-# Otherwise, treat as a relative path to __C.ROOT_DIR
-__C.RESNETS.IMAGENET_PRETRAINED_WEIGHTS = ''
 
 # Use GroupNorm instead of BatchNorm
 __C.RESNETS.USE_GN = False
@@ -996,11 +993,46 @@ __C.PYTORCH_VERSION_LESS_THAN_040 = False
 # mask heads or keypoint heads that share res5 stage weights and
 # training forward computation with box head.
 # ---------------------------------------------------------------------------- #
-_SHARE_RES5_HEADS = set(
-    [
-        'mask_rcnn_heads.mask_rcnn_fcn_head_v0upshare',
-    ]
-)
+_SHARE_RES5_HEADS = {'mask_rcnn_heads.mask_rcnn_fcn_head_v0upshare'}
+
+
+# ---------------------------------------------------------------------------- #
+# CUSTOM DATAoptions
+# ---------------------------------------------------------------------------- #
+__C.CUSTOM_DATA = AttrDict()
+# flag to force testing also on test set of custom datasets
+__C.CUSTOM_DATA.FORCE_TEST = False
+
+
+# ---------------------------------------------------------------------------- #
+# Options for visualization of Detection, GT-Samples, ...
+# ---------------------------------------------------------------------------- #
+__C.VIS = AttrDict()
+__C.VIS.ONLY_DETS = False # only visualize detections
+__C.VIS.GT_COLOR = 'cyan' # false negative or ground-truth value
+__C.VIS.DT_COLOR = 'lime' # true positive
+__C.VIS.FP_COLOR = 'red' # false positive
+
+# booleans for showing class labels of corresponding boxes
+__C.VIS.GT_SHOW_CLASS = False
+__C.VIS.DT_SHOW_CLASS = False
+__C.VIS.FP_SHOW_CLASS = True
+__C.VIS.FP_SHOW_CORRECT_CLASS = True
+
+__C.VIS.GT_SHOW_ALL = False # always show corresponding gt-boxes if True
+
+__C.VIS.BOX = AttrDict()
+__C.VIS.LABEL = AttrDict()
+__C.VIS.BOX.LINEWIDTH = 1.5
+__C.VIS.BOX.ALPHA = 1.0
+__C.VIS.LABEL.FONTSIZE = 6
+__C.VIS.LABEL.FAMILY = 'serif'
+__C.VIS.LABEL.WEIGHT = 'bold'
+__C.VIS.LABEL.ALPHA = 0.8
+__C.VIS.LABEL.PAD = 1
+__C.VIS.LABEL.GT_TEXTCOLOR = 'black'
+__C.VIS.LABEL.DT_TEXTCOLOR = 'black'
+__C.VIS.LABEL.FP_TEXTCOLOR = 'black'
 
 
 def assert_and_infer_cfg(make_immutable=True):
@@ -1015,10 +1047,10 @@ def assert_and_infer_cfg(make_immutable=True):
         __C.RPN.RPN_ON = True
     if __C.RPN.RPN_ON or __C.RETINANET.RETINANET_ON:
         __C.TEST.PRECOMPUTED_PROPOSALS = False
-    if __C.MODEL.LOAD_IMAGENET_PRETRAINED_WEIGHTS:
-        assert __C.RESNETS.IMAGENET_PRETRAINED_WEIGHTS, \
-            "Path to the weight file must not be empty to load imagenet pertrained resnets."
-    if set([__C.MRCNN.ROI_MASK_HEAD, __C.KRCNN.ROI_KEYPOINTS_HEAD]) & _SHARE_RES5_HEADS:
+    #if __C.MODEL.LOAD_IMAGENET_PRETRAINED_WEIGHTS:
+    #    assert __C.RESNETS.IMAGENET_PRETRAINED_WEIGHTS, \
+    #        "Path to the weight file must not be empty to load imagenet pertrained resnets."
+    if {__C.MRCNN.ROI_MASK_HEAD, __C.KRCNN.ROI_KEYPOINTS_HEAD} & _SHARE_RES5_HEADS:
         __C.MODEL.SHARE_RES5 = True
     if version.parse(torch.__version__) < version.parse('0.4.0'):
         __C.PYTORCH_VERSION_LESS_THAN_040 = True
@@ -1036,6 +1068,7 @@ def merge_cfg_from_file(cfg_filename):
     with open(cfg_filename, 'r') as f:
         yaml_cfg = AttrDict(yaml.load(f))
     _merge_a_into_b(yaml_cfg, __C)
+
 
 cfg_from_file = merge_cfg_from_file
 

@@ -7,17 +7,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from core.config import cfg
-from model.roi_pooling.functions.roi_pool import RoIPoolFunction
-from model.roi_crop.functions.roi_crop import RoICropFunction
-from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
-import modeling.rpn_heads as rpn_heads
-import modeling.fast_rcnn_heads as fast_rcnn_heads
-import modeling.mask_rcnn_heads as mask_rcnn_heads
-import modeling.keypoint_rcnn_heads as keypoint_rcnn_heads
-import utils.blob as blob_utils
-import utils.net as net_utils
-import utils.resnet_weights_helper as resnet_utils
+from lib.core.config import cfg
+from lib.model.roi_pooling.functions.roi_pool import RoIPoolFunction
+from lib.model.roi_crop.functions.roi_crop import RoICropFunction
+from lib.modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
+import lib.modeling.rpn_heads as rpn_heads
+import lib.modeling.fast_rcnn_heads as fast_rcnn_heads
+import lib.modeling.mask_rcnn_heads as mask_rcnn_heads
+import lib.modeling.keypoint_rcnn_heads as keypoint_rcnn_heads
+import lib.utils.blob as blob_utils
+import lib.utils.net as net_utils
+import lib.utils.detectron_weight_helper as weight_utils
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +124,16 @@ class Generalized_RCNN(nn.Module):
         self._init_modules()
 
     def _init_modules(self):
-        if cfg.MODEL.LOAD_IMAGENET_PRETRAINED_WEIGHTS:
-            resnet_utils.load_pretrained_imagenet_weights(self)
+        if cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS:
+            weight_utils.load_caffe2_pretrained_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
+            # Check if shared weights are equaled
+            if cfg.MODEL.MASK_ON and getattr(self.Mask_Head, 'SHARE_RES5', False):
+                assert compare_state_dict(self.Mask_Head.res5.state_dict(), self.Box_Head.res5.state_dict())
+            if cfg.MODEL.KEYPOINTS_ON and getattr(self.Keypoint_Head, 'SHARE_RES5', False):
+                assert compare_state_dict(self.Keypoint_Head.res5.state_dict(), self.Box_Head.res5.state_dict())
+
+        if cfg.MODEL.LOAD_PRETRAINED_DETECTRON_WEIGHTS:
+            weight_utils.load_caffe2_detectron_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
             # Check if shared weights are equaled
             if cfg.MODEL.MASK_ON and getattr(self.Mask_Head, 'SHARE_RES5', False):
                 assert compare_state_dict(self.Mask_Head.res5.state_dict(), self.Box_Head.res5.state_dict())

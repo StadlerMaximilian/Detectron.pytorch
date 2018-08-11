@@ -40,11 +40,11 @@ import logging
 import os
 import pprint
 
-from core.config import cfg
-from utils.logging import send_email
-import datasets.cityscapes_json_dataset_evaluator as cs_json_dataset_evaluator
-import datasets.json_dataset_evaluator as json_dataset_evaluator
-import datasets.voc_dataset_evaluator as voc_dataset_evaluator
+from lib.core.config import cfg
+from lib.utils.logging import send_email
+import lib.datasets.cityscapes_json_dataset_evaluator as cs_json_dataset_evaluator
+import lib.datasets.json_dataset_evaluator as json_dataset_evaluator
+import lib.datasets.voc_dataset_evaluator as voc_dataset_evaluator
 
 logger = logging.getLogger(__name__)
 
@@ -264,6 +264,12 @@ COCO_AP75 = 2
 COCO_APS = 3
 COCO_APM = 4
 COCO_APL = 5
+COCO_AR_1 = 6
+COCO_AR_10 = 7
+COCO_AR_100 = 8
+COCO_ARS_100 = 9
+COCO_ARM_100 = 10
+COCO_ARL_100 = 11
 # Slight difference for keypoints
 COCO_KPS_APM = 3
 COCO_KPS_APL = 4
@@ -283,6 +289,12 @@ def _coco_eval_to_box_results(coco_eval):
         res['box']['APs'] = s[COCO_APS]
         res['box']['APm'] = s[COCO_APM]
         res['box']['APl'] = s[COCO_APL]
+        res['box']['AR_1'] = s[COCO_AR_1]
+        res['box']['AR_10'] = s[COCO_AR_10]
+        res['box']['AR_100'] = s[COCO_AR_100]
+        res['box']['ARs_100'] = s[COCO_ARS_100]
+        res['box']['ARm_100'] = s[COCO_ARM_100]
+        res['box']['ARl_100'] = s[COCO_ARL_100]
     return res
 
 

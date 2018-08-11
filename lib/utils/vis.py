@@ -26,10 +26,12 @@ from __future__ import unicode_literals
 import cv2
 import numpy as np
 import os
-import pycocotools.mask as mask_util
+import math
+import cocoapi.PythonAPI.pycocotools.mask as mask_util
 
-from utils.colormap import colormap
-import utils.keypoints as keypoint_utils
+from lib.utils.colormap import colormap
+import lib.utils.keypoints as keypoint_utils
+from lib.core.config import cfg
 
 # Use a non-interactive backend
 import matplotlib
@@ -104,10 +106,74 @@ def get_class_string(class_index, score, dataset):
     return class_text + ' {:0.2f}'.format(score).lstrip('0')
 
 
+def calc_rect_area(box):
+    return max(0.0, (box[2] - box[0])*(box[3] - box[1]))
+
+
+def calc_intersection(dt_box, gt_box):
+    xi_1 = max(dt_box[0], gt_box[0])
+    yi_1 = max(dt_box[1], gt_box[1])
+    xi_2 = min(dt_box[2], gt_box[2])
+    yi_2 = min(dt_box[3], gt_box[3])
+    xi_2 = max(xi_2, xi_1)
+    yi_2 = max(yi_2, yi_1)
+    return [xi_1, yi_1, xi_2, yi_2]
+
+
+def calc_iou(dt_box, gt_box):
+    area_gt = calc_rect_area (gt_box)
+    area_dt = calc_rect_area(dt_box)
+    area_cr = calc_rect_area(calc_intersection(dt_box, gt_box))
+    return area_cr / (area_gt + area_dt - area_cr)
+
+
+def match_gt_dt(boxes, sorted_inds, gt_boxes, sorted_inds_gt, classes, gt_classes, threshold):
+    """ function that creates list representing whether detection have been matched correctly or not
+        if matches[i] = -1 : boxes[i] does not match a ground-truth value
+        if matches[i] = +0 : boxes[i] does not match a ground-truth value correctly
+        if matches[i] = +1 : boxes[i] does match ground-truth-value correctly
+
+        if matches_gt[i] = 0: gt box is not matched correctly
+        if matches_gt[i] = 1: gt box is matched correctly
+    """
+    matches = [-1]*len(boxes)
+    wrong_classes = [-1]*len(boxes)
+    matches_gt = [0]*len(gt_boxes)
+
+    for i_gt in sorted_inds_gt:
+        gt_box = gt_boxes[i_gt, :4]
+        gt_cls = gt_classes[i_gt]
+
+        for i_dt in sorted_inds:
+            dt_box = boxes[i_dt, :4]
+            score = boxes[i_dt, -1]
+            if score < threshold:
+                continue
+            dt_cls = classes[i_dt]
+
+            iou = calc_iou(dt_box, gt_box)
+
+            # continue if dt does not match gt at all
+            if math.isnan(iou):
+                continue
+            if iou < 0.3:
+                continue
+
+            if iou >= 0.3:
+                if dt_cls == gt_cls:
+                    matches[i_dt] = 1
+                    matches_gt[i_gt] = 1
+                else:
+                    matches[i_dt] = 0
+                    wrong_classes[i_dt] = gt_cls
+
+    return matches, wrong_classes, matches_gt
+
+
 def vis_one_image(
         im, im_name, output_dir, boxes, segms=None, keypoints=None, thresh=0.9,
         kp_thresh=2, dpi=200, box_alpha=0.0, dataset=None, show_class=False,
-        ext='pdf'):
+        ext='pdf', gt_entry=None):
     """Visual debugging of detections."""
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -140,6 +206,43 @@ def vis_one_image(
     areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
     sorted_inds = np.argsort(-areas)
 
+    matches = []
+    wrong_classes = []
+
+    if gt_entry is not None:
+        gt_boxes = gt_entry['boxes']
+        gt_classes = gt_entry['gt_classes']
+
+        areas_gt = (gt_boxes[:, 2] - gt_boxes[:, 0]) * (gt_boxes[:, 3] - gt_boxes[:, 1])
+        sorted_inds_gt = np.argsort(-areas_gt)
+
+        matches, wrong_classes, matches_gt = match_gt_dt(boxes, sorted_inds, gt_boxes, sorted_inds_gt, classes, gt_classes, thresh)
+
+        for i in sorted_inds_gt:
+            bbox = gt_boxes[i, :]
+
+            # only add ground-truth box if not matched
+            if matches_gt[i] == 0 and not cfg.VIS.ONLY_DETS:
+                ax.add_patch(
+                    plt.Rectangle((bbox[0], bbox[1]),
+                                  bbox[2] - bbox[0],
+                                  bbox[3] - bbox[1],
+                                  fill=False, edgecolor=cfg.VIS.GT_COLOR,
+                                  linewidth=cfg.VIS.BOX.LINEWIDTH,
+                                  alpha=box_alpha))
+                if show_class or cfg.VIS.GT_SHOW_CLASS:
+                    ax.text(
+                        bbox[0] + 1, bbox[1] - 6,
+                        get_class_string(gt_classes[i], 1.0, dataset),
+                        fontsize=cfg.VIS.LABEL.FONTSIZE,
+                        family=cfg.VIS.LABEL.FAMILY,
+                        weight=cfg.VIS.LABEL.WEIGHT,
+                        bbox=dict(
+                            facecolor=cfg.VIS.LABEL.GT_TEXTCOLOR,
+                            alpha=cfg.VIS.LABEL.ALPHA,
+                            pad=cfg.VIS.LABEL.PAD, edgecolor='none'),
+                            color=cfg.VIS.LABEL.GT_TEXTCOLOR)
+
     mask_color_id = 0
     for i in sorted_inds:
         bbox = boxes[i, :4]
@@ -147,24 +250,73 @@ def vis_one_image(
         if score < thresh:
             continue
 
-        print(dataset.classes[classes[i]], score)
-        # show box (off by default, box_alpha=0.0)
+        edge_color = 'b'
+        text_color = 'white'
+        if gt_entry is not None and not cfg.VIS.ONLY_DETS:
+            if matches[i] == -1:
+                edge_color = cfg.VIS.FP_COLOR
+                text_color = cfg.VIS.LABEL.FP_TEXTCOLOR
+            elif matches[i] == 0:
+                edge_color = cfg.VIS.FP_COLOR
+                text_color = cfg.VIS.LABEL.FP_TEXTCOLOR
+            elif matches[i] == 1:
+                edge_color = cfg.VIS.DT_COLOR
+                text_color = cfg.VIS.LABEL.DT_TEXTCOLOR
+
         ax.add_patch(
             plt.Rectangle((bbox[0], bbox[1]),
                           bbox[2] - bbox[0],
                           bbox[3] - bbox[1],
-                          fill=False, edgecolor='g',
-                          linewidth=0.5, alpha=box_alpha))
+                          fill=False, edgecolor=edge_color,
+                          linewidth=cfg.VIS.BOX.LINEWIDTH,
+                          alpha=cfg.VIS.BOX.ALPHA))
 
-        if show_class:
+        # do not show label of not matched detections
+        # if gt-boxes drawn: show_classes always for wrong (red) detections
+        if not cfg.VIS.ONLY_DETS and (gt_entry is not None
+                                      and matches[i] == 0 and cfg.VIS.FP_SHOW_CLASS):
+            if cfg.VIS.FP_SHOW_CORRECT_CLASS:
+                ax.text(
+                    bbox[0] + 11, bbox[1] - 6,
+                    get_class_string(classes[i], score, dataset) + '\n({})'.format(
+                        get_class_string(wrong_classes[i], 1.0, dataset)),
+                    fontsize = cfg.VIS.LABEL.FONTSIZE,
+                    family = cfg.VIS.LABEL.FAMILY, weight = cfg.VIS.LABEL.WEIGHT,
+                    bbox = dict(
+                        facecolor=edge_color, alpha=cfg.VIS.LABEL.ALPHA,
+                        pad=cfg.VIS.LABEL.PAD, edgecolor='none'),
+                        color=text_color)
+            else:
+                ax.text(
+                    bbox[0] + 1, bbox[1] - 6,
+                    get_class_string(classes[i], score, dataset),
+                    fontsize=cfg.VIS.LABEL.FONTSIZE,
+                    family=cfg.VIS.LABEL.FAMILY, weight=cfg.VIS.LABEL.WEIGHT,
+                    bbox=dict(
+                        facecolor=edge_color, alpha=cfg.VIS.LABEL.ALPHA,
+                        pad=cfg.VIS.LABEL.PAD, edgecolor='none'),
+                        color=text_color)
+        elif not cfg.VIS.ONLY_DETS and (gt_entry is not None
+                                        and matches[i] == 1 and cfg.VIS.DT_SHOW_CLASS):
             ax.text(
-                bbox[0], bbox[1] - 2,
+                bbox[0] + 1, bbox[1] - 6,
                 get_class_string(classes[i], score, dataset),
-                fontsize=3,
-                family='serif',
+                fontsize=cfg.VIS.LABEL.FONTSIZE,
+                family=cfg.VIS.LABEL.FAMILY, weight=cfg.VIS.LABEL.WEIGHT,
                 bbox=dict(
-                    facecolor='g', alpha=0.4, pad=0, edgecolor='none'),
-                color='white')
+                    facecolor=edge_color, alpha=cfg.VIS.LABEL.ALPHA,
+                    pad=cfg.VIS.LABEL.PAD, edgecolor='none'),
+                color=text_color)
+        elif show_class and cfg.VIS.ONLY_DETS:
+            ax.text(
+                bbox[0] + 1, bbox[1] - 6,
+                get_class_string(classes[i], score, dataset),
+                fontsize=cfg.VIS.LABEL.FONTSIZE,
+                family=cfg.VIS.LABEL.FAMILY, weight=cfg.VIS.LABEL.WEIGHT,
+                bbox=dict(
+                    facecolor=edge_color, alpha=cfg.VIS.LABEL.ALPHA,
+                    pad=cfg.VIS.LABEL.PAD, edgecolor='none'),
+                color=text_color)
 
         # show mask
         if segms is not None and len(segms) > i:

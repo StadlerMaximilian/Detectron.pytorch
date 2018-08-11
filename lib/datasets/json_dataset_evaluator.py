@@ -134,9 +134,10 @@ def evaluate_boxes(
     res_file += '.json'
     _write_coco_bbox_results_file(json_dataset, all_boxes, res_file)
     # Only do evaluation on non-test sets (annotations are undisclosed on test)
-    if json_dataset.name.find('test') == -1:
+    if json_dataset.name.find('test') == -1 or cfg.CUSTOM_DATA.FORCE_TEST is True:
         coco_eval = _do_detection_eval(json_dataset, res_file, output_dir)
     else:
+        print("No evaluation: force_test is {}".format(cfg.CUSTOM_DATA_FORCE_TEST))
         coco_eval = None
     # Optionally cleanup results json file
     if cleanup:
@@ -217,6 +218,8 @@ def _log_detection_eval_metrics(json_dataset, coco_eval):
     # max dets index 2: 100 per image
     precision = coco_eval.eval['precision'][ind_lo:(ind_hi + 1), :, :, 0, 2]
     ap_default = np.mean(precision[precision > -1])
+    recall = coco_eval.eval['recall'][ind_lo:(ind_hi + 1), :, 0, 2]
+    ar_default = np.mean(recall[recall > -1])
     logger.info(
         '~~~~ Mean and per-category AP @ IoU=[{:.2f},{:.2f}] ~~~~'.format(
             IoU_lo_thresh, IoU_hi_thresh))
@@ -228,7 +231,11 @@ def _log_detection_eval_metrics(json_dataset, coco_eval):
         precision = coco_eval.eval['precision'][
             ind_lo:(ind_hi + 1), :, cls_ind - 1, 0, 2]
         ap = np.mean(precision[precision > -1])
-        logger.info('{:.1f}'.format(100 * ap))
+        recall = coco_eval.eval['recall'][
+            ind_lo:(ind_hi + 1), cls_ind - 1, 0, 2]
+        ar = np.mean(recall[recall > -1])
+
+        logger.info('{}: AP: {:.1f}, AR: {:.1f}'.format(cls, 100 * ap, 100 * ar))
     logger.info('~~~~ Summary metrics ~~~~')
     coco_eval.summarize()
 

@@ -2,12 +2,12 @@ from torch import nn
 from torch.nn import init
 import torch.nn.functional as F
 
-from core.config import cfg
-from modeling.generate_anchors import generate_anchors
-from modeling.generate_proposals import GenerateProposalsOp
-from modeling.generate_proposal_labels import GenerateProposalLabelsOp
-import modeling.FPN as FPN
-import utils.net as net_utils
+from lib.core.config import cfg
+from lib.modeling.generate_anchors import generate_anchors
+from lib.modeling.generate_proposals import GenerateProposalsOp
+from lib.modeling.generate_proposal_labels import GenerateProposalLabelsOp
+import lib.modeling.FPN as FPN
+import lib.utils.net as net_utils
 
 
 # ---------------------------------------------------------------------------- #
