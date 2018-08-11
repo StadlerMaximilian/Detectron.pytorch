@@ -27,11 +27,11 @@ import cv2
 import numpy as np
 import os
 import math
-import cocoapi.PythonAPI.pycocotools.mask as mask_util
+import pycocotools.mask as mask_util
 
-from lib.utils.colormap import colormap
-import lib.utils.keypoints as keypoint_utils
-from lib.core.config import cfg
+from utils.colormap import colormap
+import utils.keypoints as keypoint_utils
+from core.config import cfg
 
 # Use a non-interactive backend
 import matplotlib

@@ -6,8 +6,8 @@ import re
 import torch
 import os
 
-import lib.nn as mynn
-from lib.core.config import cfg
+import nn as mynn
+from core.config import cfg
 
 
 def load_caffe2_detectron_weights(net, detectron_weight_file):

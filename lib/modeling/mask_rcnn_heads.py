@@ -7,10 +7,10 @@ import torch.nn.functional as F
 import torch.nn.init as init
 from torch.autograd import Variable
 
-from lib.core.config import cfg
-from lib.modeling import ResNet
-import lib.nn as mynn
-import lib.utils.net as net_utils
+from core.config import cfg
+from modeling import ResNet
+import nn as mynn
+import utils.net as net_utils
 
 
 # ---------------------------------------------------------------------------- #
