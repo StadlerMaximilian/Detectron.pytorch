@@ -39,7 +39,7 @@ python3 build.py
 # nvcc -c -o roi_align_kernel.cu.o roi_align_kernel.cu \
 # 	 -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC $CUDA_ARCH
 # cd ../
-# python build.py
+# python3 build.py
 
 # compile roi_crop
 cd ../../
