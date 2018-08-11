@@ -9,10 +9,10 @@ import time
 
 import torch
 
-import lib._init_paths  # pylint: disable=unused-import
-from lib.core.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
-from lib.core.test_engine import run_inference
-import lib.utils.logging
+import _init_paths  # pylint: disable=unused-import
+from core.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
+from core.test_engine import run_inference
+import utils.logging
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
 # thread safe and causes unwanted GPU memory allocations.
