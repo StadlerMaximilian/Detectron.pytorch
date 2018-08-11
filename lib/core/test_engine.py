@@ -30,21 +30,21 @@ import yaml
 
 import torch
 
-from lib.core.config import cfg
+from core.config import cfg
 # from core.rpn_generator import generate_rpn_on_dataset  #TODO: for rpn only case
 # from core.rpn_generator import generate_rpn_on_range
-from lib.core.test import im_detect_all
-from lib.datasets import task_evaluation
-from lib.datasets.json_dataset import JsonDataset
-from lib.modeling import model_builder
-import lib.nn as mynn
-from lib.utils.detectron_weight_helper import load_caffe2_detectron_weights
-import lib.utils.env as envu
-import lib.utils.net as net_utils
-import lib.utils.subprocess as subprocess_utils
-import lib.utils.vis as vis_utils
-from lib.utils.io import save_object
-from lib.utils.timer import Timer
+from core.test import im_detect_all
+from datasets import task_evaluation
+from datasets.json_dataset import JsonDataset
+from modeling import model_builder
+import nn as mynn
+from utils.detectron_weight_helper import load_caffe2_detectron_weights
+import utils.env as envu
+import utils.net as net_utils
+import utils.subprocess as subprocess_utils
+import utils.vis as vis_utils
+from utils.io import save_object
+from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 

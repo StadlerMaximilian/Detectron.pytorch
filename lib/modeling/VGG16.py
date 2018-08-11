@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from lib.core.config import cfg
-import lib.nn as mynn
-import lib.utils.net as net_utils
+from core.config import cfg
+import nn as mynn
+import utils.net as net_utils
 
 
 def VGG16_conv5_body():

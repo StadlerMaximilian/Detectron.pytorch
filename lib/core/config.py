@@ -16,8 +16,8 @@ import torch.nn as nn
 from torch.nn import init
 import yaml
 
-import lib.nn as mynn
-from lib.utils.collections import AttrDict
+import nn as mynn
+from utils.collections import AttrDict
 
 __C = AttrDict()
 # Consumers can get config by:
