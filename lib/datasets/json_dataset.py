@@ -42,10 +42,10 @@ from pycocotools.coco import COCO
 import utils.boxes as box_utils
 from core.config import cfg
 from utils.timer import Timer
-from .dataset_catalog import ANN_FN
-from .dataset_catalog import DATASETS
-from .dataset_catalog import IM_DIR
-from .dataset_catalog import IM_PREFIX
+from .dataset_catalog import _ANN_FN
+from .dataset_catalog import _DATASETS
+from .dataset_catalog import _IM_DIR
+from .dataset_catalog import _IM_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -54,19 +54,19 @@ class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
     def __init__(self, name):
-        assert name in DATASETS.keys(), \
+        assert name in _DATASETS.keys(), \
             'Unknown dataset name: {}'.format(name)
-        assert os.path.exists(DATASETS[name][IM_DIR]), \
-            'Image directory \'{}\' not found'.format(DATASETS[name][IM_DIR])
-        assert os.path.exists(DATASETS[name][ANN_FN]), \
-            'Annotation file \'{}\' not found'.format(DATASETS[name][ANN_FN])
+        assert os.path.exists(_DATASETS[name][_IM_DIR]), \
+            'Image directory \'{}\' not found'.format(_DATASETS[name][_IM_DIR])
+        assert os.path.exists(_DATASETS[name][_ANN_FN]), \
+            'Annotation file \'{}\' not found'.format(_DATASETS[name][_ANN_FN])
         logger.debug('Creating: {}'.format(name))
         self.name = name
-        self.image_directory = DATASETS[name][IM_DIR]
+        self.image_directory = _DATASETS[name][_IM_DIR]
         self.image_prefix = (
-            '' if IM_PREFIX not in DATASETS[name] else DATASETS[name][IM_PREFIX]
+            '' if _IM_PREFIX not in _DATASETS[name] else _DATASETS[name][_IM_PREFIX]
         )
-        self.COCO = COCO(DATASETS[name][ANN_FN])
+        self.COCO = COCO(_DATASETS[name][_ANN_FN])
         self.debug_timer = Timer()
         # Set up dataset classes
         category_ids = self.COCO.getCatIds()
