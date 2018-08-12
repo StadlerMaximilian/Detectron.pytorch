@@ -26,12 +26,15 @@ def parse_args():
     parser.add_argument(
         '--dataset',
         help='training dataset')
+
     parser.add_argument(
         '--cfg', dest='cfg_file', required=True,
         help='optional config file')
 
     parser.add_argument(
-        '--load_dets', help='path of saved detections to load')
+        '--load_dets', type=str, dest='dets_file', required=True,
+        help='path of saved detections to load')
+
     parser.add_argument(
         '--output_dir',
         help='output directory to save the testing results. If not provided, '
@@ -49,7 +52,7 @@ def parse_args():
 
 def do_reval(dataset_name, output_dir, args):
     dataset = JsonDataset(dataset_name)
-    with open(os.path.join(output_dir, 'detections.pkl'), 'rb') as f:
+    with open(os.path.join(args.dets_file), 'rb') as f:
         dets = pickle.load(f)
     # Override config with the one saved in the detections file
     if args.cfg_file is not None:
@@ -92,5 +95,4 @@ if __name__ == '__main__':
     logger.info('Re-evaluating with config:')
     logger.info(pprint.pformat(cfg))
 
-    output_dir = os.path.abspath(args.output_dir[0])
-    do_reval(args.dataset, output_dir, args)
+    do_reval(args.dataset, args.output_dir, args)
