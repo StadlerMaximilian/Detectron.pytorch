@@ -47,7 +47,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         mapping_to_detectron = {}
         for block_id in range(5):
             block_name = 'conv{}'.format(block_id + 1)
-            torch_name = block_name + '.conv'
+            torch_name = block_name + '.0.' #as conv layer is always first in every block
             caffe_name = 'conv{}_'.format(block_id + 1)
             mapping_to_detectron[torch_name + 'weight'] = caffe_name + 'w'
             mapping_to_detectron[torch_name + 'bias'] = caffe_name + 'b'
