@@ -71,7 +71,7 @@ def load_caffe2_pretrained_weights(model, pretrained_weight_file):
         if 'blobs' in src_blobs:
             src_blobs = src_blobs['blobs']
         pretrained_state_dict = src_blobs
-    elif cfg.BACKBONE_TYPE == 'ResNet':
+    elif cfg.MODEL.BACKBONE_TYPE == 'ResNet':
         weights_file = os.path.join(cfg.ROOT_DIR, cfg.RESNETS.IMAGENET_PRETRAINED_WEIGHTS)
         pretrained_state_dict = convert_resnet_state_dict(torch.load(weights_file))
 
@@ -97,11 +97,11 @@ def load_caffe2_pretrained_weights(model, pretrained_weight_file):
 
     model_state_dict = model.state_dict()
 
-    if cfg.TRAIN.BACKBONE_TYPE == 'ResNet':
+    if cfg.MODEL.BACKBONE_TYPE == 'ResNet':
         pattern = resnet_weights_name_pattern()
-    elif cfg.TRAIN.BACKBONE_TYPE == 'VGG16':
+    elif cfg.MODEL.BACKBONE_TYPE == 'VGG16':
         pattern = vgg16_weights_name_pattern()
-    elif cfg.TRAIN.BACKBONE_TYPE == 'CNN_M_1024':
+    elif cfg.MODEL.BACKBONE_TYPE == 'CNN_M_1024':
         pattern = vgg_cnn_m_1024_weights_name_pattern()
     else:
         raise ValueError("Invalid Backbone Architecture specified!")
