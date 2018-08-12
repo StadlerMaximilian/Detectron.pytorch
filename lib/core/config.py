@@ -231,11 +231,6 @@ __C.TEST.SCORE_THRESH = 0.05
 # evaluation
 __C.TEST.COMPETITION_MODE = True
 
-# Evaluate detections with the COCO json dataset eval code even if it's not the
-# evaluation code for the dataset (e.g. evaluate PASCAL VOC results using the
-# COCO API to get COCO style AP on PASCAL VOC)
-__C.TEST.FORCE_JSON_DATASET_EVAL = False
-
 # [Inferred value; do not set directly in a config]
 # Indicates if precomputed proposals are used at test time
 # Not set for 1-stage models and 2-stage models with RPN subnetwork enabled
@@ -1014,8 +1009,15 @@ __C.GAN.TRAIN.FREEZE_CONV_BODY = False
 # CUSTOM DATAoptions
 # ---------------------------------------------------------------------------- #
 __C.CUSTOM_DATA = AttrDict()
+
+# Evaluate detections with the COCO json dataset eval code even if it's not the
+# evaluation code for the dataset (e.g. evaluate PASCAL VOC results using the
+# COCO API to get COCO style AP on PASCAL VOC)
+__C.CUSTOM_DATA.FORCE_JSON_DATASET_EVAL = True
+
 # flag to force testing also on test set of custom datasets
 __C.CUSTOM_DATA.FORCE_TEST = False
+
 
 
 # ---------------------------------------------------------------------------- #

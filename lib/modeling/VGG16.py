@@ -63,12 +63,13 @@ class VGG16_conv5_body():
 
     def detectron_weight_mapping(self):
         blocks = [2, 2, 3, 3, 3]
+        conv_ids = [[0, 2], [0, 2], [0, 2, 4], [0, 2, 4], [0, 2, 4]]
+
         mapping_to_detectron = {}
         for block_id in range(5):
             block_name = 'conv{}'.format(block_id + 1)
             for layer_id in range(blocks[block_id]):
-                layer_name = 'conv{}'.format(layer_id + 1)
-                torch_name = block_name + '.' + layer_name + '.'
+                torch_name = block_name + '.' + conv_ids[layer_id] + '.'
                 caffe_name = 'conv{}_{}.'.format(block_id, layer_id)
                 mapping_to_detectron[torch_name + 'weight'] = caffe_name + 'w'
                 mapping_to_detectron[torch_name + 'bias'] = caffe_name + 'b'
@@ -96,10 +97,10 @@ class VGG16_roi_fc_head(nn.Module):
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
-            'fc6.linear.weight': 'fc6_w',
-            'fc6.linear.bias': 'fc6_b',
-            'fc7.linear.weight': 'fc7_w',
-            'fc7.linear.bias': 'fc7_b'
+            'fc6.0.weight': 'fc6_w',
+            'fc6.0.bias': 'fc6_b',
+            'fc7.weight': 'fc7_w',
+            'fc7.bias': 'fc7_b'
         }
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
