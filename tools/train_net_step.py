@@ -25,7 +25,7 @@ from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
 from datasets.roidb import combined_roidb_for_training
 from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, collate_minibatch
 from modeling.model_builder import Generalized_RCNN
-from utils.detectron_weight_helper import load_detectron_weight
+from utils.detectron_weight_helper import load_caffe2_detectron_weights
 from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.training_stats import TrainingStats
@@ -319,7 +319,7 @@ def main():
 
     if args.load_detectron:  #TODO resume for detectron weights (load sgd momentum values)
         logging.info("loading Detectron weights %s", args.load_detectron)
-        load_detectron_weight(maskRCNN, args.load_detectron)
+        load_caffe2_detectron_weights(maskRCNN, args.load_detectron)
 
     lr = optimizer.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
 

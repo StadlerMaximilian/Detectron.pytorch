@@ -133,7 +133,7 @@ class Generalized_RCNN(nn.Module):
                 assert compare_state_dict(self.Keypoint_Head.res5.state_dict(), self.Box_Head.res5.state_dict())
 
         if cfg.MODEL.LOAD_PRETRAINED_DETECTRON_WEIGHTS:
-            weight_utils.load_caffe2_detectron_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
+            weight_utils.load_caffe2_detectron_weights(self, cfg.MODEL.PRETRAINED_DETECTRON_WEIGHTS)
             # Check if shared weights are equaled
             if cfg.MODEL.MASK_ON and getattr(self.Mask_Head, 'SHARE_RES5', False):
                 assert compare_state_dict(self.Mask_Head.res5.state_dict(), self.Box_Head.res5.state_dict())
