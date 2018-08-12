@@ -65,8 +65,7 @@ def do_reval(dataset_name, output_dir, args):
         dets['all_segms'],
         dets['all_keyps'],
         output_dir,
-        use_matlab=args.matlab_eval
-    )
+        use_matlab=False)
     task_evaluation.log_copy_paste_friendly_results(results)
 
 
