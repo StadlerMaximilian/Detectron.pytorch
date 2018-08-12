@@ -35,7 +35,8 @@ def parse_args():
     parser.add_argument(
         '--output_dir',
         help='output directory to save the testing results. If not provided, '
-             'defaults to [args.load_ckpt|args.load_detectron]/../test.')
+             'defaults to [args.load_ckpt|args.load_detectron]/../test.',
+        requited=True)
 
     parser.add_argument(
         '--set', dest='set_cfgs',
@@ -93,4 +94,4 @@ if __name__ == '__main__':
     logger.info(pprint.pformat(cfg))
 
     # output_dir = os.path.abspath(args.output_dir[0])
-    do_reval(args.dataset_name, args.output_dir, args)
+    do_reval(args.dataset, args.output_dir, args)
