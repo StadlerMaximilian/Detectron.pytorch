@@ -36,7 +36,7 @@ def parse_args():
         '--output_dir',
         help='output directory to save the testing results. If not provided, '
              'defaults to [args.load_ckpt|args.load_detectron]/../test.',
-        requited=True)
+        required=True)
 
     parser.add_argument(
         '--set', dest='set_cfgs',
