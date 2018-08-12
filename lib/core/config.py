@@ -997,6 +997,20 @@ _SHARE_RES5_HEADS = {'mask_rcnn_heads.mask_rcnn_fcn_head_v0upshare'}
 
 
 # ---------------------------------------------------------------------------- #
+# PERCEPTUAL GAN options
+# ---------------------------------------------------------------------------- #
+__C.GAN = AttrDict()
+
+__C.GAN.GAN_MODE_ON = True
+
+__C.GAN.MODEL = AttrDict()
+__C.GAN.MODE.NUM_BLOCKS = 6
+
+__C.GAN.TRAIN = AttrDict()
+__C.GAN.TRAIN.FREEZE_CONV_BODY = False
+
+
+# ---------------------------------------------------------------------------- #
 # CUSTOM DATAoptions
 # ---------------------------------------------------------------------------- #
 __C.CUSTOM_DATA = AttrDict()

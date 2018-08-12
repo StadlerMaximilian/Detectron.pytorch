@@ -3,6 +3,7 @@ import os
 import numpy as np
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
@@ -180,3 +181,22 @@ def get_group_gn(dim):
         assert dim % num_groups == 0
         group_gn = num_groups
     return group_gn
+
+
+class roiPoolingLayer(nn.Module):
+    def __init__(self, roi_xform_func, spatial_scale, resolution):
+        super().__init__()
+        self.roi_xform = roi_xform_func
+        self.spatial_scale = spatial_scale
+        self.resolution = resolution
+
+    def forward(self, x, rpn_ret):
+        x = self.roi_xform(
+            x, rpn_ret,
+            blob_rois='rois',
+            method=cfg.FAST_RCNN.ROI_XFORM_METHOD,
+            resolution=self.resolution,
+            spatial_scale=self.spatial_scale,
+            sampling_ratio=cfg.FAST_RCNN.ROI_XFORM_SAMPLING_RATIO
+        )
+        return x
