@@ -1,13 +1,8 @@
-import os
-
-import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 
 from core.config import cfg
-from gan_net_utils import ResidualBlock
-import nn as mynn
 import utils.net as net_utils
 
 

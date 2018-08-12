@@ -1,9 +1,6 @@
-from functools import wraps
-import importlib
 import logging
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
@@ -19,7 +16,7 @@ import modeling.keypoint_rcnn_heads as keypoint_rcnn_heads
 import utils.blob as blob_utils
 import utils.net as net_utils
 import utils.detectron_weight_helper as weight_utils
-import utils.gan_net_utils as gan_utils
+import generator
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +38,7 @@ class Generator(Generalized_RCNN):
             self.RPN = rpn_heads.generic_rpn_outputs(
                 self.Conv_Body.dim_out, self.Conv_Body.spatial_scale)
 
-        self.Generator_Block = gan_utils.GeneratorBlock(self.roi_feature_transform, self.Conv_Body.spatial_scale_base,
+        self.Generator_Block = generator.GeneratorBlock(self.roi_feature_transform, self.Conv_Body.spatial_scale_base,
                                                         self.Conv_Body.resolution, self.Conv_Body.dim_out_base,
                                                         self.Conv_Body.dim_out)
 
