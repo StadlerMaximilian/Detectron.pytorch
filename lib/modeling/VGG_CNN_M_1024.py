@@ -109,6 +109,11 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
 
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return x
+
 
 class VGG_CNN_M_1024_roi_fc_head(nn.Module):
     def __init__(self, dim_in, roi_xform_func, spatial_scale, resolution=6):
