@@ -200,6 +200,12 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete.json'
     },
+    'tt100k_trainval_ignore_complete_overfit': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/train',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_overfit.json'
+    },
     'tt100k_trainval_ignore': {
         _IM_DIR:
             _DATA_DIR + '/tt100k/train',
@@ -223,6 +229,12 @@ _DATASETS = {
             _DATA_DIR + '/tt100k/test',
         _ANN_FN:
             _DATA_DIR + '/tt100k/annotations/tt100k_test_ignore_complete.json'
+    },
+    'tt100k_test_ignore_complete_overfit': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/test',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_test_ignore_complete_overfit.json'
     },
     'tt100k_val_small_ignore': {
         _IM_DIR:
