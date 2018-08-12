@@ -101,10 +101,10 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
-            'fc1.0.weight': 'fc6_w',
-            'fc1.0.bias': 'fc6_b',
-            'fc2.0.weight': 'fc7_w',
-            'fc2.0.bias': 'fc7_b'
+            'fc_head_fc1.0.weight': 'fc6_w',
+            'fc_head.fc1.0.bias': 'fc6_b',
+            'fc_head.fc2.0.weight': 'fc7_w',
+            'fc_head.fc2.0.bias': 'fc7_b'
         }
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
