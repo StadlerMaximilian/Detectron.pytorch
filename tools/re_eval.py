@@ -92,5 +92,5 @@ if __name__ == '__main__':
     logger.info('Re-evaluating with config:')
     logger.info(pprint.pformat(cfg))
 
-    # output_dir = os.path.abspath(args.output_dir[0])
-    do_reval(args.dataset, args.output_dir, args)
+    output_dir = os.path.abspath(args.output_dir[0])
+    do_reval(args.dataset, output_dir, args)
