@@ -1004,7 +1004,7 @@ __C.GAN = AttrDict()
 __C.GAN.GAN_MODE_ON = True
 
 __C.GAN.MODEL = AttrDict()
-__C.GAN.MODE.NUM_BLOCKS = 6
+__C.GAN.MODEL.NUM_BLOCKS = 6
 
 __C.GAN.TRAIN = AttrDict()
 __C.GAN.TRAIN.FREEZE_CONV_BODY = False
