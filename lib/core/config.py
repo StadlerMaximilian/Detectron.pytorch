@@ -1000,9 +1000,14 @@ __C.GAN.GAN_MODE_ON = True
 
 __C.GAN.MODEL = AttrDict()
 __C.GAN.MODEL.NUM_BLOCKS = 6
+__C.GAN.MODEL.CONV_BODY_ROI_POOLING = 'VGG_CNN_M_1024_roi_pooling'
+__C.GAN.MODEL.CONV_BODY_FC_HEAD = 'VGG_CNN_M_1024_fc_head'
 
 __C.GAN.TRAIN = AttrDict()
 __C.GAN.TRAIN.FREEZE_CONV_BODY = False
+__C.GAN.TRAIN.PRETRAINED_GENERATOR = True
+__C.GAN.TRAIN.PRETRAINED_CAFFE2 = True # if false: trained with detectron_pytorch
+__C.GAN.TRAIN.PRETRAINED_WEIGHT_FILE = ''
 
 
 # ---------------------------------------------------------------------------- #

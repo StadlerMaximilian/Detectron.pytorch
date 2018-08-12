@@ -70,41 +70,62 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
             return x
 
 
-class VGG_CNN_M_1024_roi_fc_head(nn.Module):
-    def __init__(self, dim_in, roi_xform_func, spatial_scale, resolution=6):
+class VGG_CNN_M_1024_roi_pooling(nn.Module):
+    def __init__(self, roi_xform_func, spatial_scale, resolution=6):
         super().__init__()
         self.roi_xform = net_utils.roiPoolingLayer(roi_xform_func, spatial_scale, resolution)
 
-        self.fc1 = nn.Linear(dim_in * resolution * resolution, 4096)
+    def forward(self, x, rpn_ret):
+        x = self.roi_xform(x, rpn_ret)
+        return x
 
-        self.fc2 = nn.Linear(4096, 1024)
+
+class VGG_CNN_M_1024_fc_head(nn.Module):
+    def __init__(self, dim_in, resolution=6):
+        super().__init__()
+
+        self.fc1 = nn.Sequential(nn.Linear(dim_in * resolution * resolution, 4096),
+                                 nn.ReLU(inplace=True))
+
+        self.fc2 = nn.Sequential(nn.Linear(4096, 1024),
+                                 nn.ReLU(inplace=True))
         self.dim_out = 1024
 
         self._init_weights()
 
     def _init_weights(self):
-        init.kaiming_uniform_(self.fc1.weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.fc1.bias, 0)
-        init.kaiming_uniform_(self.fc2.weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.fc2.bias, 0)
+        init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.constant_(self.fc1[0].bias, 0)
+        init.kaiming_uniform_(self.fc2[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.constant_(self.fc2[0].bias, 0)
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
-            'fc1.weight': 'fc6_w',
-            'fc1.bias': 'fc6_b',
-            'fc2.weight': 'fc7_w',
-            'fc2.bias': 'fc7_b'
+            'fc1.0.weight': 'fc6_w',
+            'fc1.0.bias': 'fc6_b',
+            'fc2.0.weight': 'fc7_w',
+            'fc2.0.bias': 'fc7_b'
         }
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
 
+
+class VGG_CNN_M_1024_roi_fc_head(nn.Module):
+    def __init__(self, dim_in, roi_xform_func, spatial_scale, resolution=6):
+        super().__init__()
+        self.roi_pool = VGG_CNN_M_1024_roi_pooling(roi_xform_func, spatial_scale, resolution)
+
+        self.fc_head = VGG_CNN_M_1024_fc_head(dim_in, resolution)
+
+        self.dim_out = self.fc_head.dim_out
+
+    def detectron_weight_mapping(self):
+        return self.fc_head.detectron_weight_mapping()
+
     def forward(self, x, rpn_ret):
-        x = self.roi_xform(x, rpn_ret)
-
+        x = self.roi_pool(x, rpn_ret)
         batch_size = x.size(0)
-        x = F.relu(self.fc1(x.view(batch_size, -1)), inplace=True)
-        x = F.relu(self.fc2(x), inplace=True)
-
+        x = self.fc_head(x.view(batch_size, -1))
         return x
 
 

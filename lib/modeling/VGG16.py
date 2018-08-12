@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 import torch.nn.functional as F
 
 from core.config import cfg
@@ -55,7 +56,10 @@ class VGG16_conv5_body():
                                    )
 
         self.spatial_scale = 1. / 16.
+        self.spatial_scale_base = 1. / 2.
+        self.dim_out_base = 96
         self.dim_out = 512
+        self.resolution = 7
 
         # freeze gradients for first two bottom convolutional blocks
         freeze_params(self.conv1)
@@ -69,7 +73,7 @@ class VGG16_conv5_body():
         for block_id in range(5):
             block_name = 'conv{}'.format(block_id + 1)
             for layer_id in range(blocks[block_id]):
-                torch_name = block_name + '.' + conv_ids[layer_id] + '.'
+                torch_name = block_name + '.' + str(conv_ids[layer_id]) + '.'
                 caffe_name = 'conv{}_{}.'.format(block_id, layer_id)
                 mapping_to_detectron[torch_name + 'weight'] = caffe_name + 'w'
                 mapping_to_detectron[torch_name + 'bias'] = caffe_name + 'b'
@@ -77,45 +81,55 @@ class VGG16_conv5_body():
 
         return mapping_to_detectron, orphan_in_detectron
 
-    def forward(self, x):
-        for i in range(5):
+    def forward(self, x, req_fake_features=False):
+        x = self.conv1(x)
+
+        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+            x_base = x.clone()
+
+        for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)
-        return x
+
+        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+            return x, x_base
+        else:
+            return x
 
 
 class VGG16_roi_fc_head(nn.Module):
-    def __init__(self, dim_in, roi_xform_func, spatial_scale):
+    def __init__(self, dim_in, roi_xform_func, spatial_scale, resolution=7):
         super().__init__()
-        self.roi_xform = roi_xform_func
-        self.spatial_scale = spatial_scale
+        self.roi_xform = net_utils.roiPoolingLayer(roi_xform_func, spatial_scale, resolution)
 
-        self.fc6 = nn.Sequential(nn.Linear(dim_in * 7 * 7, 4096),
-                                 nn.ReLU(inplace=True)
-                                 )
-        self.fc7 = nn.Linear(4096, 4096)
+        self.fc1 = nn.Sequential(nn.Linear(dim_in * resolution * resolution, 4096),
+                                 nn.ReLU(inplace=True))
+
+        self.fc2 = nn.Sequential(nn.Linear(4096, 4096),
+                                 nn.ReLU(inplace=True))
         self.dim_out = 4096
+
+    def _init_weights(self):
+        init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.constant_(self.fc1[0].bias, 0)
+        init.kaiming_uniform_(self.fc2[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.constant_(self.fc2[0].bias, 0)
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
-            'fc6.0.weight': 'fc6_w',
-            'fc6.0.bias': 'fc6_b',
-            'fc7.weight': 'fc7_w',
-            'fc7.bias': 'fc7_b'
+            'fc1.0.weight': 'fc6_w',
+            'fc1.0.bias': 'fc6_b',
+            'fc2.0.weight': 'fc7_w',
+            'fc2.0.bias': 'fc7_b'
         }
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
 
     def forward(self, x, rpn_ret):
-        x = self.roi_xform(
-            x, rpn_ret,
-            blob_rois='rois',
-            method=cfg.FAST_RCNN.ROI_XFORM_METHOD,
-            resolution=7,
-            spatial_scale=self.spatial_scale,
-            sampling_ratio=cfg.FAST_RCNN.ROI_XFORM_SAMPLING_RATIO
-        )
-        x = self.fc6(x)
-        x = self.fc7(x)
+        x = self.roi_xform(x, rpn_ret)
+
+        batch_size = x.size(0)
+        x = self.fc1(x.view(batch_size, -1))
+        x = self.fc2(x)
 
         return x
 

@@ -169,8 +169,6 @@ def _coco_bbox_results_one_category(json_dataset, boxes, cat_id):
     results = []
     image_ids = json_dataset.COCO.getImgIds()
     image_ids.sort()
-    print(len(boxes))
-    print(len(image_ids))
     assert len(boxes) == len(image_ids)
     for i, image_id in enumerate(image_ids):
         dets = boxes[i]
