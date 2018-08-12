@@ -48,7 +48,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         for block_id in range(5):
             block_name = 'conv{}'.format(block_id + 1)
             torch_name = block_name + '.conv'
-            caffe_name = 'conv{}.'.format(block_id)
+            caffe_name = 'conv{}_'.format(block_id + 1)
             mapping_to_detectron[torch_name + 'weight'] = caffe_name + 'w'
             mapping_to_detectron[torch_name + 'bias'] = caffe_name + 'b'
         orphan_in_detectron = []
@@ -83,9 +83,9 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        init.kaiming_uniform(self.fc1.weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.kaiming_uniform_(self.fc1.weight, a=0, mode='fan_in', nonlinearity='relu')
         init.constant_(self.fc1.bias, 0)
-        init.kaiming_uniform(self.fc2.weight, a=0, mode='fan_in', nonlinearity='relu')
+        init.kaiming_uniform_(self.fc2.weight, a=0, mode='fan_in', nonlinearity='relu')
         init.constant_(self.fc2.bias, 0)
 
     def detectron_weight_mapping(self):
