@@ -78,8 +78,6 @@ def test_net_routine(args):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    cfg.VIS = args.vis
-
     assert_and_infer_cfg()
 
     logger.info('Testing with config:')

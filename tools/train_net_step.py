@@ -411,7 +411,6 @@ def main():
                 try:
                     input_data = next(dataiterator)
                 except StopIteration:
-                    del dataiterator
                     dataiterator = iter(dataloader)
                     input_data = next(dataiterator)
 
@@ -444,9 +443,6 @@ def main():
         print(stack_trace)
 
     finally:
-        if dataloader is not None:
-            del dataiterator
-        del dataloader
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger.close()
