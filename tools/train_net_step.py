@@ -409,6 +409,7 @@ def main():
                 try:
                     input_data = next(dataiterator)
                 except StopIteration:
+                    del dataiterator
                     dataiterator = iter(dataloader)
                     input_data = next(dataiterator)
 
@@ -448,12 +449,10 @@ def main():
 
     logger.info("Start testing final model")
     if final_model is not None:
-        Popen(['python3' + ' tools/test_net.py ' + '--cfg {} ' +
-               '--load_ckpt {}' +
+        Popen(['python3' + ' tools/test_net.py ' + '--cfg {} '.format(args.cfg_file) +
+               '--load_ckpt {}'.format(final_model) +
                '--multi_gpu_testing' +
-               '--output_dir {}'.format(args.cfg_file,
-                                        final_model,
-                                        cfg.OUTPUT_DIR)])
+               '--output_dir {}'.format(cfg.OUTPUT_DIR)])
 
 
 if __name__ == '__main__':
