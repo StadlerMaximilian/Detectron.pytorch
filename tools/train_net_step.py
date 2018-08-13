@@ -19,7 +19,6 @@ from torch.autograd import Variable
 import torch.multiprocessing as multiprocessing
 import torch.nn as nn
 import cv2
-cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
 
 import _init_paths  # pylint: disable=unused-import
 import nn as mynn
@@ -38,6 +37,7 @@ from utils.training_stats import TrainingStats
 logger = setup_logging(__name__)
 logging.getLogger('roi_data.loader').setLevel(logging.INFO)
 
+cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
 # RuntimeError: received 0 items of ancdata. Issue: pytorch/pytorch#973
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
@@ -465,5 +465,4 @@ def main():
 
 
 if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn')
     main()
