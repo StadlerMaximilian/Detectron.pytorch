@@ -10,6 +10,7 @@ import logging
 from collections import defaultdict
 from subprocess import call, Popen
 from argparse import Namespace
+from test_net import test_net_routine
 
 import numpy as np
 import yaml
@@ -454,10 +455,11 @@ def main():
     logger.info("Start testing final model")
 
     if final_model is not None:
-        os.system('python3' + ' tools/test_net.py' + ' --cfg {} '.format(args.cfg_file) +
-                  ' --load_ckpt {}'.format(final_model) +
-                  ' --multi-gpu-testing' +
-                  ' --output_dir {}'.format(cfg.OUTPUT_DIR))
+        args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                              load_ckpt='{}'.format(final_model), load_detectron=None,
+                              multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                              range=None, set_cfgs=[], vis=False)
+        test_net_routine(args_test)
 
 
 if __name__ == '__main__':
