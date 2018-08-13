@@ -136,6 +136,12 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer):
     return save_name
 
 
+def cycle(iterable):
+    while True:
+        for x in iterable:
+            yield x
+
+
 def main():
     """Main function"""
 
@@ -243,7 +249,7 @@ def main():
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch)
 
-    dataiterator = iter(dataloader)
+    dataiterator = iter(cycle(dataloader))
 
     ### Model ###
     maskRCNN = Generalized_RCNN()
@@ -408,11 +414,12 @@ def main():
             training_stats.IterTic()
             optimizer.zero_grad()
             for inner_iter in range(args.iter_size):
-                try:
-                    input_data = next(dataiterator)
-                except StopIteration:
-                    dataiterator = iter(dataloader)
-                    input_data = next(dataiterator)
+                #try:
+                #    input_data = next(dataiterator)
+                #except StopIteration:
+                #    dataiterator = iter(dataloader)
+                #    input_data = next(dataiterator)
+                input_data = next(dataiterator)
 
                 for key in input_data:
                     if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
@@ -435,7 +442,6 @@ def main():
         final_model = save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
 
     except (RuntimeError, KeyboardInterrupt):
-        del dataiterator
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
         logger.info('Save ckpt done.')
