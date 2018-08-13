@@ -84,6 +84,11 @@ def test_net_routine(args):
         merge_cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
         merge_cfg_from_list(args.set_cfgs)
+
+    # set weights to false, as they are loaded via arguments
+    cfg.LOAD_PRETRAINED_BACKBONE_WEIGHTS = False
+    cfg.LOAD_PRETRAINED_DETECTRON_WEIGHTS = False
+
     assert_and_infer_cfg()
 
     logger.info('Testing with config:')
