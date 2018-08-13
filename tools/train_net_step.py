@@ -241,6 +241,7 @@ def main():
         batch_sampler=batchSampler,
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch)
+
     dataiterator = iter(dataloader)
 
     ### Model ###
@@ -450,9 +451,9 @@ def main():
     logger.info("Start testing final model")
     if final_model is not None:
         Popen(['python3' + ' tools/test_net.py ' + '--cfg {} '.format(args.cfg_file) +
-               '--load_ckpt {}'.format(final_model) +
-               '--multi_gpu_testing' +
-               '--output_dir {}'.format(cfg.OUTPUT_DIR)])
+               ' --load_ckpt {}'.format(final_model) +
+               ' --multi_gpu_testing' +
+               ' --output_dir {}'.format(cfg.OUTPUT_DIR)])
 
 
 if __name__ == '__main__':
