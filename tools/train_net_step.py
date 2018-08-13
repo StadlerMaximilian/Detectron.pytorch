@@ -11,6 +11,7 @@ from collections import defaultdict
 from subprocess import call, Popen
 from argparse import Namespace
 from test_net import test_net_routine
+import multiprocessing
 
 import numpy as np
 import yaml
@@ -144,7 +145,7 @@ def cycle(iterable):
 
 def main():
     """Main function"""
-
+    multiprocessing.set_start_method('spawn')
     args = parse_args()
     print('Called with args:')
     print(args)
