@@ -250,7 +250,7 @@ def main():
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch)
 
-    dataiterator = iter(cycle(dataloader))
+    dataiterator = iter(dataloader)
 
     ### Model ###
     maskRCNN = Generalized_RCNN()
@@ -415,12 +415,11 @@ def main():
             training_stats.IterTic()
             optimizer.zero_grad()
             for inner_iter in range(args.iter_size):
-                #try:
-                #    input_data = next(dataiterator)
-                #except StopIteration:
-                #    dataiterator = iter(dataloader)
-                #    input_data = next(dataiterator)
-                input_data = next(dataiterator)
+                try:
+                    input_data = next(dataiterator)
+                except StopIteration:
+                    dataiterator = iter(dataloader)
+                    input_data = next(dataiterator)
 
                 for key in input_data:
                     if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
