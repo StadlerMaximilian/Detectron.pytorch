@@ -443,7 +443,10 @@ def main():
         print(stack_trace)
 
     finally:
-        logger.info("Closing tfboard if used")
+        if dataloader is not None:
+            del dataiterator
+        del dataloader
+        logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger.close()
         logger.info('Finished training.')
