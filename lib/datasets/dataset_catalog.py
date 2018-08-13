@@ -252,7 +252,7 @@ _DATASETS = {
         _IM_DIR:
             _DATA_DIR + '/kitti/training/image_2',
         _ANN_FN:
-            _DATA_DIR + '/tt100k/annotations/kitti_train.json'
+            _DATA_DIR + '/kitti/annotations/kitti_train.json'
     },
     'kitti_test': {
         _IM_DIR:
@@ -264,7 +264,7 @@ _DATASETS = {
         _IM_DIR:
             _DATA_DIR + '/kitti/training/image_2',
         _ANN_FN:
-            _DATA_DIR + '/tt100k/annotations/kitti_train_ignore.json'
+            _DATA_DIR + '/kitti/annotations/kitti_train_ignore.json'
     },
     'kitti_test_ignore': {
         _IM_DIR:
@@ -276,7 +276,7 @@ _DATASETS = {
         _IM_DIR:
             _DATA_DIR + '/kitti/training/image_2',
         _ANN_FN:
-            _DATA_DIR + '/tt100k/annotations/kitti_train_ignore_complete.json'
+            _DATA_DIR + '/kitti/annotations/kitti_train_ignore_complete.json'
     },
     'kitti_test_ignore_complete': {
         _IM_DIR:
