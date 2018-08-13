@@ -145,7 +145,6 @@ def cycle(iterable):
 
 def main():
     """Main function"""
-    multiprocessing.set_start_method('spawn', force=True)
     args = parse_args()
     print('Called with args:')
     print(args)
