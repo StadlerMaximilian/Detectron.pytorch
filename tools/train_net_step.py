@@ -450,7 +450,7 @@ def main():
 
     logger.info("Start testing final model")
     if final_model is not None:
-        Popen(['python3' + ' tools/test_net.py ' + '--cfg {} '.format(args.cfg_file) +
+        Popen(['python3', 'tools/test_net.py', '--cfg {} '.format(args.cfg_file) +
                ' --load_ckpt {}'.format(final_model) +
                ' --multi_gpu_testing' +
                ' --output_dir {}'.format(cfg.OUTPUT_DIR)])
