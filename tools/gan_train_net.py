@@ -8,8 +8,6 @@ import resource
 import traceback
 import logging
 from collections import defaultdict
-from subprocess import call
-from argparse import Namespace
 
 import numpy as np
 import yaml
@@ -31,7 +29,6 @@ from utils.detectron_weight_helper import load_caffe2_detectron_weights
 from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.training_stats import TrainingStats
-from tools.test_net import test_net_routine
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
@@ -133,7 +130,6 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer):
         'model': model.state_dict(),
         'optimizer': optimizer.state_dict()}, save_name)
     logger.info('save model: %s', save_name)
-    return save_name
 
 
 def main():
@@ -367,9 +363,6 @@ def main():
         args,
         args.disp_interval,
         tblogger if args.use_tfboard and not args.no_save else None)
-
-    final_model = None
-
     try:
         logger.info('Training starts !')
         step = args.start_step
@@ -431,8 +424,7 @@ def main():
 
         # ---- Training ends ----
         # Save last checkpoint
-        final_model = save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
-        logger.info('Finished training.')
+        save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
 
     except (RuntimeError, KeyboardInterrupt):
         del dataiterator
@@ -445,16 +437,6 @@ def main():
     finally:
         if args.use_tfboard and not args.no_save:
             tblogger.close()
-        print("Closed DataLoader and tfboard")
-
-        logger.info("Start testing final model")
-        if final_model is not None:
-            call(['/usr/bin/python3', 'tools/test_net.py', '--cfg {} ' +
-                                                           '--load_ckpt {}' +
-                                                           '--multi_gpu_testing' +
-                                                           '--output_dir {}'.format(args.cfg,
-                                                                                    final_model,
-                                                                                    cfg.OUTPUT_DIR)])
 
 
 if __name__ == '__main__':

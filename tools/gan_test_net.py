@@ -58,11 +58,13 @@ def parse_args():
     return parser.parse_args()
 
 
-def test_net_routine(args):
+if __name__ == '__main__':
+
     if not torch.cuda.is_available():
         sys.exit("Need a CUDA device to run the code.")
-    logger = utils.logging.setup_logging(__name__)
 
+    logger = utils.logging.setup_logging(__name__)
+    args = parse_args()
     logger.info('Called with args:')
     logger.info(args)
 
@@ -80,6 +82,19 @@ def test_net_routine(args):
 
     cfg.VIS = args.vis
 
+    if args.cfg_file is not None:
+        merge_cfg_from_file(args.cfg_file)
+    if args.set_cfgs is not None:
+        merge_cfg_from_list(args.set_cfgs)
+
+    if args.dataset == "coco2017":
+        cfg.TEST.DATASETS = ('coco_2017_val',)
+        cfg.MODEL.NUM_CLASSES = 81
+    elif args.dataset == "keypoints_coco2017":
+        cfg.TEST.DATASETS = ('keypoints_coco_2017_val',)
+        cfg.MODEL.NUM_CLASSES = 2
+    else:  # For subprocess call
+        assert cfg.TEST.DATASETS, 'cfg.TEST.DATASETS shouldn\'t be empty'
     assert_and_infer_cfg()
 
     logger.info('Testing with config:')
@@ -95,9 +110,3 @@ def test_net_routine(args):
         ind_range=args.range,
         multi_gpu_testing=args.multi_gpu_testing,
         check_expected_results=True)
-
-
-if __name__ == '__main__':
-    args = parse_args()
-    test_net_routine(args)
-

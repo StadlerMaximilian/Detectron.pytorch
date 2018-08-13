@@ -31,7 +31,7 @@ import datasets.dummy_datasets as datasets
 import utils.misc as misc_utils
 import utils.net as net_utils
 import utils.vis as vis_utils
-from utils.detectron_weight_helper import load_caffe2_detectron_weights
+from utils.detectron_weight_helper import load_detectron_weight
 from utils.timer import Timer
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
@@ -125,7 +125,7 @@ def main():
 
     if args.load_detectron:
         print("loading detectron weights %s" % args.load_detectron)
-        load_caffe2_detectron_weights(maskRCNN, args.load_detectron)
+        load_detectron_weight(maskRCNN, args.load_detectron)
 
     maskRCNN = mynn.DataParallel(maskRCNN, cpu_keywords=['im_info', 'roidb'],
                                  minibatch=True, device_ids=[0])  # only support single GPU
