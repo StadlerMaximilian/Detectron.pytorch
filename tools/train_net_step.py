@@ -31,7 +31,6 @@ from utils.detectron_weight_helper import load_caffe2_detectron_weights
 from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.training_stats import TrainingStats
-from tools.test_net import test_net_routine
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
