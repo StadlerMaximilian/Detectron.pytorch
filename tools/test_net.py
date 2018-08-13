@@ -80,7 +80,11 @@ def test_net_routine(args):
 
     cfg.VIS = args.vis
 
-    assert_and_infer_cfg(make_immutable=False)
+    if args.cfg_file is not None:
+        merge_cfg_from_file(args.cfg_file)
+    if args.set_cfgs is not None:
+        merge_cfg_from_list(args.set_cfgs)
+    assert_and_infer_cfg()
 
     logger.info('Testing with config:')
     logger.info(pprint.pformat(cfg))
