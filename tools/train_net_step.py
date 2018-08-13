@@ -456,8 +456,6 @@ def main():
                   ' --multi-gpu-testing' +
                   ' --output_dir {}'.format(cfg.OUTPUT_DIR))
 
-    logger.info("Finished combined training and testing!")
-
 
 if __name__ == '__main__':
     main()
