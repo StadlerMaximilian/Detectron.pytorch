@@ -444,16 +444,16 @@ def main():
     finally:
         if args.use_tfboard and not args.no_save:
             tblogger.close()
-        print("Closed DataLoader and tfboard")
 
-        logger.info("Start testing final model")
-        if final_model is not None:
-            call(['/usr/bin/python3', 'tools/test_net.py', '--cfg {} ' +
-                                                           '--load_ckpt {}' +
-                                                           '--multi_gpu_testing' +
-                                                           '--output_dir {}'.format(args.cfg_file,
-                                                                                    final_model,
-                                                                                    cfg.OUTPUT_DIR)])
+    logger.info("Closed needed helpers.")
+    logger.info("Start testing final model")
+    if final_model is not None:
+        call(['/usr/bin/python3', 'tools/test_net.py' + '--cfg {} ' +
+                                                       '--load_ckpt {}' +
+                                                       '--multi_gpu_testing' +
+                                                       '--output_dir {}'.format(args.cfg_file,
+                                                                                final_model,
+                                                                                cfg.OUTPUT_DIR)])
 
 
 if __name__ == '__main__':
