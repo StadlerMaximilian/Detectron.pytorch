@@ -247,7 +247,8 @@ def main():
         dataset,
         batch_sampler=batchSampler,
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
-        collate_fn=collate_minibatch)
+        collate_fn=collate_minibatch,
+        pin_memory=False)
 
     dataiterator = iter(dataloader)
 
