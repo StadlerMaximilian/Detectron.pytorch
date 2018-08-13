@@ -453,8 +453,10 @@ def main():
     if final_model is not None:
         os.system('python3' + ' tools/test_net.py' + ' --cfg {} '.format(args.cfg_file) +
                   ' --load_ckpt {}'.format(final_model) +
-                  ' --multi_gpu_testing' +
+                  ' --multi-gpu-testing' +
                   ' --output_dir {}'.format(cfg.OUTPUT_DIR))
+
+    logger.info("Finished combined training and testing!")
 
 
 if __name__ == '__main__':
