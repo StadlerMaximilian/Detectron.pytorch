@@ -431,7 +431,6 @@ def main():
         # ---- Training ends ----
         # Save last checkpoint
         final_model = save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
-        logger.info('Finished training.')
 
     except (RuntimeError, KeyboardInterrupt):
         logger.info('Save ckpt on exception ...')
@@ -441,14 +440,15 @@ def main():
         print(stack_trace)
 
     finally:
+        logger.info("Closing DataLoader and tfboard")
         del dataiterator
         if args.use_tfboard and not args.no_save:
             tblogger.close()
+        logger.info('Finished training.')
 
-    logger.info("Closed needed helpers.")
     logger.info("Start testing final model")
     if final_model is not None:
-        Popen(['python3' + 'tools/test_net.py' + '--cfg {} ' +
+        Popen(['python3' + ' tools/test_net.py ' + '--cfg {} ' +
                '--load_ckpt {}' +
                '--multi_gpu_testing' +
                '--output_dir {}'.format(args.cfg_file,
