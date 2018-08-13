@@ -8,7 +8,7 @@ import resource
 import traceback
 import logging
 from collections import defaultdict
-from subprocess import call
+from subprocess import call, Popen
 from argparse import Namespace
 
 import numpy as np
@@ -434,7 +434,6 @@ def main():
         logger.info('Finished training.')
 
     except (RuntimeError, KeyboardInterrupt):
-        del dataiterator
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
         logger.info('Save ckpt done.')
@@ -442,18 +441,19 @@ def main():
         print(stack_trace)
 
     finally:
+        del dataiterator
         if args.use_tfboard and not args.no_save:
             tblogger.close()
 
     logger.info("Closed needed helpers.")
     logger.info("Start testing final model")
     if final_model is not None:
-        call(['/usr/bin/python3', 'tools/test_net.py' + '--cfg {} ' +
-                                                       '--load_ckpt {}' +
-                                                       '--multi_gpu_testing' +
-                                                       '--output_dir {}'.format(args.cfg_file,
-                                                                                final_model,
-                                                                                cfg.OUTPUT_DIR)])
+        Popen(['python3' + 'tools/test_net.py' + '--cfg {} ' +
+               '--load_ckpt {}' +
+               '--multi_gpu_testing' +
+               '--output_dir {}'.format(args.cfg_file,
+                                        final_model,
+                                        cfg.OUTPUT_DIR)])
 
 
 if __name__ == '__main__':
