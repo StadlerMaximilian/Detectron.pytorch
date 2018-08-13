@@ -451,7 +451,7 @@ def main():
             call(['/usr/bin/python3', 'tools/test_net.py', '--cfg {} ' +
                                                            '--load_ckpt {}' +
                                                            '--multi_gpu_testing' +
-                                                           '--output_dir {}'.format(args.cfg,
+                                                           '--output_dir {}'.format(args.cfg_file,
                                                                                     final_model,
                                                                                     cfg.OUTPUT_DIR)])
 
