@@ -11,12 +11,12 @@ from collections import defaultdict
 from subprocess import call, Popen
 from argparse import Namespace
 from test_net import test_net_routine
-import multiprocessing
 
 import numpy as np
 import yaml
 import torch
 from torch.autograd import Variable
+import torch.multiprocessing as multiprocessing
 import torch.nn as nn
 import cv2
 cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
@@ -465,4 +465,5 @@ def main():
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
     main()
