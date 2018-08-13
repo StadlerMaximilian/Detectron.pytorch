@@ -212,7 +212,7 @@ def main():
         cfg.SOLVER.BASE_LR = args.lr
     if args.lr_decay_gamma is not None:
         cfg.SOLVER.GAMMA = args.lr_decay_gamma
-    assert_and_infer_cfg()
+    assert_and_infer_cfg(make_immutable=False)
 
     timers = defaultdict(Timer)
 
