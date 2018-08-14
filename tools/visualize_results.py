@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 
 import argparse
 import pickle
-from six.moves import cPickle
+from six.moves import cPickle as cpickle
 import cv2
 import os
 import sys
@@ -104,7 +104,7 @@ def vis(dataset, detections_pkl, thresh, output_dir, limit=0, ext='pdf', fw='pyt
 
     with open(detections_pkl, 'r') as f:
         if fw == 'pytorch':
-            dets = cPickle.load(f, pickle.HIGHEST_PROTOCOL)
+            dets = cpickle.load(f)
         elif fw == 'caffe2':
             dets = pickle.load(f)
         else:
