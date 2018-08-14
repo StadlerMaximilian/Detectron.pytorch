@@ -104,7 +104,7 @@ def vis(dataset, detections_pkl, thresh, output_dir, limit=0, ext='pdf', fw='pyt
 
     with open(detections_pkl, 'r') as f:
         if fw == 'pytorch':
-            dets = cPickle.load(f)
+            dets = cPickle.load(f, pickle.HIGHEST_PROTOCOL)
         elif fw == 'caffe2':
             dets = pickle.load(f)
         else:
