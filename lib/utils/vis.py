@@ -185,7 +185,7 @@ def vis_one_image(
     if boxes is None or boxes.shape[0] == 0 or max(boxes[:, 4]) < thresh:
         return
 
-    if segms is not None:
+    if segms is not None and len(segms) > 0:
         masks = mask_util.decode(segms)
 
     color_list = colormap(rgb=True) / 255
