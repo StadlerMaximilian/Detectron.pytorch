@@ -102,13 +102,14 @@ def vis(dataset, detections_pkl, thresh, output_dir, limit=0, ext='pdf', fw='pyt
     ds = JsonDataset(dataset)
     roidb = ds.get_roidb(gt=True) # include ground-truth bboxes
 
-    with open(detections_pkl, 'r') as f:
-        if fw == 'pytorch':
+    if fw == 'pytorch':
+        with open(detections_pkl, 'rb') as f:
             dets = cpickle.load(f)
-        elif fw == 'caffe2':
+    elif fw == 'caffe2':
+        with open(detections_pkl, 'r') as f:
             dets = pickle.load(f)
-        else:
-            raise ValueError('Unsupported Framework specified')
+    else:
+        raise ValueError('Unsupported Framework specified')
 
     assert all(k in dets for k in ['all_boxes', 'all_segms', 'all_keyps']), \
         'Expected detections pkl file in the format used by test_engine.py'
