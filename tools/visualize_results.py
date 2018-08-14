@@ -24,10 +24,12 @@ from __future__ import unicode_literals
 
 import argparse
 import pickle
+from six.moves import cPickle
 import cv2
 import os
 import sys
 
+import _init_paths  # pylint: disable=unused-import
 from core.config import cfg
 from datasets.json_dataset import JsonDataset
 import utils.vis as vis_utils
@@ -81,6 +83,14 @@ def parse_args():
         default='pdf',
         type=str
     )
+    parser.add_argument(
+        '--fw',
+        dest='fw',
+        help='framework that created detections [pytorch or caffe2]',
+        default='pytorch',
+        type=str
+    )
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -88,12 +98,17 @@ def parse_args():
     return args
 
 
-def vis(dataset, detections_pkl, thresh, output_dir, limit=0, ext='pdf'):
+def vis(dataset, detections_pkl, thresh, output_dir, limit=0, ext='pdf', fw='pytorch'):
     ds = JsonDataset(dataset)
     roidb = ds.get_roidb(gt=True) # include ground-truth bboxes
 
     with open(detections_pkl, 'r') as f:
-        dets = pickle.load(f)
+        if fw == 'pytorch':
+            dets = cPickle.load(f)
+        elif fw == 'caffe2':
+            dets = pickle.load(f)
+        else:
+            raise ValueError('Unsupported Framework specified')
 
     assert all(k in dets for k in ['all_boxes', 'all_segms', 'all_keyps']), \
         'Expected detections pkl file in the format used by test_engine.py'
@@ -151,5 +166,6 @@ if __name__ == '__main__':
         opts.thresh,
         opts.output_dir,
         limit=opts.first,
-        ext=opts.ext
+        ext=opts.ext,
+        fw=opts.fw
     )
