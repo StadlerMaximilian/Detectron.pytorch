@@ -392,7 +392,7 @@ __C.MODEL = AttrDict()
 __C.MODEL.TYPE = ''
 __C.MODEL.BACKBONE_TYPE = 'CNN_M_1024' # or 'VGG16' or 'ResNet'
 __C.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS = False
-__C.MODEL.PRETRAINED_BACKBONE_WEIGHTS = ''
+__C.MODEL.PRETRAINED_BACKBON_WEIGHTS = ''
 __C.MODEL.LOAD_PRETRAINED_DETECTRON_WEIGHTS = False
 __C.MODEL.PRETRAINED_DETECTRON_WEIGHTS = ''
 
@@ -1002,12 +1002,83 @@ __C.GAN.MODEL = AttrDict()
 __C.GAN.MODEL.NUM_BLOCKS = 6
 __C.GAN.MODEL.CONV_BODY_ROI_POOLING = 'VGG_CNN_M_1024_roi_pooling'
 __C.GAN.MODEL.CONV_BODY_FC_HEAD = 'VGG_CNN_M_1024_fc_head'
+__C.GAN.MODEL.LABEL_SMOOTHING = 1.0
+
 
 __C.GAN.TRAIN = AttrDict()
-__C.GAN.TRAIN.FREEZE_CONV_BODY = False
-__C.GAN.TRAIN.PRETRAINED_GENERATOR = True
-__C.GAN.TRAIN.PRETRAINED_CAFFE2 = True # if false: trained with detectron_pytorch
+__C.GAN.TRAIN.FREEZE_CONV_BODY = True
 __C.GAN.TRAIN.PRETRAINED_WEIGHT_FILE = ''
+__C.GAN.TRAIN.k = 1
+
+
+__C.GAN.SOLVER = AttrDict()
+
+# e.g 'SGD', 'Adam'
+__C.GAN.SOLVER.TYPE_G = 'SGD'
+__C.GAN.SOLVER.TYPE_D = 'SGD'
+
+
+# Base learning rate for the specified schedule
+__C.GAN.SOLVER.BASE_LR_D = 0.001
+__C.GAN.SOLVER.BASE_LR_G= 0.001
+
+# Schedule type (see functions in utils.lr_policy for options)
+# E.g., 'step', 'steps_with_decay', ...
+__C.GAN.SOLVER.LR_POLICY_G = 'step'
+__C.GAN.SOLVER_LR_POLICY_D = 'step'
+
+__C.GAN.SOLVER.GAMMA_D = 0.1
+__C.GAN.SOLVER.GAMMA_G = 0.1
+
+# Uniform step size for 'steps' policy
+__C.GAN.SOLVER.STEP_SIZE = 30000
+# Non-uniform step iterations for 'steps_with_decay' or 'steps_with_lrs'
+# policies
+__C.GAN.SOLVER.STEPS = []
+
+# Learning rates to use with 'steps_with_lrs' policy
+__C.GAN.SOLVER.LRS_D = []
+__C.GAN.SOLVER.LRS_G = []
+
+# Maximum number of SGD iterations
+__C.GAN.SOLVER.MAX_ITER = 40000
+
+# Momentum to use with SGD
+__C.GAN.SOLVER.MOMENTUM_D = 0.9
+__C.GAN.SOLVER.MOMENTUM_G = 0.9
+
+# L2 regularization hyperparameter
+__C.GAN.SOLVER.WEIGHT_DECAY_D = 0.0005
+__C.GAN.SOLVER.WEIGHT_DECAY_G = 0.0005
+
+# Whether to double the learning rate for bias
+__C.GAN.SOLVER.BIAS_DOUBLE_LR_D = True
+__C.GAN.SOLVER.BIAS_DOUBLE_LR_G = True
+
+# Whether to have weight decay on bias as well
+__C.GAN.SOLVER.BIAS_WEIGHT_DECAY_G = False
+__C.GAN.SOLVER.BIAS_WEIGHT_DECAY_D = False
+
+# Warm up to SOLVER.BASE_LR over this number of SGD iterations
+__C.GAN.SOLVER.WARM_UP_ITERS = 500
+
+# Start the warm up from SOLVER.BASE_LR * SOLVER.WARM_UP_FACTOR
+__C.GAN.SOLVER.WARM_UP_FACTOR = 1.0 / 3.0
+
+# WARM_UP_METHOD can be either 'constant' or 'linear' (i.e., gradual)
+__C.GAN.SOLVER.WARM_UP_METHOD = 'linear'
+
+# Scale the momentum update history by new_lr / old_lr when updating the
+# learning rate (this is correct given MomentumSGDUpdateOp)
+__C.GAN.SOLVER.SCALE_MOMENTUM = True
+# Only apply the correction if the relative LR change exceeds this threshold
+# (prevents ever change in linear warm up from scaling the momentum by a tiny
+# amount; momentum scaling is only important if the LR change is large)
+__C.GAN.SOLVER.SCALE_MOMENTUM_THRESHOLD = 1.1
+
+# Suppress logging of changes to LR unless the relative change exceeds this
+# threshold (prevents linear warm up from spamming the training log)
+__C.GAN.SOLVER.LOG_LR_CHANGE_THRESHOLD = 1.1
 
 
 # ---------------------------------------------------------------------------- #

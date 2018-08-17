@@ -23,16 +23,11 @@ def parse_args():
     """Parse in command line arguments"""
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
     parser.add_argument(
-        '--dataset',
-        help='training dataset')
-    parser.add_argument(
         '--cfg', dest='cfg_file', required=True,
         help='optional config file')
 
     parser.add_argument(
         '--load_ckpt', help='path of checkpoint to load')
-    parser.add_argument(
-        '--load_detectron', help='path to the detectron weight pickle file')
 
     parser.add_argument(
         '--output_dir',
@@ -58,22 +53,20 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-
+def test_net_routine(args):
     if not torch.cuda.is_available():
         sys.exit("Need a CUDA device to run the code.")
-
     logger = utils.logging.setup_logging(__name__)
-    args = parse_args()
+
     logger.info('Called with args:')
     logger.info(args)
 
     assert (torch.cuda.device_count() == 1) ^ bool(args.multi_gpu_testing)
 
-    assert bool(args.load_ckpt) ^ bool(args.load_detectron), \
-        'Exactly one of --load_ckpt and --load_detectron should be specified.'
+    assert bool(args.load_ckpt)
+
     if args.output_dir is None:
-        ckpt_path = args.load_ckpt if args.load_ckpt else args.load_detectron
+        ckpt_path = args.load_ckpt
         args.output_dir = os.path.join(
             os.path.dirname(os.path.dirname(ckpt_path)), 'test')
         logger.info('Automatically set output directory to %s', args.output_dir)
@@ -87,14 +80,6 @@ if __name__ == '__main__':
     if args.set_cfgs is not None:
         merge_cfg_from_list(args.set_cfgs)
 
-    if args.dataset == "coco2017":
-        cfg.TEST.DATASETS = ('coco_2017_val',)
-        cfg.MODEL.NUM_CLASSES = 81
-    elif args.dataset == "keypoints_coco2017":
-        cfg.TEST.DATASETS = ('keypoints_coco_2017_val',)
-        cfg.MODEL.NUM_CLASSES = 2
-    else:  # For subprocess call
-        assert cfg.TEST.DATASETS, 'cfg.TEST.DATASETS shouldn\'t be empty'
     assert_and_infer_cfg()
 
     logger.info('Testing with config:')
@@ -110,3 +95,9 @@ if __name__ == '__main__':
         ind_range=args.range,
         multi_gpu_testing=args.multi_gpu_testing,
         check_expected_results=True)
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    test_net_routine(args)
+

@@ -9,6 +9,9 @@ import utils.net as net_utils
 class VGG_CNN_M_1024_conv5_body(nn.Module):
     def __init__(self):
         super().__init__()
+        self.mapping_to_detectron = None
+        self.orphans_in_detectron = None
+        self.provide_fake_features = False
 
         self.conv1 = nn.Sequential(nn.Conv2d(3, 96, 7, padding=0, stride=2),
                                    nn.ReLU(inplace=True),
@@ -47,27 +50,31 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         mapping_to_detectron = {}
         for block_id in range(5):
             block_name = 'conv{}'.format(block_id + 1)
-            torch_name = block_name + '.0.' #as conv layer is always first in every block
+            torch_name = block_name + '.0.' # as conv layer is always first in every block
             caffe_name = 'conv{}_'.format(block_id + 1)
             mapping_to_detectron[torch_name + 'weight'] = caffe_name + 'w'
             mapping_to_detectron[torch_name + 'bias'] = caffe_name + 'b'
         orphan_in_detectron = []
+        self.mapping_to_detectron = mapping_to_detectron
+        self.orphans_in_detectron = orphan_in_detectron
+        return self.mapping_to_detectron, self.orphans_in_detectron
 
-        return mapping_to_detectron, orphan_in_detectron
-
-    def forward(self, x, req_fake_features=False):
+    def forward(self, x):
         x = self.conv1(x)
 
-        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+        if cfg.GAN.GAN_MODE_ON and self.provide_fake_features:
             x_base = x.clone()
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)
 
-        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+        if cfg.GAN.GAN_MODE_ON and self.provide_fake_features:
             return x, x_base
         else:
             return x
+
+    def _set_provide_fake_features(self, bool):
+        self.provide_fake_features = bool
 
 
 class VGG_CNN_M_1024_roi_pooling(nn.Module):
@@ -83,6 +90,8 @@ class VGG_CNN_M_1024_roi_pooling(nn.Module):
 class VGG_CNN_M_1024_fc_head(nn.Module):
     def __init__(self, dim_in, resolution=6):
         super().__init__()
+        self.mapping_to_detectron = None
+        self.orphans_in_detectron = None
 
         self.fc1 = nn.Sequential(nn.Linear(dim_in * resolution * resolution, 4096),
                                  nn.ReLU(inplace=True))
@@ -107,7 +116,9 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
             'fc_head.fc2.0.bias': 'fc7_b'
         }
         orphan_in_detectron = []
-        return detectron_weight_mapping, orphan_in_detectron
+        self.mapping_to_detectron = detectron_weight_mapping
+        self.orphans_in_detectron = orphan_in_detectron
+        return self.mapping_to_detectron, self.orphans_in_detectron
 
     def forward(self, x):
         x = self.fc1(x)
@@ -118,6 +129,8 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
 class VGG_CNN_M_1024_roi_fc_head(nn.Module):
     def __init__(self, dim_in, roi_xform_func, spatial_scale, resolution=6):
         super().__init__()
+        self.mapping_to_detectron = None
+        self.orphans_in_detectron = None
         self.roi_pool = VGG_CNN_M_1024_roi_pooling(roi_xform_func, spatial_scale, resolution)
 
         self.fc_head = VGG_CNN_M_1024_fc_head(dim_in, resolution)
@@ -125,7 +138,20 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
         self.dim_out = self.fc_head.dim_out
 
     def detectron_weight_mapping(self):
-        return self.fc_head.detectron_weight_mapping()
+        if self.mapping_to_detectron is None:
+            d_wmap = {}  # detectron_weight_mapping
+            d_orphan = []  # detectron orphan weight list
+            for name, m_child in self.named_children():
+                if list(m_child.parameters()):  # if module has any parameter
+                    child_map, child_orphan = m_child.detectron_weight_mapping()
+                    d_orphan.extend(child_orphan)
+                    for key, value in child_map.items():
+                        new_key = name + '.' + key
+                        d_wmap[new_key] = value
+            self.mapping_to_detectron = d_wmap
+            self.orphans_in_detectron = d_orphan
+
+        return self.mapping_to_detectron, self.orphans_in_detectron
 
     def forward(self, x, rpn_ret):
         x = self.roi_pool(x, rpn_ret)

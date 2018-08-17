@@ -9,13 +9,10 @@ import traceback
 import logging
 from collections import defaultdict
 
-import numpy as np
 import yaml
 import torch
 from torch.autograd import Variable
-import torch.nn as nn
 import cv2
-cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
 
 import _init_paths  # pylint: disable=unused-import
 import nn as mynn
@@ -24,16 +21,18 @@ import utils.misc as misc_utils
 from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
 from datasets.roidb import combined_roidb_for_training
 from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, collate_minibatch
-from modeling.model_builder import Generalized_RCNN
-from utils.detectron_weight_helper import load_caffe2_detectron_weights
+from modeling.generator import Generator
+from modeling.discriminator import Discriminator
+from modeling.model_builder_gan import GAN
 from utils.logging import setup_logging
 from utils.timer import Timer
-from utils.training_stats import TrainingStats
+from utils.gan_utils import TrainingStats
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
 logging.getLogger('roi_data.loader').setLevel(logging.INFO)
 
+cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
 # RuntimeError: received 0 items of ancdata. Issue: pytorch/pytorch#973
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
@@ -62,28 +61,10 @@ def parse_args():
     # These options has the highest prioity and can overwrite the values in config file
     # or values set by set_cfgs. `None` means do not overwrite.
     parser.add_argument(
-        '--bs', dest='batch_size',
-        help='Explicitly specify to overwrite the value comed from cfg_file.',
-        type=int)
-    parser.add_argument(
         '--nw', dest='num_workers',
         help='Explicitly specify to overwrite number of workers to load data. Defaults to 4',
         type=int)
-    parser.add_argument(
-        '--iter_size',
-        help='Update once every iter_size steps, as in Caffe.',
-        default=1, type=int)
 
-    parser.add_argument(
-        '--o', dest='optimizer', help='Training optimizer.',
-        default=None)
-    parser.add_argument(
-        '--lr', help='Base learning rate.',
-        default=None, type=float)
-    parser.add_argument(
-        '--lr_decay_gamma',
-        help='Learning rate decay rate.',
-        default=None, type=float)
 
     # Epoch
     parser.add_argument(
@@ -101,9 +82,14 @@ def parse_args():
         '--no_save', help='do not save anything', action='store_true')
 
     parser.add_argument(
-        '--load_ckpt', help='checkpoint path to load')
+        '--load_pretrained', help='path to pretrained detectron model .pth',
+        required=True
+    )
+
     parser.add_argument(
-        '--load_detectron', help='path to the detectron weight pickle file')
+        '--load_ckpt_G', help='checkpoint path of Generator to load')
+    parser.add_argument(
+        '--load_ckpt_D', help='checkpoint path of Discriminator to load')
 
     parser.add_argument(
         '--use_tfboard', help='Use tensorflow tensorboard to log training info',
@@ -130,11 +116,29 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer):
         'model': model.state_dict(),
         'optimizer': optimizer.state_dict()}, save_name)
     logger.info('save model: %s', save_name)
+    return save_name
+
+
+def save_model(output_dir, no_save, model):
+    """Save final model"""
+    if no_save:
+        return
+    ckpt_dir = os.path.join(output_dir, 'ckpt')
+    if not os.path.exists(ckpt_dir):
+        os.makedirs(ckpt_dir)
+    save_name = os.path.join(ckpt_dir, 'model_gan_final.pth')
+    if isinstance(model, mynn.DataParallel):
+        model = model.module
+    model_state_dict = model.state_dict()
+    torch.save({
+        'model': model.state_dict()
+    })
+    logger.info('save model: %s', save_name)
+    return save_name
 
 
 def main():
     """Main function"""
-
     args = parse_args()
     print('Called with args:')
     print(args)
@@ -144,8 +148,15 @@ def main():
 
     if args.cuda or cfg.NUM_GPUS > 0:
         cfg.CUDA = True
+        Tensor = torch.cuda.FloatTensor
     else:
         raise ValueError("Need Cuda device to run !")
+
+    if args.load_pretrained is None:
+        raise ValueError("No pretrained detectron model specified")
+    else:
+        if not os.path.exists(args.load_pretrained):
+            raise ValueError("Specified pretrained detectron model does not exists")
 
     cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
@@ -172,46 +183,40 @@ def main():
     ### Adjust learning based on batch size change linearly
     # For iter_size > 1, gradients are `accumulated`, so lr is scaled based
     # on batch_size instead of effective_batch_size
-    old_base_lr = cfg.SOLVER.BASE_LR
-    cfg.SOLVER.BASE_LR *= args.batch_size / original_batch_size
-    print('Adjust BASE_LR linearly according to batch_size change:\n'
-          '    BASE_LR: {} --> {}'.format(old_base_lr, cfg.SOLVER.BASE_LR))
+    old_base_lr_D = cfg.GAN.SOLVER.BASE_LR_D
+    old_base_lr_G = cfg.GAN.SOLVER.BASE_LR_G
+    cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size / original_batch_size
+    cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size / original_batch_size
+    print('Adjust BASE_LR_D linearly according to batch_size change:\n'
+          '    BASE_LR: {} --> {}'.format(old_base_lr_D, cfg.GAN.SOLVER.BASE_LR_D))
+    print('Adjust BASE_LR_G linearly according to batch_size change:\n'
+          '    BASE_LR: {} --> {}'.format(old_base_lr_G, cfg.GAN.SOLVER.BASE_LR_G))
 
     ### Adjust solver steps
     step_scale = original_batch_size / effective_batch_size
-    old_solver_steps = cfg.SOLVER.STEPS
-    old_max_iter = cfg.SOLVER.MAX_ITER
-    cfg.SOLVER.STEPS = list(map(lambda x: int(x * step_scale + 0.5), cfg.SOLVER.STEPS))
-    cfg.SOLVER.MAX_ITER = int(cfg.SOLVER.MAX_ITER * step_scale + 0.5)
+    old_solver_steps_D = cfg.GAN.SOLVER.STEPS_D
+    old_solver_steps_G = cfg.GAN.SOLVER.STEPS_G
+    old_max_iter = cfg.GAN.SOLVER.MAX_ITER
+    cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_D))
+    cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_G))
+    cfg.GAN.SOLVER.MAX_ITER = int(cfg.GAN.SOLVER.MAX_ITER * step_scale + 0.5)
     print('Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
-          '    SOLVER.STEPS: {} --> {}\n'
-          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps, cfg.SOLVER.STEPS,
-                                                  old_max_iter, cfg.SOLVER.MAX_ITER))
-
-    # Scale FPN rpn_proposals collect size (post_nms_topN) in `collect` function
-    # of `collect_and_distribute_fpn_rpn_proposals.py`
-    #
-    # post_nms_topN = int(cfg[cfg_key].RPN_POST_NMS_TOP_N * cfg.FPN.RPN_COLLECT_SCALE + 0.5)
-    if cfg.FPN.FPN_ON and cfg.MODEL.FASTER_RCNN:
-        cfg.FPN.RPN_COLLECT_SCALE = cfg.TRAIN.IMS_PER_BATCH / original_ims_per_batch
-        print('Scale FPN rpn_proposals collect size directly propotional to the change of IMS_PER_BATCH:\n'
-              '    cfg.FPN.RPN_COLLECT_SCALE: {}'.format(cfg.FPN.RPN_COLLECT_SCALE))
+          '    SOLVER.STEPS_D: {} --> {}\n'
+          '    SOLVER.STEPS_G: {} --> {}\n'
+          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_D, cfg.GAN.SOLVER.STEPS_D,
+                                                  old_solver_steps_G, cfg.GAN.SOLVER.STEPS_G,
+                                                  old_max_iter, cfg.GAN.SOLVER.MAX_ITER))
 
     if args.num_workers is not None:
         cfg.DATA_LOADER.NUM_THREADS = args.num_workers
     print('Number of data loading threads: %d' % cfg.DATA_LOADER.NUM_THREADS)
 
-    ### Overwrite some solver settings from command line arguments
-    if args.optimizer is not None:
-        cfg.SOLVER.TYPE = args.optimizer
-    if args.lr is not None:
-        cfg.SOLVER.BASE_LR = args.lr
-    if args.lr_decay_gamma is not None:
-        cfg.SOLVER.GAMMA = args.lr_decay_gamma
-    assert_and_infer_cfg()
+    assert_and_infer_cfg(make_immutable=False)
 
     timers = defaultdict(Timer)
 
+    # TODO
+    # create functionality for sampling training samples for GAN training !!!
     ### Dataset ###
     timers['roidb'].tic()
     roidb, ratio_list, ratio_index = combined_roidb_for_training(
@@ -233,103 +238,131 @@ def main():
         roidb,
         cfg.MODEL.NUM_CLASSES,
         training=True)
+
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_sampler=batchSampler,
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
-        collate_fn=collate_minibatch)
+        collate_fn=collate_minibatch,
+        pin_memory=False)
+
     dataiterator = iter(dataloader)
 
     ### Model ###
-    maskRCNN = Generalized_RCNN()
+    generator = Generator(pretrained_weights=args.load_pretrained) # pretrained_weights
+    resolution = generator.Conv_Body.resolution
+    dim_in = generator.RPN.dim_out
+    discriminator = Discriminator(dim_in, resolution, pretrained_weights=args.load_pretrained)
 
     if cfg.CUDA:
-        maskRCNN.cuda()
+        generator.cuda()
+        discriminator.cuda()
 
-    ### Optimizer ###
-    gn_param_nameset = set()
-    for name, module in maskRCNN.named_modules():
-        if isinstance(module, nn.GroupNorm):
-            gn_param_nameset.add(name+'.weight')
-            gn_param_nameset.add(name+'.bias')
-    gn_params = []
-    gn_param_names = []
-    bias_params = []
-    bias_param_names = []
-    nonbias_params = []
-    nonbias_param_names = []
-    nograd_param_names = []
-    for key, value in maskRCNN.named_parameters():
+    ### Discriminator Parameters ###
+    params = {}
+    params['D'] = {
+        'bias_params': [],
+        'bias_param_names': [],
+        'nonbias_params': [],
+        'nonbias_param_names': [],
+        'nograd_param_names': []
+    }
+
+    for key, value in discriminator.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
-                bias_params.append(value)
-                bias_param_names.append(key)
-            elif key in gn_param_nameset:
-                gn_params.append(value)
-                gn_param_names.append(key)
+                params['D']['bias_params'].append(value)
+                params['D']['bias_param_names'].append(key)
             else:
-                nonbias_params.append(value)
-                nonbias_param_names.append(key)
+                params['D']['nonbias_params'].append(value)
+                params['D']['nonbias_param_names'].append(key)
         else:
-            nograd_param_names.append(key)
-    assert (gn_param_nameset - set(nograd_param_names) - set(bias_param_names)) == set(gn_param_names)
+            params['D']['nograd_param_names'].append(key)
 
-    # Learning rate of 0 is a dummy value to be set properly at the start of training
-    params = [
-        {'params': nonbias_params,
+    params_D = [
+        {'params': params['D']['nonbias_params'],
          'lr': 0,
-         'weight_decay': cfg.SOLVER.WEIGHT_DECAY},
-        {'params': bias_params,
-         'lr': 0 * (cfg.SOLVER.BIAS_DOUBLE_LR + 1),
-         'weight_decay': cfg.SOLVER.WEIGHT_DECAY if cfg.SOLVER.BIAS_WEIGHT_DECAY else 0},
-        {'params': gn_params,
-         'lr': 0,
-         'weight_decay': cfg.SOLVER.WEIGHT_DECAY_GN}
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D},
+        {'params': params['D']['bias_params'],
+         'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_D + 1),
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
     ]
     # names of paramerters for each paramter
-    param_names = [nonbias_param_names, bias_param_names, gn_param_names]
+    param_names_D = [params['G']['nonbias_param_names'], params['G']['bias_param_names']]
 
-    if cfg.SOLVER.TYPE == "SGD":
-        optimizer = torch.optim.SGD(params, momentum=cfg.SOLVER.MOMENTUM)
-    elif cfg.SOLVER.TYPE == "Adam":
-        optimizer = torch.optim.Adam(params)
+    ### Generator Parameters ###
+    params['G'] = {
+        'bias_params': [],
+        'bias_param_names': [],
+        'nonbias_params': [],
+        'nonbias_param_names': [],
+        'nograd_param_names': []
+    }
+
+    for key, value in generator.named_parameters():
+        if value.requires_grad:
+            if 'bias' in key:
+                params['G']['bias_params'].append(value)
+                params['G']['bias_param_names'].append(key)
+            else:
+                params['G']['nonbias_params'].append(value)
+                params['G']['nonbias_param_names'].append(key)
+        else:
+            params['G']['nograd_param_names'].append(key)
+
+    params_G = [
+        {'params': params['G']['nonbias_params'],
+         'lr': 0,
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G},
+        {'params': params['G']['bias_params'],
+         'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_G + 1),
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0}
+    ]
+    # names of parameters for each parameter
+    param_names_G = [params['G']['nonbias_param_names'], params['G']['bias_param_names']]
+
+    ### Optimizers ###
+    if cfg.GAN.SOLVER.TYPE_G == "SGD":
+        optimizer_G = torch.optim.SGD(params_G, momentum=cfg.GAN.SOLVER.MOMENTUM_G)
+    elif cfg.GAN.SOLVER.TYPE_G == "Adam":
+        optimizer_G = torch.optim.Adam(params_G)
+    if cfg.GAN.SOLVER.TYPE_D == "SGD":
+        optimizer_D = torch.optim.SGD(params_D, momentum=cfg.GAN.SOLVER.MOMENTUM_D)
+    elif cfg.GAN.SOLVER.TYPE_D == "Adam":
+        optimizer_D = torch.optim.Adam(params_D)
 
     ### Load checkpoint
-    if args.load_ckpt:
-        load_name = args.load_ckpt
-        logging.info("loading checkpoint %s", load_name)
-        checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
-        net_utils.load_ckpt(maskRCNN, checkpoint['model'])
+    if args.load_ckpt_G and args.load_ckpt_D:
+        load_name_G = args.load_ckpt_G
+        load_name_D = args.load_ckpt_D
+        logging.info("loading checkpoint %s", load_name_G)
+        logging.info("loading checkpoint %s", load_name_D)
+        checkpoint_G = torch.load(load_name_G, map_location=lambda storage, loc: storage)
+        checkpoint_D = torch.load(load_name_D, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(generator, checkpoint_G['model'])
+        net_utils.load_ckpt(discriminator, checkpoint_D['model'])
+
         if args.resume:
-            args.start_step = checkpoint['step'] + 1
-            if 'train_size' in checkpoint:  # For backward compatibility
-                if checkpoint['train_size'] != train_size:
-                    print('train_size value: %d different from the one in checkpoint: %d'
-                          % (train_size, checkpoint['train_size']))
-
-            # reorder the params in optimizer checkpoint's params_groups if needed
-            # misc_utils.ensure_optimizer_ckpt_params_order(param_names, checkpoint)
-
-            # There is a bug in optimizer.load_state_dict on Pytorch 0.3.1.
-            # However it's fixed on master.
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            # misc_utils.load_optimizer_state_dict(optimizer, checkpoint['optimizer'])
-        del checkpoint
+            # as for every k steps of discriminator, G is updated once
+            optimizer_G.load_state_dict(checkpoint_G['optimizer'])
+            optimizer_D.load_state_dict(checkpoint_D['optimizer'])
+        del checkpoint_G
+        del checkpoint_D
         torch.cuda.empty_cache()
 
-    if args.load_detectron:  #TODO resume for detectron weights (load sgd momentum values)
-        logging.info("loading Detectron weights %s", args.load_detectron)
-        load_caffe2_detectron_weights(maskRCNN, args.load_detectron)
+    lr_D = optimizer_D.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
+    lr_G = optimizer_G.param_groups[0]['lr']
 
-
-    lr = optimizer.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
-
-    maskRCNN = mynn.DataParallel(maskRCNN, cpu_keywords=['im_info', 'roidb'],
+    generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
                                  minibatch=True)
+    discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
+                                      minibatch=True )
 
     ### Training Setups ###
     args.run_name = misc_utils.get_run_name() + '_step'
     output_dir = misc_utils.get_output_dir(args, args.run_name)
+    output_dir_D = os.path.join(output_dir, '/discriminator')
+    output_dir_G = os.path.join(output_dir, '/generator')
     args.cfg_filename = os.path.basename(args.cfg_file)
 
     if not args.no_save:
@@ -346,97 +379,169 @@ def main():
             tblogger = SummaryWriter(output_dir)
 
     ### Training Loop ###
-    maskRCNN.train()
+    generator.train()
+    discriminator.train()
 
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
     # Set index for decay steps
     decay_steps_ind = None
-    for i in range(1, len(cfg.SOLVER.STEPS)):
-        if cfg.SOLVER.STEPS[i] >= args.start_step:
+    for i in range(1, len(cfg.GAN.SOLVER.STEPS)):
+        if cfg.GAN.SOLVER.STEPS[i] >= args.start_step:
             decay_steps_ind = i
             break
     if decay_steps_ind is None:
-        decay_steps_ind = len(cfg.SOLVER.STEPS)
+        decay_steps_ind = len(cfg.GAN.SOLVER.STEPS)
 
     training_stats = TrainingStats(
         args,
         args.disp_interval,
         tblogger if args.use_tfboard and not args.no_save else None)
+
     try:
         logger.info('Training starts !')
         step = args.start_step
-        for step in range(args.start_step, cfg.SOLVER.MAX_ITER):
+        for step in range(args.start_step, cfg.GAN.SOLVER.MAX_ITER):
 
             # Warm up
-            if step < cfg.SOLVER.WARM_UP_ITERS:
-                method = cfg.SOLVER.WARM_UP_METHOD
+            if step < cfg.GAN.SOLVER.WARM_UP_ITERS:
+                method = cfg.GAN.SOLVER.WARM_UP_METHOD
                 if method == 'constant':
-                    warmup_factor = cfg.SOLVER.WARM_UP_FACTOR
+                    warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR
                 elif method == 'linear':
-                    alpha = step / cfg.SOLVER.WARM_UP_ITERS
-                    warmup_factor = cfg.SOLVER.WARM_UP_FACTOR * (1 - alpha) + alpha
+                    alpha = step / cfg.GAN.SOLVER.WARM_UP_ITERS
+                    warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR * (1 - alpha) + alpha
                 else:
                     raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
-                lr_new = cfg.SOLVER.BASE_LR * warmup_factor
-                net_utils.update_learning_rate(optimizer, lr, lr_new)
-                lr = optimizer.param_groups[0]['lr']
-                assert lr == lr_new
-            elif step == cfg.SOLVER.WARM_UP_ITERS:
-                net_utils.update_learning_rate(optimizer, lr, cfg.SOLVER.BASE_LR)
-                lr = optimizer.param_groups[0]['lr']
-                assert lr == cfg.SOLVER.BASE_LR
+                # TODO
+                # introduce possibility of having two seperate learning rates and warmup factors!!
+                lr_new_D = cfg.GAN.SOLVER.BASE_LR_D * warmup_factor
+                lr_new_G = cfg.GAN.SOLVER.BASE_LR_G * warmup_factor
+                net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
+                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
+                lr_D = optimizer_D.param_groups[0]['lr']
+                lr_G = optimizer_G.param_groups[0]['lr']
+                assert lr_D == lr_new_D
+                assert lr_G == lr_new_G
+            elif step == cfg.GAN.SOLVER.WARM_UP_ITERS:
+                net_utils.update_learning_rate(optimizer_D, lr_D, cfg.GAN.SOLVER.BASE_LR_D)
+                net_utils.update_learning_rate(optimizer_G, lr_G, cfg.GAN.SOLVER.BASE_LR_G)
+                lr_D = optimizer_D.param_groups[0]['lr']
+                lr_G = optimizer_G.param_groups[0]['lr']
+                assert lr_D == cfg.GAN.SOLVER.BASE_LR_D
+                assert lr_G == cfg.GAN.SOLVER.BASE_LR_G
 
             # Learning rate decay
-            if decay_steps_ind < len(cfg.SOLVER.STEPS) and \
-                    step == cfg.SOLVER.STEPS[decay_steps_ind]:
+            if decay_steps_ind < len(cfg.GAN.SOLVER.STEPS) and \
+                    step == cfg.GAN.SOLVER.STEPS[decay_steps_ind]:
                 logger.info('Decay the learning on step %d', step)
-                lr_new = lr * cfg.SOLVER.GAMMA
-                net_utils.update_learning_rate(optimizer, lr, lr_new)
-                lr = optimizer.param_groups[0]['lr']
-                assert lr == lr_new
+                lr_new_G = lr_G * cfg.GAN.SOLVER.GAMMA_G
+                lr_new_D = lr_D * cfg.GAN.SOLVER.GAMMA_D
+                net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
+                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
+                lr_G = optimizer_G.param_groups[0]['lr']
+                lr_D = optimizer_D.param_groups[0]['lr']
+                assert lr_D == lr_new_D
+                assert lr_G == lr_new_G
                 decay_steps_ind += 1
 
             training_stats.IterTic()
-            optimizer.zero_grad()
-            for inner_iter in range(args.iter_size):
-                try:
-                    input_data = next(dataiterator)
-                except StopIteration:
-                    dataiterator = iter(dataloader)
-                    input_data = next(dataiterator)
 
-                for key in input_data:
-                    if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
-                        input_data[key] = list(map(Variable, input_data[key]))
+            try:
+                input_data = next(dataiterator)
+            except StopIteration:
+                dataiterator = iter(dataloader)
+                input_data = next(dataiterator)
 
-                net_outputs = maskRCNN(**input_data)
-                training_stats.UpdateIterStats(net_outputs, inner_iter)
-                loss = net_outputs['total_loss']
-                loss.backward()
-            optimizer.step()
+            for key in input_data:
+                if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
+                    input_data[key] = list(map(Variable, input_data[key]))
+
+            # train discriminator
+            for _ in cfg.GAN.TRAIN.k:
+                optimizer_D.zero_grad()
+                # train on fake data
+                generator._set_provide_fake_features(True)
+                outputs_G = generator(**input_data)
+                blob_fake = outputs_G['blob_fake']
+                rpn_ret = outputs_G['rpn_ret']
+                adv_target = Variable(Tensor(blob_fake.size(0), 1).fill_(0.0),
+                                      requires_grad=False)
+                outputs_D = discriminator(blob_fake, rpn_ret, adv_target=adv_target)
+                training_stats.UpdateIterStats(out_D=outputs_D)
+
+                # train on real data
+                generator._set_provide_fake_features(False)
+                outputs_G = generator(**input_data)
+                blob_conv = outputs_G['blob_conv']
+                rpn_ret = outputs_G['rpn_ret']
+                adv_target = Variable(Tensor(blob_conv.size(0), 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                      requires_grad=False)
+                outputs_D = discriminator(blob_conv, rpn_ret, adv_target=adv_target)
+                training_stats.UpdateIterStats(out_D=outputs_D)
+
+                loss_D = outputs_D['total_loss']
+                loss_D.backward()
+
+                optimizer_D.step()
+
+            # train generator
+            generator._set_provide_fake_features(True)
+            optimizer_G.zero_grad()
+            outputs_G = generator(**input_data)
+            blob_fake = outputs_G['blob_fake']
+            rpn_ret = outputs_G['rpn_ret']
+            adv_target = Variable(Tensor(blob_fake.size(0), 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                  requires_grad=False)
+            outputs_D = discriminator(blob_fake, rpn_ret, adv_target)
+            training_stats.UpdateIterStats(outputs_D)
+
+            loss_G = outputs_D['total_loss']
+            loss_G.backward()
+            optimizer_G.step()
+
             training_stats.IterToc()
 
-            training_stats.LogIterStats(step, lr)
+            training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
-                save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
+                save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
+                save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
 
         # ---- Training ends ----
         # Save last checkpoint
-        save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
+        final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
+        final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
+
+        gan = GAN(generator_weights=final_generator, discriminator_weights=final_discriminator)
+        final_model = save_model(output_dir, no_save=False, model=gan)
 
     except (RuntimeError, KeyboardInterrupt):
         del dataiterator
         logger.info('Save ckpt on exception ...')
-        save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
+        save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
+        save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
         logger.info('Save ckpt done.')
         stack_trace = traceback.format_exc()
         print(stack_trace)
 
     finally:
+        logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger.close()
+        logger.info('Finished training.')
+
+    logger.info("Start testing final model")
+
+    if final_model is not None:
+        pass
+        # TODO
+        # write testing and inference scripts !!!
+        #args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+        #                      load_ckpt='{}'.format(final_model), load_detectron=None,
+        #                      multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+        #                      range=None, set_cfgs=[], vis=False)
+        #test_net_routine(args_test)
 
 
 if __name__ == '__main__':
