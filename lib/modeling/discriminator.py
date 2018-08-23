@@ -89,7 +89,7 @@ class Discriminator(nn.Module):
 
         pretrained_detectron = torch.load(pretrained_weights)
         load_layers = ['Box_Head', 'Box_Outs']
-        mapping, _ = self.detectron_weight_mapping
+        mapping, _ = self.detectron_weight_mapping()
         state_dict = {}
         ckpt = pretrained_detectron['model']
         for name in ckpt:
