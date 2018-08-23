@@ -103,6 +103,11 @@ def parse_args():
         help='Explicitly specify to overwrite the value comed from cfg_file.',
         type=int)
 
+    parser.add_argument(
+        '--iter_size',
+        help='Update once every iter_size steps, as in Caffe.',
+        default=1, type=int)
+
     return parser.parse_args()
 
 
