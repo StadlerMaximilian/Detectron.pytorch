@@ -175,7 +175,7 @@ class TrainingStats(object):
         for k, v in self.smoothed_losses_D.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
-                adv_losses_D.append((k, v.GetMedianValue()))
+                adv_loss_D = v.GetMedianValue()
             elif len(toks) == 2:
                 head_losses_D.append((k, v.GetMedianValue()))
             else:
@@ -185,7 +185,7 @@ class TrainingStats(object):
             print("{}, {}".format(k,v))
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
-                adv_losses_G.append((k, v.GetMedianValue()))
+                adv_loss_G = v.GetMedianValue()
             elif len(toks) == 2:
                 head_losses_G.append((k, v.GetMedianValue()))
             else:
@@ -193,7 +193,7 @@ class TrainingStats(object):
 
         stats['head_losses_D'] = OrderedDict(head_losses_D)
         stats['head_losses_G'] = OrderedDict(head_losses_G)
-        stats['adv_losses_D'] = OrderedDict(adv_losses_D)
-        stats['adv_losses_G'] = OrderedDict(adv_losses_G)
+        stats['adv_loss_D'] = adv_loss_D
+        stats['adv_loss_G'] = adv_loss_G
 
         return stats
