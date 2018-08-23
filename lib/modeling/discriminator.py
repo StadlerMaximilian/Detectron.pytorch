@@ -59,6 +59,9 @@ class Discriminator(nn.Module):
             loss_adv = self.adversarial_loss(adv_score, adv_target_tensor)
             return_dict['losses']['loss_adv'] = loss_adv
 
+            print(type(rpn_ret['labels_int32']))
+            print(rpn_ret['labels_int32'].size())
+
             loss_cls, loss_bbox, accuracy_cls = fast_rcnn_heads.fast_rcnn_losses(
                 cls_score, bbox_pred, rpn_ret['labels_int32'], rpn_ret['bbox_targets'],
                 rpn_ret['bbox_inside_weights'], rpn_ret['bbox_outside_weights'])
