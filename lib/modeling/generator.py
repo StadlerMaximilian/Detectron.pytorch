@@ -117,7 +117,7 @@ class Generator(nn.Module):
 
         if self.provide_fake_features:
             blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
-            print("{} vs {}".format(blob_conv.size(), blob_conv_residual.size()))
+            print("{} vs {}".format(blob_conv_pooled.size(), blob_conv_residual.size()))
             return_dict['bloc_conv_residual'] = blob_conv_residual
             return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 

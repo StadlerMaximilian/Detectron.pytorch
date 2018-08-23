@@ -36,8 +36,6 @@ class Discriminator(nn.Module):
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-
-
     def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 

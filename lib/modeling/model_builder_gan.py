@@ -45,7 +45,7 @@ class GAN(nn.Module):
 
         dis_out = self.discriminator(blob_conv, rpn_ret)
 
-        copy_blobs = ['blob_conv', 'blob_conv_pooled']
+        copy_blobs = ['blob_conv', 'blob_conv_pooled', 'blob_fake']
         for key in copy_blobs:
             dis_out[key] = gen_out[key]
 
