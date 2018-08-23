@@ -166,7 +166,8 @@ class Generalized_RCNN(nn.Module):
 
         #debug
         for k, v in rpn_ret:
-            print("{}: {}\n".format(k, v))
+            print(rpn_ret)
+            #print("{}: {}\n".format(k, v))
 
         # if self.training:
         #     # can be used to infer fg/bg ratio
