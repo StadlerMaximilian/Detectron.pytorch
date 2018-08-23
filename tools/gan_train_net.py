@@ -406,7 +406,7 @@ def main():
     lr_G = optimizer_G.param_groups[0]['lr']
 
     generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
-                                  minibatch=True)
+                                  minibatch=True, batch_outputs=False) # keep batch split onto GPUs for generator
     discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
                                       minibatch=True)
 
