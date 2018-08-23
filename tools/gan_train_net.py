@@ -423,6 +423,10 @@ def main():
     if not args.no_save:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+        if not os.path.exists(output_dir_D):
+            os.makedirs(output_dir_D)
+        if not os.path.exists(output_dir_G):
+            os.makedirs(output_dir_G)
 
         blob = {'cfg': yaml.dump(cfg), 'args': args}
         with open(os.path.join(output_dir, 'config_and_args.pkl'), 'wb') as f:

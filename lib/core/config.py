@@ -1003,7 +1003,11 @@ __C.GAN.MODEL.NUM_BLOCKS = 6
 __C.GAN.MODEL.CONV_BODY_FC_HEAD = 'VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head'
 __C.GAN.MODEL.CONV_BODY_RESOLUTION = 6
 __C.GAN.MODEL.LABEL_SMOOTHING = 1.0
-
+__C.GAN.MODEL.AREA_THRESHOLD = -1 # threshold for area of ground-truth objects
+                                   # objects with area bigger than this threshold are considered for REAL-training
+                                   # objects with area smaller than this threshold are considered for FAKE-training
+                                   # as goal is to lean tranfer from small to lage objects
+                                   # -1 for deactivating
 
 __C.GAN.TRAIN = AttrDict()
 __C.GAN.TRAIN.FREEZE_CONV_BODY = True
@@ -1012,14 +1016,11 @@ __C.GAN.TRAIN.k = 1
 __C.GAN.TRAIN.DATASETS_SOURCE = ()
 __C.GAN.TRAIN.DATASETS_TARGET = ()
 
-
-
 __C.GAN.SOLVER = AttrDict()
 
 # e.g 'SGD', 'Adam'
 __C.GAN.SOLVER.TYPE_G = 'SGD'
 __C.GAN.SOLVER.TYPE_D = 'SGD'
-
 
 # Base learning rate for the specified schedule
 __C.GAN.SOLVER.BASE_LR_D = 0.001
@@ -1082,9 +1083,6 @@ __C.GAN.SOLVER.SCALE_MOMENTUM_THRESHOLD = 1.1
 # Suppress logging of changes to LR unless the relative change exceeds this
 # threshold (prevents linear warm up from spamming the training log)
 __C.GAN.SOLVER.LOG_LR_CHANGE_THRESHOLD = 1.1
-
-
-
 
 # ---------------------------------------------------------------------------- #
 # CUSTOM DATAoptions
