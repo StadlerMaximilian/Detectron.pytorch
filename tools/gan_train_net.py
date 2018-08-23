@@ -527,9 +527,11 @@ def main():
                 outputs_G = generator(**input_data_fake)
                 blob_fake = outputs_G['blob_fake']
                 rpn_ret = outputs_G['rpn_ret']
+
+                adv_target = [0.0] * cfg.NUM_GPUS # 0.0 for fake
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret,
-                                       'adv_target': 0.0  # 0.0 for fake
+                                       'adv_target': adv_target
                                        }
                 outputs_D = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D)
@@ -550,9 +552,10 @@ def main():
                 blob_conv_pooled = outputs_G['blob_conv_pooled']
                 rpn_ret = outputs_G['rpn_ret']
                 # use smoothed label for "REAL" - Label
+                adv_target = [cfg.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret,
-                                       'adv_target': cfg.MODEL.LABEL_SMOOTHING
+                                       'adv_target': adv_target
                                        }
                 outputs_D = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D)
@@ -590,9 +593,10 @@ def main():
             blob_fake = outputs_G['blob_fake']
             rpn_ret = outputs_G['rpn_ret']
             # also use smoothed value for GENERATOR training
+            adv_target = [cfg.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
             input_discriminator = {'blob_conv': blob_fake,
                                    'rpn_ret': rpn_ret,
-                                   'adv_target': cfg.GAN.MODEL.LABEL_SMOOTHING
+                                   'adv_target': adv_target
                                    }
             outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)
