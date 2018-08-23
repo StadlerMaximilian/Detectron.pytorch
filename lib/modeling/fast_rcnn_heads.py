@@ -53,9 +53,9 @@ def fast_rcnn_losses(cls_score, bbox_pred, label_int32, bbox_targets,
 
     # introduce checks for arguments being already of type torch.tensor(), as
     # when split into generator and discriminator, the DataParallel-Module converts arrays already into Tensors()
-    
+
     if isinstance(label_int32, torch.Tensor):
-        rois_label = Variable(label_int32).cuda(device_id)
+        rois_label = Variable(label_int32.long()).cuda(device_id)
     else:
         rois_label = Variable(torch.from_numpy(label_int32.astype('int64'))).cuda(device_id)
     loss_cls = F.cross_entropy(cls_score, rois_label)
