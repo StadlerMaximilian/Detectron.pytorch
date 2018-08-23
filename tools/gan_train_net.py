@@ -552,7 +552,7 @@ def main():
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
                 # use smoothed label for "REAL" - Label
-                adv_target = [cfg.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
+                adv_target = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret,
                                        'adv_target': adv_target
@@ -593,7 +593,7 @@ def main():
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]
             # also use smoothed value for GENERATOR training
-            adv_target = [cfg.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
+            adv_target = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
             input_discriminator = {'blob_conv': blob_fake,
                                    'rpn_ret': rpn_ret,
                                    'adv_target': adv_target
