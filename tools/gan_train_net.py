@@ -607,7 +607,8 @@ def main():
 
     except (RuntimeError, KeyboardInterrupt):
         del dataiterator_source
-        del dataiterator_target
+        if USE_TARGET:
+            del dataiterator_target
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
         save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
