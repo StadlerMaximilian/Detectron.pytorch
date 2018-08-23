@@ -41,3 +41,13 @@ CUSTOM_DATA:
 GAN:
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit',)
+  SOLVER:
+    WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO
+    WEIGHT_DECAY_G: 0.0005
+    LR_POLICY: steps_with_decay
+    BASE_LR_D: 0.0025
+    BASE_LR_G: 0.0025
+    GAMMA_D: 0.1
+    GAMMA_G: 0.1
+    MAX_ITER: 1000
+    STEPS: [0, 545, 810]
