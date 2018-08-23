@@ -77,16 +77,6 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         self.provide_fake_features = bool
 
 
-class VGG_CNN_M_1024_roi_pooling(nn.Module):
-    def __init__(self, roi_xform_func, spatial_scale, resolution=6):
-        super().__init__()
-        self.roi_xform = net_utils.roiPoolingLayer(roi_xform_func, spatial_scale, resolution)
-
-    def forward(self, x, rpn_ret):
-        x = self.roi_xform(x, rpn_ret)
-        return x
-
-
 class VGG_CNN_M_1024_fc_head(nn.Module):
     def __init__(self, dim_in, resolution=6):
         super().__init__()
@@ -131,7 +121,7 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
         super().__init__()
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
-        self.roi_pool = VGG_CNN_M_1024_roi_pooling(roi_xform_func, spatial_scale, resolution)
+        self.roi_pool = net_utils.roiPoolingLayer(roi_xform_func, spatial_scale, resolution)
 
         self.fc_head = VGG_CNN_M_1024_fc_head(dim_in, resolution)
 

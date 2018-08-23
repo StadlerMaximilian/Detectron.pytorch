@@ -59,9 +59,8 @@ class Generator(nn.Module):
             self.RPN = rpn_heads.generic_rpn_outputs(
                 self.Conv_Body.dim_out, self.Conv_Body.spatial_scale)
 
-        self.Pooling = get_func(cfg.GAN.MODEL.CONV_BODY_ROI_POOLING)(self.roi_feature_transform,
-                                                                     self.Conv_Body.spatial_scale,
-                                                                     self.Conv_Body.resolution)
+        self.roi_pool = net_utils.roiPoolingLayer(self.roi_feature_transform, self.Conv_Body.spatial_scale,
+                                                  self.Conv_Body.resolution)
 
         self.Generator_Block = GeneratorBlock(self.roi_feature_transform, self.Conv_Body.spatial_scale_base,
                                               self.Conv_Body.resolution, self.Conv_Body.dim_out_base,
@@ -113,11 +112,14 @@ class Generator(nn.Module):
         rpn_ret = self.RPN(blob_conv, im_info, roidb)
         return_dict['rpn_ret'] = rpn_ret
 
+        blob_conv_pooled = self.roi_pool(blob_conv)
+        return_dict['blob_conv_pooled'] = blob_conv_pooled
+
         if self.provide_fake_features:
             blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
             print("{} vs {}".format(blob_conv.size(), blob_conv_residual.size()))
             return_dict['bloc_conv_residual'] = blob_conv_residual
-            return_dict['blob_fake'] = blob_conv + blob_conv_residual
+            return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
         return return_dict
 
