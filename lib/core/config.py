@@ -1028,7 +1028,7 @@ __C.GAN.SOLVER.BASE_LR_G= 0.001
 # Schedule type (see functions in utils.lr_policy for options)
 # E.g., 'step', 'steps_with_decay', ...
 __C.GAN.SOLVER.LR_POLICY_G = 'step'
-__C.GAN.SOLVER_LR_POLICY_D = 'step'
+__C.GAN.SOLVER.LR_POLICY_D = 'step'
 
 __C.GAN.SOLVER.GAMMA_D = 0.1
 __C.GAN.SOLVER.GAMMA_G = 0.1
