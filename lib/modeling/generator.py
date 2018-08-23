@@ -113,7 +113,7 @@ class Generator(nn.Module):
         return_dict['rpn_ret'] = rpn_ret
 
         #debug
-        for k, v in rpn_ret.itmes():
+        for k, v in rpn_ret.items():
             print("{}: {}".format(k, type(v)))
 
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
