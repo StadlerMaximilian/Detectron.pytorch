@@ -13,6 +13,7 @@ import yaml
 import torch
 from torch.autograd import Variable
 import cv2
+from argparse import Namespace
 
 import _init_paths  # pylint: disable=unused-import
 import nn as mynn
@@ -27,6 +28,8 @@ from modeling.model_builder_gan import GAN
 from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.gan_utils import TrainingStats
+from test_net import test_net_routine
+
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
@@ -129,7 +132,6 @@ def save_model(output_dir, no_save, model):
     save_name = os.path.join(ckpt_dir, 'model_gan_final.pth')
     if isinstance(model, mynn.DataParallel):
         model = model.module
-    model_state_dict = model.state_dict()
     torch.save({
         'model': model.state_dict()
     })
@@ -148,7 +150,6 @@ def main():
 
     if args.cuda or cfg.NUM_GPUS > 0:
         cfg.CUDA = True
-        Tensor = torch.cuda.FloatTensor
     else:
         raise ValueError("Need Cuda device to run !")
 
@@ -157,12 +158,14 @@ def main():
     else:
         if not os.path.exists(args.load_pretrained):
             raise ValueError("Specified pretrained detectron model does not exists")
+        else:
+            cfg.GAN.TRAIN.PRETRAINED_WEIGHTS = args.load_pretrained
 
     cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
 
-    ### Adaptively adjust some configs ###
+    # Adaptively adjust some configs #
     original_batch_size = cfg.NUM_GPUS * cfg.TRAIN.IMS_PER_BATCH
     original_ims_per_batch = cfg.TRAIN.IMS_PER_BATCH
     original_num_gpus = cfg.NUM_GPUS
@@ -180,7 +183,7 @@ def main():
     print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
     print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch, cfg.TRAIN.IMS_PER_BATCH))
 
-    ### Adjust learning based on batch size change linearly
+    # Adjust learning based on batch size change linearly
     # For iter_size > 1, gradients are `accumulated`, so lr is scaled based
     # on batch_size instead of effective_batch_size
     old_base_lr_D = cfg.GAN.SOLVER.BASE_LR_D
@@ -192,7 +195,7 @@ def main():
     print('Adjust BASE_LR_G linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_G, cfg.GAN.SOLVER.BASE_LR_G))
 
-    ### Adjust solver steps
+    # Adjust solver steps
     step_scale = original_batch_size / effective_batch_size
     old_solver_steps_D = cfg.GAN.SOLVER.STEPS_D
     old_solver_steps_G = cfg.GAN.SOLVER.STEPS_G
@@ -217,48 +220,83 @@ def main():
 
     # TODO
     # create functionality for sampling training samples for GAN training !!!
-    ### Dataset ###
-    timers['roidb'].tic()
-    roidb, ratio_list, ratio_index = combined_roidb_for_training(
-        cfg.TRAIN.DATASETS, cfg.TRAIN.PROPOSAL_FILES)
-    timers['roidb'].toc()
-    roidb_size = len(roidb)
-    logger.info('{:d} roidb entries'.format(roidb_size))
-    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb'].average_time)
+
+    # Dataset #
+    timers['roidb_source'].tic()
+    roidb_source, ratio_list_source, ratio_index_source = combined_roidb_for_training(
+        cfg.GAN.TRAIN.DATASETS_SOURCE, cfg.TRAIN.PROPOSAL_FILES)
+    timers['roidb_source'].toc()
+    roidb_size_source = len(roidb_source)
+    logger.info('{:d} roidb entries'.format(roidb_size_source))
+    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_source'].average_time)
 
     # Effective training sample size for one epoch
-    train_size = roidb_size // args.batch_size * args.batch_size
+    train_size = roidb_size_source // args.batch_size * args.batch_size
 
-    batchSampler = BatchSampler(
-        sampler=MinibatchSampler(ratio_list, ratio_index),
+    batchSampler_source = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_source, ratio_index_source),
         batch_size=args.batch_size,
         drop_last=True
     )
-    dataset = RoiDataLoader(
-        roidb,
+
+    dataset_source = RoiDataLoader(
+        roidb_source,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_sampler=batchSampler,
+    dataloader_source = torch.utils.data.DataLoader(
+        dataset_source,
+        batch_sampler=batchSampler_source,
         num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch,
         pin_memory=False)
 
-    dataiterator = iter(dataloader)
+    dataiterator_source = iter(dataloader_source)
 
-    ### Model ###
-    generator = Generator(pretrained_weights=args.load_pretrained) # pretrained_weights
+    USE_TARGET = False
+    if len(cfg.GAN.TRAIN.DATASETS_TARGET) > 0:  # target training activated
+        USE_TARGET = True
+        timers['roidb_target'].tic()
+        roidb_target, ratio_list_target, ratio_index_target = combined_roidb_for_training(
+            cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
+        timers['roidb_target'].toc()
+        roidb_size_target = len(roidb_target)
+        logger.info('{:d} roidb entries'.format(roidb_size_target))
+        logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
+
+        train_size_target = roidb_size_target // args.batch_size * args.batch_size
+
+        batchSampler_target = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_target, ratio_index_target),
+            batch_size=args.batch_size,
+            drop_last=True
+        )
+
+        dataset_target = RoiDataLoader(
+            roidb_target,
+            cfg.MODEL.NUM_CLASSES,
+            training=True)
+
+        dataloader_target = torch.utils.data.DataLoader(
+            dataset_target,
+            batch_sampler=batchSampler_target,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS,
+            collate_fn=collate_minibatch,
+            pin_memory=False)
+
+        dataiterator_target = iter(dataloader_target)
+
+    # Model
+    generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
     resolution = generator.Conv_Body.resolution
     dim_in = generator.RPN.dim_out
-    discriminator = Discriminator(dim_in, resolution, pretrained_weights=args.load_pretrained)
+    discriminator = Discriminator(dim_in, resolution, pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
 
     if cfg.CUDA:
         generator.cuda()
         discriminator.cuda()
 
-    ### Discriminator Parameters ###
+    # Discriminator Parameters
     params = {}
     params['D'] = {
         'bias_params': [],
@@ -326,10 +364,14 @@ def main():
         optimizer_G = torch.optim.SGD(params_G, momentum=cfg.GAN.SOLVER.MOMENTUM_G)
     elif cfg.GAN.SOLVER.TYPE_G == "Adam":
         optimizer_G = torch.optim.Adam(params_G)
+    else:
+        raise ValueError("INVALID Optimizer_G specified. Must be SGD or Adam!")
     if cfg.GAN.SOLVER.TYPE_D == "SGD":
         optimizer_D = torch.optim.SGD(params_D, momentum=cfg.GAN.SOLVER.MOMENTUM_D)
     elif cfg.GAN.SOLVER.TYPE_D == "Adam":
         optimizer_D = torch.optim.Adam(params_D)
+    else:
+        raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
 
     ### Load checkpoint
     if args.load_ckpt_G and args.load_ckpt_D:
@@ -356,7 +398,7 @@ def main():
     generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
                                  minibatch=True)
     discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
-                                      minibatch=True )
+                                      minibatch=True)
 
     ### Training Setups ###
     args.run_name = misc_utils.get_run_name() + '_step'
@@ -413,8 +455,6 @@ def main():
                     warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR * (1 - alpha) + alpha
                 else:
                     raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
-                # TODO
-                # introduce possibility of having two seperate learning rates and warmup factors!!
                 lr_new_D = cfg.GAN.SOLVER.BASE_LR_D * warmup_factor
                 lr_new_G = cfg.GAN.SOLVER.BASE_LR_G * warmup_factor
                 net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
@@ -447,37 +487,56 @@ def main():
 
             training_stats.IterTic()
 
-            try:
-                input_data = next(dataiterator)
-            except StopIteration:
-                dataiterator = iter(dataloader)
-                input_data = next(dataiterator)
-
-            for key in input_data:
-                if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
-                    input_data[key] = list(map(Variable, input_data[key]))
-
             # train discriminator
             for _ in cfg.GAN.TRAIN.k:
-                optimizer_D.zero_grad()
+
                 # train on fake data
+                if USE_TARGET:
+                    try:
+                        input_data_fake = next(dataiterator_target)
+                    except StopIteration:
+                        dataiterator_target = iter(dataloader_target)
+                        input_data_fake = next(dataiterator_target)
+
+                    for key in input_data_fake:
+                        if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                            input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+                else:
+                    try:
+                        input_data_fake = next(dataiterator_source)
+                    except StopIteration:
+                        dataiterator_source = iter(dataloader_source)
+                        input_data_fake = next(dataiterator_source)
+
+                    for key in input_data_fake:
+                        if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
+                            input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+
+                optimizer_D.zero_grad()
                 generator._set_provide_fake_features(True)
-                outputs_G = generator(**input_data)
+                outputs_G = generator(**input_data_fake)
                 blob_fake = outputs_G['blob_fake']
                 rpn_ret = outputs_G['rpn_ret']
-                adv_target = Variable(Tensor(blob_fake.size(0), 1).fill_(0.0),
-                                      requires_grad=False)
-                outputs_D = discriminator(blob_fake, rpn_ret, adv_target=adv_target)
+                outputs_D = discriminator(blob_fake, rpn_ret, adv_target=0.0) # 0.0 for fake
                 training_stats.UpdateIterStats(out_D=outputs_D)
 
                 # train on real data
+                try:
+                    input_data_real = next(dataiterator_source)
+                except StopIteration:
+                    dataiterator_source = iter(dataloader_source)
+                    input_data_real = next(dataiterator_source)
+
+                for key in input_data_real:
+                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                        input_data_real[key] = list(map(Variable, input_data_real[key]))
+
                 generator._set_provide_fake_features(False)
-                outputs_G = generator(**input_data)
+                outputs_G = generator(**input_data_real)
                 blob_conv = outputs_G['blob_conv']
                 rpn_ret = outputs_G['rpn_ret']
-                adv_target = Variable(Tensor(blob_conv.size(0), 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                      requires_grad=False)
-                outputs_D = discriminator(blob_conv, rpn_ret, adv_target=adv_target)
+                # use smoothed label for "REAL" - Label
+                outputs_D = discriminator(blob_conv, rpn_ret, adv_target=cfg.GAN.MODEL.LABEL_SMOOTHING)
                 training_stats.UpdateIterStats(out_D=outputs_D)
 
                 loss_D = outputs_D['total_loss']
@@ -486,17 +545,39 @@ def main():
                 optimizer_D.step()
 
             # train generator
+            if USE_TARGET:
+                try:
+                    input_data_fake = next(dataiterator_target)
+                except StopIteration:
+                    dataiterator_target = iter(dataloader_target)
+                    input_data_fake = next(dataiterator_target)
+
+                for key in input_data_fake:
+                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+            else:
+                try:
+                    input_data_fake = next(dataiterator_source)
+                except StopIteration:
+                    dataiterator_source = iter(dataloader_source)
+                    input_data_fake = next(dataiterator_source)
+
+                for key in input_data_fake:
+                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+
+
+
             generator._set_provide_fake_features(True)
             optimizer_G.zero_grad()
-            outputs_G = generator(**input_data)
+            outputs_G = generator(**input_data_fake)
             blob_fake = outputs_G['blob_fake']
             rpn_ret = outputs_G['rpn_ret']
-            adv_target = Variable(Tensor(blob_fake.size(0), 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                  requires_grad=False)
-            outputs_D = discriminator(blob_fake, rpn_ret, adv_target)
-            training_stats.UpdateIterStats(outputs_D)
+            # also use smoothed value for GENERATOR training
+            outputs_DG = discriminator(blob_fake, rpn_ret, adv_target=cfg.GAN.MODEL.LABEL_SMOOTHING)
+            training_stats.UpdateIterStats(outputs_G=outputs_DG)
 
-            loss_G = outputs_D['total_loss']
+            loss_G = outputs_DG['total_loss']
             loss_G.backward()
             optimizer_G.step()
 
@@ -517,31 +598,33 @@ def main():
         final_model = save_model(output_dir, no_save=False, model=gan)
 
     except (RuntimeError, KeyboardInterrupt):
-        del dataiterator
+        del dataiterator_source
+        del dataiterator_target
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
         save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
         logger.info('Save ckpt done.')
         stack_trace = traceback.format_exc()
         print(stack_trace)
-
-    finally:
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger.close()
-        logger.info('Finished training.')
+        logger.info('Aborted training.')
+        return
+
+    logger.info("Closing dataloader and tfboard if used")
+    if args.use_tfboard and not args.no_save:
+        tblogger.close()
+    logger.info('Finished training.')
 
     logger.info("Start testing final model")
 
     if final_model is not None:
-        pass
-        # TODO
-        # write testing and inference scripts !!!
-        #args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-        #                      load_ckpt='{}'.format(final_model), load_detectron=None,
-        #                      multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
-        #                      range=None, set_cfgs=[], vis=False)
-        #test_net_routine(args_test)
+        args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                              load_ckpt='{}'.format(final_model), load_detectron=None,
+                              multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                              range=None, set_cfgs=[], vis=False)
+        test_net_routine(args_test)
 
 
 if __name__ == '__main__':

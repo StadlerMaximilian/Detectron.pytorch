@@ -1007,8 +1007,11 @@ __C.GAN.MODEL.LABEL_SMOOTHING = 1.0
 
 __C.GAN.TRAIN = AttrDict()
 __C.GAN.TRAIN.FREEZE_CONV_BODY = True
-__C.GAN.TRAIN.PRETRAINED_WEIGHT_FILE = ''
+__C.GAN.TRAIN.PRETRAINED_WEIGHTS = ''
 __C.GAN.TRAIN.k = 1
+__C.GAN.TRAIN.DATASETS_SOURCE = ()
+__C.GAN.TRAIN.DATASETS_TARGET = ()
+
 
 
 __C.GAN.SOLVER = AttrDict()
@@ -1079,6 +1082,8 @@ __C.GAN.SOLVER.SCALE_MOMENTUM_THRESHOLD = 1.1
 # Suppress logging of changes to LR unless the relative change exceeds this
 # threshold (prevents linear warm up from spamming the training log)
 __C.GAN.SOLVER.LOG_LR_CHANGE_THRESHOLD = 1.1
+
+
 
 
 # ---------------------------------------------------------------------------- #

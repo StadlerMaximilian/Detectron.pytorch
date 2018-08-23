@@ -27,6 +27,7 @@ class Discriminator(nn.Module):
                                          nn.Linear(1024, 1),
                                          nn.Sigmoid())
         self._init_weights()
+        self.Tensor = torch.cuda.FloatTensor
 
         self.Box_Head = get_func(cfg.GAN.MODEL.CONV_BODY_FC_HEAD)(dim_in, resolution)
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
@@ -35,20 +36,27 @@ class Discriminator(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
 
-    def forward(self, blob_conv, rpn_ret, adv_target=None):
+    def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 
-        batch_size = blob_conv.size(0)
+        batch_size = len(rpn_ret['labels_int32'])
+        print("batch_size in discriminator: {}".format(batch_size))
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 
-        box_feat = self.Box_Head(blob_conv, rpn_ret)
+        box_feat = self.Box_Head(blob_conv.view(batch_size, -1))
         cls_score, bbox_pred = self.Box_Outs(box_feat)
 
-        if self.training and adv_target is not None:
+        if self.training:
+            if adv_target < 0.0 or adv_target > 1.0:
+                raise ValueError("INVALID adv_target specified!")
+
+            adv_target_tensor = Variable(self.Tensor(batch_size, 1).fill_(adv_target),
+                                         requires_grad=False)
+
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            loss_adv = self.adversarial_loss(adv_score, adv_target)
+            loss_adv = self.adversarial_loss(adv_score, adv_target_tensor)
             return_dict['losses']['loss_adv'] = loss_adv
 
             loss_cls, loss_bbox, accuracy_cls = fast_rcnn_heads.fast_rcnn_losses(
@@ -68,6 +76,7 @@ class Discriminator(nn.Module):
             return_dict['cls_score'] = cls_score
             return_dict['bbox_pred'] = bbox_pred
             return_dict['adv_score'] = adv_score
+            return_dict['rois'] = rpn_ret['rois']
 
         return return_dict
 

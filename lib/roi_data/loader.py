@@ -146,6 +146,7 @@ def cal_minibatch_ratio(ratio_list):
 
 class MinibatchSampler(torch_sampler.Sampler):
     def __init__(self, ratio_list, ratio_index):
+        super().__init__(data_source=None)
         self.ratio_list = ratio_list
         self.ratio_index = ratio_index
         self.num_data = len(ratio_list)
@@ -194,6 +195,7 @@ class BatchSampler(torch_sampler.BatchSampler):
     """
 
     def __init__(self, sampler, batch_size, drop_last):
+        super().__init__(sampler, batch_size, drop_last)
         if not isinstance(sampler, torch_sampler.Sampler):
             raise ValueError("sampler should be an instance of "
                              "torch.utils.data.Sampler, but got sampler={}"
@@ -224,7 +226,6 @@ class BatchSampler(torch_sampler.BatchSampler):
             return len(self.sampler) // self.batch_size
         else:
             return (len(self.sampler) + self.batch_size - 1) // self.batch_size
-
 
 
 def collate_minibatch(list_of_blobs):

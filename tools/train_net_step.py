@@ -137,12 +137,6 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer):
     return save_name
 
 
-def cycle(iterable):
-    while True:
-        for x in iterable:
-            yield x
-
-
 def main():
     """Main function"""
     args = parse_args()

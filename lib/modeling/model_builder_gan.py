@@ -21,7 +21,7 @@ import utils.detectron_weight_helper as weight_utils
 import utils.net as net_utils
 
 
-class GAN(nn.module):
+class GAN(nn.Module):
     def __init__(self, generator_weights=None, discriminator_weights=None):
         super().__init__()
         self.mapping_to_detectron = None
