@@ -44,7 +44,8 @@ GAN:
   SOLVER:
     WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO
     WEIGHT_DECAY_G: 0.0005
-    LR_POLICY: steps_with_decay
+    LR_POLICY_D: steps_with_decay
+    LR_POLICY_G: steps_with_decay
     BASE_LR_D: 0.0025
     BASE_LR_G: 0.0025
     GAMMA_D: 0.1
