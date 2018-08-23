@@ -112,7 +112,7 @@ class Generator(nn.Module):
         rpn_ret = self.RPN(blob_conv, im_info, roidb)
         return_dict['rpn_ret'] = rpn_ret
 
-        blob_conv_pooled = self.roi_pool(blob_conv)
+        blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
         return_dict['blob_conv_pooled'] = blob_conv_pooled
 
         if self.provide_fake_features:
