@@ -98,6 +98,11 @@ def parse_args():
         '--use_tfboard', help='Use tensorflow tensorboard to log training info',
         action='store_true')
 
+    parser.add_argument(
+        '--bs', dest='batch_size',
+        help='Explicitly specify to overwrite the value comed from cfg_file.',
+        type=int)
+
     return parser.parse_args()
 
 
