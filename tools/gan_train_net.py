@@ -413,8 +413,8 @@ def main():
     ### Training Setups ###
     args.run_name = misc_utils.get_run_name() + '_step'
     output_dir = misc_utils.get_output_dir(args, args.run_name)
-    output_dir_D = os.path.join(output_dir, '/discriminator')
-    output_dir_G = os.path.join(output_dir, '/generator')
+    output_dir_D = misc_utils.get_output_dir_part(args, args.run_name, 'discriminator')
+    output_dir_G = misc_utils.get_output_dir_part(args, args.run_name, 'generator')
     args.cfg_filename = os.path.basename(args.cfg_file)
 
     if not args.no_save:
@@ -583,7 +583,7 @@ def main():
             rpn_ret = outputs_G['rpn_ret']
             # also use smoothed value for GENERATOR training
             outputs_DG = discriminator(blob_fake, rpn_ret, adv_target=cfg.GAN.MODEL.LABEL_SMOOTHING)
-            training_stats.UpdateIterStats(outputs_G=outputs_DG)
+            training_stats.UpdateIterStats(out_G=outputs_G)
 
             loss_G = outputs_DG['total_loss']
             loss_G.backward()
