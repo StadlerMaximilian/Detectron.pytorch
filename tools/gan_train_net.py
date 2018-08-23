@@ -383,6 +383,9 @@ def main():
     else:
         raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
 
+    optimizer_D.zero_grad()
+    optimizer_G.zero_grad()
+
     ### Load checkpoint
     if args.load_ckpt_G and args.load_ckpt_D:
         load_name_G = args.load_ckpt_G
@@ -522,7 +525,6 @@ def main():
                         if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
-                optimizer_D.zero_grad()
                 generator.module._set_provide_fake_features(True)
                 outputs_G = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G]
@@ -562,6 +564,7 @@ def main():
 
                 loss_D = outputs_D['total_loss']
                 loss_D.backward()
+                optimizer_D.zero_grad()
 
                 optimizer_D.step()
 
@@ -588,7 +591,6 @@ def main():
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
-            optimizer_G.zero_grad()
             outputs_G = generator(**input_data_fake)
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]
@@ -604,6 +606,7 @@ def main():
             loss_G = outputs_DG['total_loss']
             loss_G.backward()
             optimizer_G.step()
+            optimizer_G.zero_grad()
 
             training_stats.IterToc()
 

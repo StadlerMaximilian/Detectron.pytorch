@@ -80,13 +80,13 @@ def log_gan_stats(stats, misc_args):
     if stats['metrics']:
         lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['metrics'].items()) + "\n"
     if stats['head_losses_G']:
-        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_G'].items()) + "\n"
+        lines += "\t\tGenerator: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_G'].items()) + "\n"
     if stats['head_losses_D']:
-        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_D'].items()) + "\n"
+        lines += "\t\tDiscriminator: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_D'].items()) + "\n"
     if stats['adv_loss_G']:
-        lines += "\t\t adv_generator: {:.6f} \n".format(stats['adv_loss_G'])
+        lines += "\t\tadv_loss_generator: {:.6f} \n".format(stats['adv_loss_G'])
     if stats['adv_loss_D']:
-        lines += "\t\t adv_discriminator: {:.6f} \n".format(stats['adv_loss_D'])
+        lines += "\t\tadv__loss_discriminator: {:.6f} \n".format(stats['adv_loss_D'])
     print(lines[:-1])  # remove last new line
 
 

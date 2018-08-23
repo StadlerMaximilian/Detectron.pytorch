@@ -70,8 +70,8 @@ class TrainingStats(object):
     def UpdateIterStats(self, out_D=None, out_G=None):
         """Update tracked iteration statistics."""
 
-        if out_D is not None and not self.flag_D: # first trained on either real/fake images (then set flag)
-            self.total_loss = 0
+        if out_D is not None and not self.flag_D:  # first trained on either real/fake images (then set flag)
+            self.total_loss = 0.0
             self.flag_D = True
 
             for k, loss in out_D['losses'].items():
@@ -89,17 +89,16 @@ class TrainingStats(object):
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
-        elif out_D is not None and self.flag_D : # first trained on fake images
-
+        elif out_D is not None and self.flag_D:  # if flag is set
             for k, loss in out_D['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
                 self.total_loss += loss
                 loss_data = loss.data[0]
-                out_D['losses'][k] = loss
+                out_D['losses'][k] += loss  # adding values for discriminator update
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D['total_loss'] =self.total_loss  # Add the total loss for back propagation
+            out_D['total_loss'] = self.total_loss  # set to total loss including added total losses
             self.smoothed_total_loss_D.AddValue(self.total_loss.data[0])
 
             for k, metric in out_D['metrics'].items():
@@ -107,7 +106,7 @@ class TrainingStats(object):
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
         elif out_G is not None:
-            total_loss = 0
+            total_loss = 0.0
 
             for k, loss in out_G['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
@@ -182,7 +181,6 @@ class TrainingStats(object):
                 raise ValueError("Unexpected loss key: %s" % k)
 
         for k, v in self.smoothed_losses_G.items():
-            print("{}, {}".format(k,v))
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
                 adv_loss_G = v.GetMedianValue()
