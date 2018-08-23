@@ -50,12 +50,31 @@ class fast_rcnn_outputs(nn.Module):
 def fast_rcnn_losses(cls_score, bbox_pred, label_int32, bbox_targets,
                      bbox_inside_weights, bbox_outside_weights):
     device_id = cls_score.get_device()
-    rois_label = Variable(torch.from_numpy(label_int32.astype('int64'))).cuda(device_id)
+
+    # introduce checks for arguments being already of type torch.tensor(), as
+    # when split into generator and discriminator, the DataParallel-Module converts arrays already into Tensors()
+    
+    if isinstance(label_int32, torch.Tensor):
+        rois_label = Variable(label_int32).cuda(device_id)
+    else:
+        rois_label = Variable(torch.from_numpy(label_int32.astype('int64'))).cuda(device_id)
     loss_cls = F.cross_entropy(cls_score, rois_label)
 
-    bbox_targets = Variable(torch.from_numpy(bbox_targets)).cuda(device_id)
-    bbox_inside_weights = Variable(torch.from_numpy(bbox_inside_weights)).cuda(device_id)
-    bbox_outside_weights = Variable(torch.from_numpy(bbox_outside_weights)).cuda(device_id)
+    if isinstance(bbox_targets, torch.Tensor):
+        bbox_targets = Variable(bbox_targets).cuda(device_id)
+    else:
+        bbox_targets = Variable(torch.from_numpy(bbox_targets)).cuda(device_id)
+
+    if isinstance(bbox_inside_weights, torch.Tensor):
+        bbox_inside_weights = Variable(bbox_inside_weights).cuda(device_id)
+    else:
+        bbox_inside_weights = Variable(torch.from_numpy(bbox_inside_weights)).cuda(device_id)
+
+    if isinstance(bbox_outside_weights, torch.Tensor):
+        bbox_outside_weights = Variable(bbox_outside_weights).cuda(device_id)
+    else:
+        bbox_outside_weights = Variable(torch.from_numpy(bbox_outside_weights)).cuda(device_id)
+
     loss_bbox = net_utils.smooth_l1_loss(
         bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights)
 
