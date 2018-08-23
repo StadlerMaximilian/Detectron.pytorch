@@ -105,6 +105,8 @@ class TrainingStats(object):
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
+            self.flag_D = False  # set flag again to false to reset alternating storing scheme
+
         elif out_G is not None:
             total_loss = 0.0
 
