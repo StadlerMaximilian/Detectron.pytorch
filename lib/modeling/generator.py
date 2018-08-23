@@ -3,15 +3,35 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
+import importlib
 
 from core.config import cfg
 from model.roi_pooling.functions.roi_pool import RoIPoolFunction
 from model.roi_crop.functions.roi_crop import RoICropFunction
 from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
-from modeling.model_builder import get_func
 import modeling.rpn_heads as rpn_heads
 import utils.net as net_utils
 import utils.blob as blob_utils
+
+
+def get_func(func_name):
+    """Helper to return a function object by name. func_name must identify a
+    function in this module or the path to a function relative to the base
+    'modeling' module.
+    """
+    if func_name == '':
+        return None
+    try:
+        parts = func_name.split('.')
+        # Refers to a function in this module
+        if len(parts) == 1:
+            return globals()[parts[0]]
+        # Otherwise, assume we're referencing a module under modeling
+        module_name = 'modeling.' + '.'.join(parts[:-1])
+        module = importlib.import_module(module_name)
+        return getattr(module, parts[-1])
+    except Exception:
+        raise
 
 
 class Generator(nn.Module):
