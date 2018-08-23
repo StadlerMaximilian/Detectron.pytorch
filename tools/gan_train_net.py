@@ -523,7 +523,7 @@ def main():
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 optimizer_D.zero_grad()
-                generator._set_provide_fake_features(True)
+                generator.module._set_provide_fake_features(True)
                 outputs_G = generator(**input_data_fake)
                 blob_fake = outputs_G['blob_fake']
                 rpn_ret = outputs_G['rpn_ret']
@@ -541,7 +541,7 @@ def main():
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
-                generator._set_provide_fake_features(False)
+                generator.module._set_provide_fake_features(False)
                 outputs_G = generator(**input_data_real)
                 blob_conv = outputs_G['blob_conv']
                 rpn_ret = outputs_G['rpn_ret']
@@ -576,9 +576,7 @@ def main():
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
-
-
-            generator._set_provide_fake_features(True)
+            generator.module._set_provide_fake_features(True)
             optimizer_G.zero_grad()
             outputs_G = generator(**input_data_fake)
             blob_fake = outputs_G['blob_fake']
