@@ -254,7 +254,7 @@ class ResidualBlock(nn.Module):
         orphan_in_detectron = []
         self.mapping_to_detectron = detectron_weight_mapping
         self.orphans_in_detectron = orphan_in_detectron
-        return self.mapping_to_detectron, self.detectron_weight_mapping()
+        return self.mapping_to_detectron, self.orphans_in_detectron
 
     def _init_weights(self):
         init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
