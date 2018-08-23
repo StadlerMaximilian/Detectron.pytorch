@@ -39,12 +39,8 @@ class Discriminator(nn.Module):
     def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 
-        #debug
-        for k, v in rpn_ret.items():
-            print("{}: {}".format(k, type(v)))
-
         batch_size = len(rpn_ret['labels_int32'])
-        #print("batch_size in discriminator: {}".format(batch_size))
+        print("\t\t batch_size in discriminator: {}".format(batch_size))
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 
         box_feat = self.Box_Head(blob_conv.view(batch_size, -1))
@@ -143,5 +139,5 @@ class Discriminator(nn.Module):
         return_dict['losses'][key] = value
 
     def adversarial_loss(self, blob, target):
-        return torch.nn.BCELoss(blob, target)
+        return F.binary_cross_entropy(blob, target)
 
