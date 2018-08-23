@@ -195,4 +195,8 @@ class TrainingStats(object):
         stats['adv_losses_D'] = OrderedDict(adv_losses_D)
         stats['adv_losses_G'] = OrderedDict(adv_losses_G)
 
+        #debug
+        for k, v in stats.items:
+            print("{}: {}".format(k, v))
+
         return stats
