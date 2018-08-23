@@ -20,6 +20,9 @@ class Discriminator(nn.Module):
     def __init__(self, dim_in, resolution, pretrained_weights=None):
         super().__init__()
         self.fc_dim = dim_in * resolution * resolution
+        self.mapping_to_detectron = None
+        self.orphans_in_detectron = None
+
         self.adversarial = nn.Sequential(nn.Linear(self.fc_dim, 4096),
                                          nn.ReLU(inplace=True),
                                          nn.Linear(4096, 1024),
@@ -33,8 +36,7 @@ class Discriminator(nn.Module):
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-        self.mapping_to_detectron = None
-        self.orphans_in_detectron = None
+
 
     def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
