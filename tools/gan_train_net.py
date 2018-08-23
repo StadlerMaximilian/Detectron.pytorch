@@ -498,7 +498,7 @@ def main():
             training_stats.IterTic()
 
             # train discriminator
-            for _ in cfg.GAN.TRAIN.k:
+            for _ in range(cfg.GAN.TRAIN.k):
 
                 # train on fake data
                 if USE_TARGET:
