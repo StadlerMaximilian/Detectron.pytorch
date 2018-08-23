@@ -27,7 +27,7 @@ import datetime
 import numpy as np
 
 from core.config import cfg
-from utils.logging import log_stats
+from utils.logging import log_gan_stats
 from utils.logging import SmoothedValue
 from utils.timer import Timer
 import utils.net as nu
@@ -135,7 +135,7 @@ class TrainingStats(object):
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == cfg.SOLVER.MAX_ITER - 1):
             stats = self.GetStats(cur_iter, lr_D, lr_G)
-            log_stats(stats, self.misc_args)
+            log_gan_stats(stats, self.misc_args)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 

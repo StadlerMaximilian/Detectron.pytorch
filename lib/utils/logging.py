@@ -64,6 +64,32 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
+def log_gan_stats(stats, misc_args):
+    """Log training statistics specifically for gans to terminal"""
+    if hasattr(misc_args, 'epoch'):
+        lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
+            misc_args.run_name, misc_args.cfg_filename,
+            misc_args.epoch, misc_args.step, misc_args.iters_per_epoch)
+    else:
+        lines = "[%s][%s][Step %d / %d]\n" % (
+            misc_args.run_name, misc_args.cfg_filename, stats['iter'], cfg.SOLVER.MAX_ITER)
+
+    lines += "\t\tlossGenerator: %.6f, lossDiscriminator: % .6f ,lr: %.6f time: %.6f, eta: %s\n" % (
+        stats['loss_G'], stats['loss_D'], stats['lr'], stats['time'], stats['eta']
+    )
+    if stats['metrics']:
+        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['metrics'].items()) + "\n"
+    if stats['head_losses_G']:
+        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_G'].items()) + "\n"
+    if stats['head_losses_D']:
+        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_D'].items()) + "\n"
+    if stats['adv_losses_G']:
+        lines += "\t\t adv_generator: {.6f} \n".format(stats['adv_losses_G'])
+    if stats['adv_losses_D']:
+        lines += "\t\t adv_discriminator: {.6f} \n".format(stats['adv_losses_D'])
+    print(lines[:-1])  # remove last new line
+
+
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a
     window or the global series average.
