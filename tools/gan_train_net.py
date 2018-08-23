@@ -564,9 +564,8 @@ def main():
 
                 loss_D = outputs_D['total_loss']
                 loss_D.backward()
-                optimizer_D.zero_grad()
-
                 optimizer_D.step()
+                optimizer_D.zero_grad()
 
             # train generator
             if USE_TARGET:

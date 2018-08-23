@@ -168,8 +168,6 @@ class TrainingStats(object):
 
         head_losses_D = []
         head_losses_G = []
-        adv_losses_D = []
-        adv_losses_G = []
 
         for k, v in self.smoothed_losses_D.items():
             toks = k.split('_')
