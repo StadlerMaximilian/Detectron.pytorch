@@ -39,7 +39,6 @@ class Discriminator(nn.Module):
     def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 
-        print(type(rpn_ret['labels_int32']))
         batch_size = len(rpn_ret['labels_int32'])
         #print("batch_size in discriminator: {}".format(batch_size))
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
@@ -59,9 +58,6 @@ class Discriminator(nn.Module):
 
             loss_adv = self.adversarial_loss(adv_score, adv_target_tensor)
             return_dict['losses']['loss_adv'] = loss_adv
-
-            print(type(rpn_ret['labels_int32']))
-            print(rpn_ret['labels_int32'].size())
 
             loss_cls, loss_bbox, accuracy_cls = fast_rcnn_heads.fast_rcnn_losses(
                 cls_score, bbox_pred, rpn_ret['labels_int32'], rpn_ret['bbox_targets'],
