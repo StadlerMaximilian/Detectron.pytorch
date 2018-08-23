@@ -207,17 +207,17 @@ def main():
 
     # Adjust solver steps
     step_scale = original_batch_size / effective_batch_size
-    old_solver_steps_D = cfg.GAN.SOLVER.STEPS
-    old_solver_steps_G = cfg.GAN.SOLVER.STEPS
+    #old_solver_steps_D = cfg.GAN.SOLVER.STEPS
+    #old_solver_steps_G = cfg.GAN.SOLVER.STEPS
+    old_solver_steps = cfg.GAN.SOLVER.STEPS
     old_max_iter = cfg.GAN.SOLVER.MAX_ITER
-    cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_D))
-    cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_G))
+    #cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_D))
+    #cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_G))
+    cfg.GAN.SOLVER.STEPS = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS))
     cfg.GAN.SOLVER.MAX_ITER = int(cfg.GAN.SOLVER.MAX_ITER * step_scale + 0.5)
     print('Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
           '    SOLVER.STEPS_D: {} --> {}\n'
-          '    SOLVER.STEPS_G: {} --> {}\n'
-          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_D, cfg.GAN.SOLVER.STEPS_D,
-                                                  old_solver_steps_G, cfg.GAN.SOLVER.STEPS_G,
+          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps, cfg.GAN.SOLVER.STEPS,
                                                   old_max_iter, cfg.GAN.SOLVER.MAX_ITER))
 
     if args.num_workers is not None:
