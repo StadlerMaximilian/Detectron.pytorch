@@ -336,7 +336,7 @@ def main():
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
     ]
     # names of paramerters for each paramter
-    param_names_D = [params['G']['nonbias_param_names'], params['G']['bias_param_names']]
+    param_names_D = [params['D']['nonbias_param_names'], params['D']['bias_param_names']]
 
     ### Generator Parameters ###
     params['G'] = {
