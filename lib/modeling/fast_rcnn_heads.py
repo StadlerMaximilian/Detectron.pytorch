@@ -50,7 +50,7 @@ class fast_rcnn_outputs(nn.Module):
 def fast_rcnn_losses(cls_score, bbox_pred, label_int32, bbox_targets,
                      bbox_inside_weights, bbox_outside_weights):
     device_id = cls_score.get_device()
-    print('{}'.format(type(label_int32),
+    print('{}, {}, {}\n'.format(type(label_int32),
                       type(bbox_targets),
                       type( bbox_outside_weights)
                       ))

@@ -164,6 +164,10 @@ class Generalized_RCNN(nn.Module):
 
         rpn_ret = self.RPN(blob_conv, im_info, roidb)
 
+        #debug
+        for k, v in rpn_ret:
+            print("{}: {}\n".format(k, v))
+
         # if self.training:
         #     # can be used to infer fg/bg ratio
         #     return_dict['rois_label'] = rpn_ret['labels_int32']
