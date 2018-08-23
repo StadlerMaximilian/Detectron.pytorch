@@ -39,4 +39,5 @@ CUSTOM_DATA:
   FORCE_TEST: True
   FORCE_JSON_DATASET_EVAL: True
 GAN:
-  TRAIN.DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit',)
+  TRAIN:
+    DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit',)
