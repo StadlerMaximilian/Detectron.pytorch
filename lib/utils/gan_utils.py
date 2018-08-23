@@ -182,6 +182,7 @@ class TrainingStats(object):
                 raise ValueError("Unexpected loss key: %s" % k)
 
         for k, v in self.smoothed_losses_G.items():
+            print("{}, {}".format(k,v))
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
                 adv_losses_G.append((k, v.GetMedianValue()))
@@ -194,9 +195,5 @@ class TrainingStats(object):
         stats['head_losses_G'] = OrderedDict(head_losses_G)
         stats['adv_losses_D'] = OrderedDict(adv_losses_D)
         stats['adv_losses_G'] = OrderedDict(adv_losses_G)
-
-        #debug
-        for k, v in stats.items:
-            print("{}: {}".format(k, v))
 
         return stats
