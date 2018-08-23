@@ -9,6 +9,7 @@ data/*
 notebooks/*.pkl
 
 /Outputs
+/data
 
 # ------------------------------
 
