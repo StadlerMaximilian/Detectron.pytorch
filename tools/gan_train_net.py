@@ -262,6 +262,9 @@ def main():
         USE_TARGET = True
         num_loaders = 3
 
+    train_size_D = 0
+    train_size_G = 0
+    train_size = 0
 
     # Dataset #
     timers['roidb_source'].tic()
@@ -273,7 +276,8 @@ def main():
     logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_source'].average_time)
 
     # Effective training sample size for one epoch
-    train_size = roidb_size_source // args.batch_size * args.batch_size
+    train_size_D += roidb_size_source // args.batch_size_D * args.batch_size_D
+    train_size_G += roidb_size_source // args.batch_Size_G * args.batch_size_G
 
     batchSampler_source_discriminator= BatchSampler(
         sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
@@ -303,6 +307,10 @@ def main():
         roidb_size_target = len(roidb_target)
         logger.info('{:d} roidb entries'.format(roidb_size_target))
         logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
+
+        # Effective training sample size for one epoch
+        train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
+        train_size_G += roidb_size_target // args.batch_Size_G * args.batch_size_G
 
         batchSampler_target_discriminator = BatchSampler(
             sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
@@ -343,7 +351,7 @@ def main():
             pin_memory=False)
 
         dataiterator_target_generator = iter(dataloader_target_generator)
-
+        train_size = max(train_size_D // 2, train_size_G // 2)
     else:
         batchSampler_source_generator = BatchSampler(
             sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
@@ -364,6 +372,8 @@ def main():
             pin_memory=False)
 
         dataiterator_source_generator = iter(dataloader_source_generator)
+
+        train_size = max(train_size_D, train_size_G)
 
     # Model
     generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
