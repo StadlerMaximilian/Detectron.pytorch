@@ -546,7 +546,7 @@ def main():
         gan = GAN(generator_weights=args.gen, discriminator_weights=args.dis)
         final_model = save_model(output_dir, no_save=False, model=gan)
 
-        for key, _ in gan.state_dict().items()
+        for key, _ in gan.state_dict().items():
             print(key)
 
         if final_model is not None:
