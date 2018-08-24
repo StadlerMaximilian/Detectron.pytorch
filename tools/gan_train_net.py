@@ -623,6 +623,12 @@ def main():
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
                 loss_D_fake = outputs_D_fake['total_loss']
 
+                del input_data_fake
+                del outputs_G_fake
+                del blob_fake
+                del rpn_ret_fake
+                del input_discriminator
+
                 mem = torch.cuda.max_memory_allocated()
                 print("Finished training D1 with mem: {}".format(mem))
 
@@ -657,6 +663,12 @@ def main():
                 loss_D.backward()
                 optimizer_D.step()
 
+                del outputs_G_real
+                del blob_conv_pooled
+                del rpn_ret_real
+                del input_discriminator
+                del input_data_real
+
                 mem = torch.cuda.max_memory_allocated()
                 print("Finished training D2 with mem: {}".format(mem))
 
@@ -667,18 +679,18 @@ def main():
             optimizer_G.zero_grad()
 
             try:
-                input_data_fake = next(dataiterator_target_generator)
+                input_data_fake_g = next(dataiterator_target_generator)
             except StopIteration:
                 dataiterator_target_generator = iter(dataloader_target_generator)
-                input_data_fake = next(dataiterator_target_generator)
+                input_data_fake_g = next(dataiterator_target_generator)
 
-            for key in input_data_fake:
+            for key in input_data_fake_g:
                 if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                    input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+                    input_data_fake_g[key] = list(map(Variable, input_data_fake_g[key]))
 
             generator.module._set_provide_fake_features(True)
-            input_data_fake.update({"flags": fake_gen_flags})
-            outputs_GG = generator(**input_data_fake)
+            input_data_fake_g.update({"flags": fake_gen_flags})
+            outputs_GG = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
@@ -692,6 +704,11 @@ def main():
             loss_G = outputs_DG['total_loss']
             loss_G.backward()
             optimizer_G.step()
+
+            del input_data_fake_g
+            del blob_fake_g
+            del rpn_ret_g
+            del input_discriminator
 
             mem = torch.cuda.max_memory_allocated()
             print("Finished training G with mem: {}".format(mem))
