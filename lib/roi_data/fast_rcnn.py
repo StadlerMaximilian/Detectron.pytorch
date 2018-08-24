@@ -229,9 +229,9 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     if flags.fake_mode:
         # for fake samples: keep only samples with area < area-threshold
-        keep_area_inds = box_utils.filter_large_boxes(bboxes[:, 1:], max_size=area_thrs)
+        keep_area_inds = box_utils.filter_large_boxes(bboxes, max_size=area_thrs)
     else:  # mode == "REAL":
-        keep_area_inds = box_utils.filter_small_boxes(bboxes[:, 1:], min_size=area_thrs)
+        keep_area_inds = box_utils.filter_small_boxes(bboxes, min_size=area_thrs)
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
