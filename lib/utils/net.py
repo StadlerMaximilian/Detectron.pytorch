@@ -166,7 +166,7 @@ def load_ckpt(model, ckpt):
             except KeyError:
                 name_parts = name.split('.')
                 name_parts = [x for x in name_parts if x != "fc_head"]
-                name_modified = '.'.join(name_parts.join)
+                name_modified = '.'.join(name_parts)
                 if mapping[name_modified]:
                     state_dict[name_modified] = ckpt[name_modified]
         else:
