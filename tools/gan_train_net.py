@@ -604,9 +604,6 @@ def main():
 
                 optimizer_D.zero_grad()
 
-                mem = torch.cuda.max_memory_allocated()
-                print("Training D1 with mem: {}".format(mem))
-
                 # train on fake data
                 try:
                     input_data_fake = next(dataiterator_target_discriminator)
@@ -618,10 +615,11 @@ def main():
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
+                generator.module._set_provide_fake_features(True)
                 input_data_fake.update({"flags": create_flags("fake", "discriminator")})
                 outputs_G_fake = generator(**input_data_fake)
 
-                blob_fake = [Variable(torch.tensor(x['blob_fake'])).cuda() for x in outputs_G_fake]
+                blob_fake = [x['blob_fake'] for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
@@ -651,7 +649,7 @@ def main():
                 generator.module._set_provide_fake_features(False)
                 input_data_real.update({"flags": create_flags("real", "discriminator")})
                 outputs_G_real = generator(**input_data_real)
-                blob_conv_pooled = [Variable(torch.tensor(x['blob_conv_pooled'])).cuda() for x in outputs_G_real]
+                blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
@@ -665,12 +663,7 @@ def main():
                 loss_D.backward()
                 optimizer_D.step()
 
-                mem = torch.cuda.max_memory_allocated()
-                print("Finished training D2 with mem: {}".format(mem))
-
             # train generator
-            mem = torch.cuda.max_memory_allocated()
-            print("Training G with mem: {}".format(mem))
             optimizer_G.zero_grad()
 
             try:
@@ -700,15 +693,9 @@ def main():
             loss_G.backward()
             optimizer_G.step()
 
-            mem = torch.cuda.max_memory_allocated()
-            print("Finished training G with mem: {}".format(mem))
-
             training_stats.IterToc()
 
             training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
-
-            mem = torch.cuda.max_memory_allocated()
-            print("Freed cache: mem: {}".format(mem))
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
