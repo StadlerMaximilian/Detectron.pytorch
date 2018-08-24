@@ -598,6 +598,7 @@ def main():
 
             training_stats.IterTic()
 
+            """
             # train discriminator
             for _ in range(cfg.GAN.TRAIN.k):
 
@@ -668,9 +669,9 @@ def main():
                 print("Finished training D2 with mem: {}".format(mem))
 
                 mem = torch.cuda.max_memory_allocated()
-                print("Training G with mem: {}".format(mem))
-
+            """
             # train generator
+            print("Training G with mem: {}".format(mem))
             optimizer_G.zero_grad()
 
             try:
