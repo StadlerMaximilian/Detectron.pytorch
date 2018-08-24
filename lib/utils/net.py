@@ -159,8 +159,20 @@ def load_ckpt(model, ckpt):
     mapping, _ = model.detectron_weight_mapping()
     state_dict = {}
     for name in ckpt:
-        if mapping[name]:
-            state_dict[name] = ckpt[name]
+        if "fc_head" in name:
+            try:
+                if mapping[name]:
+                    state_dict[name] = ckpt[name]
+            except KeyError:
+                name_parts = name.split('.')
+                name_parts = [x for x in name_parts if x != "fc_head"]
+                name_modified = name_parts.join('.')
+                if mapping[name]:
+                    state_dict[name] = ckpt[name]
+        else:
+            if mapping[name]:
+                state_dict[name] = ckpt[name]
+
     model.load_state_dict(state_dict, strict=False)
 
 
