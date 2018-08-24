@@ -236,6 +236,8 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
 
+    print("sample rois: {} / {}".foormat(rois_per_image, fg_rois_per_image))
+
     max_overlaps = roidb['max_overlaps']
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
