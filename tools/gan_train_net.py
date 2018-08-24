@@ -165,6 +165,14 @@ def save_model(output_dir, no_save, model):
     return save_name
 
 
+def create_flags(mode, train):
+    return [ModeFlags(mode, train) for _ in range(cfg.NUM_GPUS)]
+
+
+def create_adv_targets(value):
+    return [value] * cfg.NUM_GPUS
+
+
 def main():
     """Main function"""
     args = parse_args()
@@ -475,6 +483,7 @@ def main():
 
     generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
                                   minibatch=True, batch_outputs=False) # keep batch split onto GPUs for generator
+    generator.module._set_provide_fake_features(True)
     discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
                                       minibatch=True)
 
@@ -507,13 +516,7 @@ def main():
     ### Training Loop ###
     generator.train()
     discriminator.train()
-    fake_dis_flags = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
-    real_dis_flags = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
-    fake_gen_flags = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
-    # use smoothed label for "REAL" - Label
-    adv_target_smoothed = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
-    # 0.0 for fake in discriminator
-    adv_target_zero = [0.0] * cfg.NUM_GPUS
+
 
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
@@ -614,15 +617,14 @@ def main():
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
-                generator.module._set_provide_fake_features(True)
-                input_data_fake.update({"flags": fake_dis_flags})
+                input_data_fake.update({"flags": create_flags("fake", "discriminator")})
                 outputs_G_fake = generator(**input_data_fake)
 
-                blob_fake = [Variable(x['blob_fake']).cuda() for x in outputs_G_fake]
+                blob_fake = [Variable(torch.tensor(x['blob_fake'])).cuda() for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
-                                       'adv_target': adv_target_zero
+                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
@@ -646,13 +648,13 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                input_data_real.update({"flags": real_dis_flags})
+                input_data_real.update({"flags": create_flags("real", "discriminator")})
                 outputs_G_real = generator(**input_data_real)
-                blob_conv_pooled = [Variable(x['blob_conv_pooled']).cuda() for x in outputs_G_real]
+                blob_conv_pooled = [Variable(torch.tensor(x['blob_conv_pooled'])).cuda() for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
-                                       'adv_target': adv_target_smoothed
+                                       'adv_target': create_adv_targets(0.0)
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
@@ -682,14 +684,14 @@ def main():
                     input_data_fake_g[key] = list(map(Variable, input_data_fake_g[key]))
 
             generator.module._set_provide_fake_features(True)
-            input_data_fake_g.update({"flags": fake_gen_flags})
+            input_data_fake_g.update({"flags": create_flags("fake", "generator")})
             outputs_GG = generator(**input_data_fake_g)
-            blob_fake_g = [Variable(x['blob_fake']).cuda() for x in outputs_GG]
+            blob_fake_g = [Variable(torch.tensor(x['blob_fake'])).cuda() for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
             input_discriminator = {'blob_conv': blob_fake_g,
                                    'rpn_ret': rpn_ret_g,
-                                   'adv_target': adv_target_smoothed
+                                   'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
                                    }
             outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)

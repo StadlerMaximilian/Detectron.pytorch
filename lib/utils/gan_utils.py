@@ -105,7 +105,7 @@ class TrainingStats(object):
         """Update tracked iteration statistics."""
 
         if out_D is not None:  # first trained on either real/fake images (then set flag)
-            total_loss = 0.0
+            total_loss = 0
 
             for k, loss in out_D['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
@@ -123,7 +123,7 @@ class TrainingStats(object):
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
         elif out_G is not None:
-            total_loss = 0.0
+            total_loss = 0
 
             for k, loss in out_G['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
