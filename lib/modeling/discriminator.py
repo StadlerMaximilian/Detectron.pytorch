@@ -44,6 +44,9 @@ class Discriminator(nn.Module):
         return_dict = {}
 
         batch_size = len(rpn_ret['labels_int32'])
+        fg = len(rpn_ret['labels_int32'] > 0)
+        print("batch-size in discriminator: {} (fg: {}%)".format(batch_size,
+                                                                 1.0* fg / batch_size * 100.0))
 
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 

@@ -218,26 +218,16 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     assert isinstance(flags, ModeFlags) is True
     area_thrs = cfg.GAN.AREA_THRESHOLD
 
-    for k, v in roidb.items():
-        print(k)
-    return
-
-    if 'bbox_targets' not in roidb:
-        gt_inds = np.where(roidb['gt_classes'] > 0)[0]
-        gt_boxes = roidb['boxes'][gt_inds, :]
-        if area_thrs > 0:
-            bboxes_ind = gt_inds[roidb['box_to_gt_ind_map']]
-            bboxes = gt_boxes[bboxes_ind]
-    else:
-        if area_thrs > 0:
-            bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
+    # gt gt_boxes and sample such that they fulfill threshold criterion
+    gt_inds = np.where(roidb['gt_classes'] > 0)[0]
+    gt_boxes = roidb['boxes'][gt_inds, :]
 
     if area_thrs > 0:
         if flags.fake_mode:
             # for fake samples: keep only samples with area < area-threshold
-            keep_area_inds = box_utils.filter_large_boxes(bboxes, max_size=area_thrs)
+            gt_keep_inds = gt_inds[box_utils.filter_large_boxes(gt_boxes, max_size=area_thrs)]
         else:  # mode == "REAL":
-            keep_area_inds = box_utils.filter_small_boxes(bboxes, min_size=area_thrs)
+            gt_keep_inds = gt_inds[box_utils.filter_small_boxes(gt_boxes, min_size=area_thrs)]
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
@@ -250,8 +240,12 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
+
+    # with area-threshold, only select indices of boxes, whose corresponding ground-truth-box fulfills criterion
+    # i.e. whose corresponding index to gt-box is in gt_keep_inds
     if cfg.GAN.AREA_THRESHOLD > 0:
-        fg_inds = np.asarray([x for x in fg_inds if x in keep_area_inds]).astype(int)
+        fg_inds = np.asarray(x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds).astype(int)
+
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, int(fg_inds.size))
