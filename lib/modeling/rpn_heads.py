@@ -80,7 +80,7 @@ class single_scale_rpn_outputs(nn.Module):
         orphan_in_detectron = []
         return detectron_weight_mapping, orphan_in_detectron
 
-    def forward(self, x, im_info, roidb=None):
+    def forward(self, x, im_info, roidb=None, mode="FAKE", train_part="GENERATOR"):
         """
         x: feature maps from the backbone network. (Variable)
         im_info: (CPU Variable)
@@ -118,7 +118,7 @@ class single_scale_rpn_outputs(nn.Module):
         if cfg.MODEL.FASTER_RCNN:
             if self.training:
                 # Add op that generates training labels for in-network RPN proposals
-                blobs_out = self.RPN_GenerateProposalLabels(rpn_rois, roidb, im_info)
+                blobs_out = self.RPN_GenerateProposalLabels(rpn_rois, roidb, im_info, mode=mode, train_part=train_part)
                 return_dict.update(blobs_out)
             else:
                 # Alias rois to rpn_rois for inference

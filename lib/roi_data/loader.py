@@ -116,19 +116,19 @@ class RoiDataLoader(data.Dataset):
         return self.DATA_SIZE
 
 
-def cal_minibatch_ratio(ratio_list):
+def cal_minibatch_ratio(ratio_list, train_ims_per_batch):
     """Given the ratio_list, we want to make the RATIO same for each minibatch on each GPU.
-    Note: this only work for 1) cfg.TRAIN.MAX_SIZE is ignored during `prep_im_for_blob` 
+    Note: this only work for 1) cfg.TRAIN.MAX_SIZE is ignored during `prep_im_for_blob`
     and 2) cfg.TRAIN.SCALES containing SINGLE scale.
     Since all prepared images will have same min side length of cfg.TRAIN.SCALES[0], we can
      pad and batch images base on that.
     """
     DATA_SIZE = len(ratio_list)
     ratio_list_minibatch = np.empty((DATA_SIZE,))
-    num_minibatch = int(np.ceil(DATA_SIZE / cfg.TRAIN.IMS_PER_BATCH))  # Include leftovers
+    num_minibatch = int(np.ceil(DATA_SIZE / train_ims_per_batch))  # Include leftovers
     for i in range(num_minibatch):
-        left_idx = i * cfg.TRAIN.IMS_PER_BATCH
-        right_idx = min((i+1) * cfg.TRAIN.IMS_PER_BATCH - 1, DATA_SIZE - 1)
+        left_idx = i * train_ims_per_batch
+        right_idx = min((i+1) * train_ims_per_batch - 1, DATA_SIZE - 1)
 
         if ratio_list[right_idx] < 1:
             # for ratio < 1, we preserve the leftmost in each batch.
@@ -145,24 +145,25 @@ def cal_minibatch_ratio(ratio_list):
 
 
 class MinibatchSampler(torch_sampler.Sampler):
-    def __init__(self, ratio_list, ratio_index):
+    def __init__(self, ratio_list, ratio_index, train_ims_per_batch):
         #super().__init__(data_source=None)
         self.ratio_list = ratio_list
         self.ratio_index = ratio_index
         self.num_data = len(ratio_list)
+        self.train_ims_per_batch = train_ims_per_batch
 
         if cfg.TRAIN.ASPECT_GROUPING:
             # Given the ratio_list, we want to make the ratio same
             # for each minibatch on each GPU.
-            self.ratio_list_minibatch = cal_minibatch_ratio(ratio_list)
+            self.ratio_list_minibatch = cal_minibatch_ratio(ratio_list, self.train_ims_per_batch)
 
     def __iter__(self):
         if cfg.TRAIN.ASPECT_GROUPING:
             # indices for aspect grouping awared permutation
-            n, rem = divmod(self.num_data, cfg.TRAIN.IMS_PER_BATCH)
-            round_num_data = n * cfg.TRAIN.IMS_PER_BATCH
+            n, rem = divmod(self.num_data, self.train_ims_per_batch)
+            round_num_data = n * self.train_ims_per_batch
             indices = np.arange(round_num_data)
-            npr.shuffle(indices.reshape(-1, cfg.TRAIN.IMS_PER_BATCH))  # inplace shuffle
+            npr.shuffle(indices.reshape(-1, self.train_ims_per_batch))  # inplace shuffle
             if rem != 0:
                 indices = np.append(indices, np.arange(round_num_data, round_num_data + rem))
             ratio_index = self.ratio_index[indices]
@@ -172,7 +173,7 @@ class MinibatchSampler(torch_sampler.Sampler):
             ratio_list = self.ratio_list[rand_perm]
             ratio_index = self.ratio_index[rand_perm]
             # re-calculate minibatch ratio list
-            ratio_list_minibatch = cal_minibatch_ratio(ratio_list)
+            ratio_list_minibatch = cal_minibatch_ratio(ratio_list, self.train_ims_per_batch)
 
         return iter(zip(ratio_index.tolist(), ratio_list_minibatch.tolist()))
 
@@ -195,7 +196,7 @@ class BatchSampler(torch_sampler.BatchSampler):
     """
 
     def __init__(self, sampler, batch_size, drop_last):
-        #super().__init__(sampler, batch_size, drop_last)
+        #super().__init__(sampler, batch_size, drop_last)  # no init of super-class, as this code is copied from super
         if not isinstance(sampler, torch_sampler.Sampler):
             raise ValueError("sampler should be an instance of "
                              "torch.utils.data.Sampler, but got sampler={}"
@@ -229,6 +230,18 @@ class BatchSampler(torch_sampler.BatchSampler):
 
 
 def collate_minibatch(list_of_blobs):
+    return _collate_minibatch(list_of_blobs, cfg.TRAIN.IMS_PER_BATCH)
+
+
+def collate_minibatch_generator(list_of_blobs):
+    return _collate_minibatch(list_of_blobs, cfg.GAN.TRAIN.IMS_PER_BATCH_G)
+
+
+def collate_minibatch_discriminator(list_of_blobs):
+    return _collate_minibatch(list_of_blobs, cfg.GAN.TRAIN.IMS_PER_BATCH_D)
+
+
+def _collate_minibatch(list_of_blobs, train_imgs_per_batch):
     """Stack samples seperately and return a list of minibatches
     A batch contains NUM_GPUS minibatches and image size in different minibatch may be different.
     Hence, we need to stack smaples from each minibatch seperately.
@@ -237,12 +250,12 @@ def collate_minibatch(list_of_blobs):
     # Because roidb consists of entries of variable length, it can't be batch into a tensor.
     # So we keep roidb in the type of "list of ndarray".
     list_of_roidb = [blobs.pop('roidb') for blobs in list_of_blobs]
-    for i in range(0, len(list_of_blobs), cfg.TRAIN.IMS_PER_BATCH):
-        mini_list = list_of_blobs[i:(i + cfg.TRAIN.IMS_PER_BATCH)]
+    for i in range(0, len(list_of_blobs), train_imgs_per_batch):
+        mini_list = list_of_blobs[i:(i + train_imgs_per_batch)]
         # Pad image data
         mini_list = pad_image_data(mini_list)
         minibatch = default_collate(mini_list)
-        minibatch['roidb'] = list_of_roidb[i:(i + cfg.TRAIN.IMS_PER_BATCH)]
+        minibatch['roidb'] = list_of_roidb[i:(i + train_imgs_per_batch)]
         for key in minibatch:
             Batch[key].append(minibatch[key])
 

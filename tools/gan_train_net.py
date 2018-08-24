@@ -21,7 +21,8 @@ import utils.net as net_utils
 import utils.misc as misc_utils
 from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
 from datasets.roidb import combined_roidb_for_training
-from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, collate_minibatch
+from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, \
+    collate_minibatch_discriminator, collate_minibatch_generator
 from modeling.generator import Generator
 from modeling.discriminator import Discriminator
 from modeling.model_builder_gan import GAN
@@ -99,7 +100,12 @@ def parse_args():
         action='store_true')
 
     parser.add_argument(
-        '--bs', dest='batch_size',
+        '--bs_G', dest='batch_size_G',
+        help='Explicitly specify to overwrite the value comed from cfg_file.',
+        type=int)
+
+    parser.add_argument(
+        '--bs_D', dest='batch_size_D',
         help='Explicitly specify to overwrite the value comed from cfg_file.',
         type=int)
 
@@ -175,50 +181,72 @@ def main():
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
 
-    # Adaptively adjust some configs #
-    original_batch_size = cfg.NUM_GPUS * cfg.TRAIN.IMS_PER_BATCH
-    original_ims_per_batch = cfg.TRAIN.IMS_PER_BATCH
+    # Adaptively adjust some configs for discriminator #
+    original_batch_size_D = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_D
+    original_ims_per_batch_D = cfg.GAN.TRAIN.IMS_PER_BATCH_D
     original_num_gpus = cfg.NUM_GPUS
-    if args.batch_size is None:
-        args.batch_size = original_batch_size
+    if args.batch_size_D is None:
+        args.batch_size_D = original_batch_size_D
     cfg.NUM_GPUS = torch.cuda.device_count()
     assert (args.batch_size % cfg.NUM_GPUS) == 0, \
-        'batch_size: %d, NUM_GPUS: %d' % (args.batch_size, cfg.NUM_GPUS)
-    cfg.TRAIN.IMS_PER_BATCH = args.batch_size // cfg.NUM_GPUS
-    effective_batch_size = args.iter_size * args.batch_size
-    print('effective_batch_size = batch_size * iter_size = %d * %d' % (args.batch_size, args.iter_size))
+        'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_D, cfg.NUM_GPUS)
+    cfg.GAN.TRAIN.IMS_PER_BATCH_D = args.batch_size_D // cfg.NUM_GPUS
+    effective_batch_size_D = args.iter_size * args.batch_size_D
+    print('effective_batch_size_D = batch_size * iter_size = %d * %d' % (args.batch_size_D, args.iter_size))
 
     print('Adaptive config changes:')
-    print('    effective_batch_size: %d --> %d' % (original_batch_size, effective_batch_size))
+    print('    effective_batch_size: %d --> %d' % (original_batch_size_D, effective_batch_size_D))
     print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
-    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch, cfg.TRAIN.IMS_PER_BATCH))
+    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_D, cfg.TRAIN.IMS_PER_BATCH_D))
+
+    # Adaptively adjust some configs for generator #
+    original_batch_size_G = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_G
+    original_ims_per_batch_G = cfg.GAN.TRAIN.IMS_PER_BATCH_G
+    original_num_gpus = cfg.NUM_GPUS
+    if args.batch_size_G is None:
+        args.batch_size_G = original_batch_size_G
+    cfg.NUM_GPUS = torch.cuda.device_count()
+    assert (args.batch_size % cfg.NUM_GPUS) == 0, \
+        'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_G, cfg.NUM_GPUS)
+    cfg.GAN.TRAIN.IMS_PER_BATCH_G = args.batch_size_G // cfg.NUM_GPUS
+    effective_batch_size_G = args.iter_size * args.batch_size_G
+    print('effective_batch_size_D = batch_size * iter_size = %d * %d' % (args.batch_size_G, args.iter_size))
+
+    print('Adaptive config changes:')
+    print('    effective_batch_size: %d --> %d' % (original_batch_size_G, effective_batch_size_G))
+    print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
+    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_G, cfg.TRAIN.IMS_PER_BATCH_G))
 
     # Adjust learning based on batch size change linearly
     # For iter_size > 1, gradients are `accumulated`, so lr is scaled based
     # on batch_size instead of effective_batch_size
     old_base_lr_D = cfg.GAN.SOLVER.BASE_LR_D
     old_base_lr_G = cfg.GAN.SOLVER.BASE_LR_G
-    cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size / original_batch_size
-    cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size / original_batch_size
+    cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size / original_batch_size_D
+    cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size / original_batch_size_G
     print('Adjust BASE_LR_D linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_D, cfg.GAN.SOLVER.BASE_LR_D))
     print('Adjust BASE_LR_G linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_G, cfg.GAN.SOLVER.BASE_LR_G))
 
     # Adjust solver steps
-    step_scale = original_batch_size / effective_batch_size
-    #old_solver_steps_D = cfg.GAN.SOLVER.STEPS
-    #old_solver_steps_G = cfg.GAN.SOLVER.STEPS
-    old_solver_steps = cfg.GAN.SOLVER.STEPS
+    step_scale_D = original_batch_size_D / effective_batch_size_D
+    step_scale_G = original_batch_size_G / effective_batch_size_G
+    old_solver_steps_D = cfg.GAN.SOLVER.STEPS
+    old_solver_steps_G = cfg.GAN.SOLVER.STEPS
     old_max_iter = cfg.GAN.SOLVER.MAX_ITER
-    #cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_D))
-    #cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS_G))
-    cfg.GAN.SOLVER.STEPS = list(map(lambda x: int(x * step_scale + 0.5), cfg.GAN.SOLVER.STEPS))
-    cfg.GAN.SOLVER.MAX_ITER = int(cfg.GAN.SOLVER.MAX_ITER * step_scale + 0.5)
-    print('Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
-          '    SOLVER.STEPS_D: {} --> {}\n'
-          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps, cfg.GAN.SOLVER.STEPS,
-                                                  old_max_iter, cfg.GAN.SOLVER.MAX_ITER))
+    cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale_D + 0.5), cfg.GAN.SOLVER.STEPS_D))
+    cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale_G + 0.5), cfg.GAN.SOLVER.STEPS_G))
+    cfg.GAN.SOLVER.MAX_ITER_D = int(cfg.GAN.SOLVER.MAX_ITER * step_scale_D + 0.5)
+    cfg.GAN.SOLVER.MAX_ITER_G = int(cfg.GAN.SOLVER.MAX_ITER * step_scale_G + 0.5)
+    print('DIS: Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
+          '    SOLVER.STEPS: {} --> {}\n'
+          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_D, cfg.GAN.SOLVER.STEPS_D,
+                                                  old_max_iter, cfg.GAN.SOLVER.MAX_ITER_D))
+    print('GEN: Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
+          '    SOLVER.STEPS: {} --> {}\n'
+          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_G, cfg.GAN.SOLVER.STEPS_G,
+                                                  old_max_iter, cfg.GAN.SOLVER.MAX_ITER_G))
 
     if args.num_workers is not None:
         cfg.DATA_LOADER.NUM_THREADS = args.num_workers
@@ -228,8 +256,12 @@ def main():
 
     timers = defaultdict(Timer)
 
-    # TODO
-    # create functionality for sampling training samples for GAN training !!!
+    USE_TARGET = False
+    num_loaders = 2
+    if len(cfg.GAN.TRAIN.DATASETS_TARGET) > 0:  # target training activated
+        USE_TARGET = True
+        num_loaders = 3
+
 
     # Dataset #
     timers['roidb_source'].tic()
@@ -243,30 +275,28 @@ def main():
     # Effective training sample size for one epoch
     train_size = roidb_size_source // args.batch_size * args.batch_size
 
-    batchSampler_source = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_source, ratio_index_source),
-        batch_size=args.batch_size,
+    batchSampler_source_discriminator= BatchSampler(
+        sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
+        batch_size=args.batch_size_D,
         drop_last=True
     )
 
-    dataset_source = RoiDataLoader(
+    dataset_source_discriminator = RoiDataLoader(
         roidb_source,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
-    dataloader_source = torch.utils.data.DataLoader(
-        dataset_source,
-        batch_sampler=batchSampler_source,
-        num_workers=cfg.DATA_LOADER.NUM_THREADS,
-        collate_fn=collate_minibatch,
+    dataloader_source_discriminator = torch.utils.data.DataLoader(
+        dataset_source_discriminator,
+        batch_sampler=batchSampler_source_discriminator,
+        num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+        collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
-    dataiterator_source = iter(dataloader_source)
+    dataiterator_source_discriminator = iter(dataloader_source_discriminator)
 
-    USE_TARGET = False
-    if len(cfg.GAN.TRAIN.DATASETS_TARGET) > 0:  # target training activated
-        USE_TARGET = True
-        timers['roidb_target'].tic()
+    if USE_TARGET:
+        timers['roidb_source'].tic()
         roidb_target, ratio_list_target, ratio_index_target = combined_roidb_for_training(
             cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
         timers['roidb_target'].toc()
@@ -274,27 +304,66 @@ def main():
         logger.info('{:d} roidb entries'.format(roidb_size_target))
         logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
 
-        train_size_target = roidb_size_target // args.batch_size * args.batch_size
-
-        batchSampler_target = BatchSampler(
-            sampler=MinibatchSampler(ratio_list_target, ratio_index_target),
-            batch_size=args.batch_size,
+        batchSampler_target_discriminator = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
+            batch_size=args.batch_size_D,
             drop_last=True
         )
 
-        dataset_target = RoiDataLoader(
+        dataset_target_discriminator = RoiDataLoader(
             roidb_target,
             cfg.MODEL.NUM_CLASSES,
             training=True)
 
-        dataloader_target = torch.utils.data.DataLoader(
-            dataset_target,
-            batch_sampler=batchSampler_target,
-            num_workers=cfg.DATA_LOADER.NUM_THREADS,
-            collate_fn=collate_minibatch,
+        dataloader_target_discriminator = torch.utils.data.DataLoader(
+            dataset_target_discriminator,
+            batch_sampler=batchSampler_target_discriminator,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+            collate_fn=collate_minibatch_discriminator,
             pin_memory=False)
 
-        dataiterator_target = iter(dataloader_target)
+        dataiterator_target_discriminator = iter(dataloader_target_discriminator)
+
+        batchSampler_target_generator = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+            batch_size=args.batch_size_G,
+            drop_last=True
+        )
+
+        dataset_target_generator = RoiDataLoader(
+            roidb_target,
+            cfg.MODEL.NUM_CLASSES,
+            training=True)
+
+        dataloader_target_generator = torch.utils.data.DataLoader(
+            dataset_target_generator,
+            batch_sampler=batchSampler_target_generator,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+            collate_fn=collate_minibatch_generator,
+            pin_memory=False)
+
+        dataiterator_target_generator = iter(dataloader_target_generator)
+
+    else:
+        batchSampler_source_generator = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+            batch_size=args.batch_size_G,
+            drop_last=True
+        )
+
+        dataset_source_generator = RoiDataLoader(
+            roidb_source,
+            cfg.MODEL.NUM_CLASSES,
+            training=True)
+
+        dataloader_source_generator= torch.utils.data.DataLoader(
+            dataset_source_generator,
+            batch_sampler=batchSampler_source_generator,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS / 2,
+            collate_fn=collate_minibatch_generator,
+            pin_memory=False)
+
+        dataiterator_source_generator = iter(dataloader_source_generator)
 
     # Model
     generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
@@ -427,6 +496,8 @@ def main():
             os.makedirs(output_dir_D)
         if not os.path.exists(output_dir_G):
             os.makedirs(output_dir_G)
+        logging.info("Using output_dirs: {}\n\t\t{}\n\t\t{}".format(output_dir, output_dir_G,
+                                                                    output_dir_D))
 
         blob = {'cfg': yaml.dump(cfg), 'args': args}
         with open(os.path.join(output_dir, 'config_and_args.pkl'), 'wb') as f:
@@ -444,25 +515,37 @@ def main():
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
     # Set index for decay steps
-    decay_steps_ind = None
-    for i in range(1, len(cfg.GAN.SOLVER.STEPS)):
-        if cfg.GAN.SOLVER.STEPS[i] >= args.start_step:
-            decay_steps_ind = i
+    decay_steps_ind_D = None
+    decay_steps_ind_G = None
+    for i in range(1, len(cfg.GAN.SOLVER.STEPS_D)):
+        if cfg.GAN.SOLVER.STEPS_D[i] >= args.start_step:
+            decay_steps_ind_D = i
             break
-    if decay_steps_ind is None:
-        decay_steps_ind = len(cfg.GAN.SOLVER.STEPS)
+    if decay_steps_ind_D is None:
+        decay_steps_ind_D = len(cfg.GAN.SOLVER.STEPS_D)
+
+    for i in range(1, len(cfg.GAN.SOLVER.STEPS_G)):
+        if cfg.GAN.SOLVER.STEPS_G[i] >= args.start_step:
+            decay_steps_ind_G = i
+            break
+    if decay_steps_ind_G is None:
+        decay_steps_ind_G = len(cfg.GAN.SOLVER.STEPS_G)
 
     training_stats = TrainingStats(
         args,
         args.disp_interval,
         tblogger if args.use_tfboard and not args.no_save else None)
 
+    # use maximum max_iter for training
+    max_iter = max(cfg.GAN.SOLVER.MAX_ITER_D, cfg.GAN.SOLVER.MAX_ITER_G)
+
     try:
         logger.info('Training starts !')
         step = args.start_step
-        for step in range(args.start_step, cfg.GAN.SOLVER.MAX_ITER):
+        for step in range(args.start_step, max_iter):
 
             # Warm up
+            # for simplicity: equal for generator and discriminator
             if step < cfg.GAN.SOLVER.WARM_UP_ITERS:
                 method = cfg.GAN.SOLVER.WARM_UP_METHOD
                 if method == 'constant':
@@ -489,18 +572,23 @@ def main():
                 assert lr_G == cfg.GAN.SOLVER.BASE_LR_G
 
             # Learning rate decay
-            if decay_steps_ind < len(cfg.GAN.SOLVER.STEPS) and \
-                    step == cfg.GAN.SOLVER.STEPS[decay_steps_ind]:
-                logger.info('Decay the learning on step %d', step)
-                lr_new_G = lr_G * cfg.GAN.SOLVER.GAMMA_G
+            if decay_steps_ind_D < len(cfg.GAN.SOLVER.STEPS_D) and \
+                    step == cfg.GAN.SOLVER.STEPS_D[decay_steps_ind_D]:
+                logger.info('Decay the learning (discriminator) on step %d', step)
                 lr_new_D = lr_D * cfg.GAN.SOLVER.GAMMA_D
                 net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
-                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
-                lr_G = optimizer_G.param_groups[0]['lr']
                 lr_D = optimizer_D.param_groups[0]['lr']
                 assert lr_D == lr_new_D
+                decay_steps_ind_D += 1
+
+            if decay_steps_ind_G < len(cfg.GAN.SOLVER.STEPS_G) and \
+                    step == cfg.GAN.SOLVER.STEPS_G[decay_steps_ind_G]:
+                logger.info('Decay the learning (generator) on step %d', step)
+                lr_new_G = lr_G * cfg.GAN.SOLVER.GAMMA_G
+                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
+                lr_G = optimizer_G.param_groups[0]['lr']
                 assert lr_G == lr_new_G
-                decay_steps_ind += 1
+                decay_steps_ind_G += 1
 
             training_stats.IterTic()
 
@@ -510,27 +598,27 @@ def main():
                 # train on fake data
                 if USE_TARGET:
                     try:
-                        input_data_fake = next(dataiterator_target)
+                        input_data_fake = next(dataiterator_target_discriminator)
                     except StopIteration:
-                        dataiterator_target = iter(dataloader_target)
-                        input_data_fake = next(dataiterator_target)
+                        dataiterator_target_discriminator = iter(dataloader_target_discriminator)
+                        input_data_fake = next(dataiterator_target_discriminator)
 
                     for key in input_data_fake:
                         if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
                 else:
                     try:
-                        input_data_fake = next(dataiterator_source)
+                        input_data_fake = next(dataiterator_source_discriminator)
                     except StopIteration:
-                        dataiterator_source = iter(dataloader_source)
-                        input_data_fake = next(dataiterator_source)
+                        dataiterator_source_discriminator = iter(dataloader_source_discriminator)
+                        input_data_fake = next(dataiterator_source_discriminator)
 
                     for key in input_data_fake:
                         if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
-                outputs_G = generator(**input_data_fake)
+                outputs_G = generator(**input_data_fake, mode="FAKE", train_part="DISCRIMINATOR")
                 blob_fake = [x['blob_fake'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
 
@@ -544,17 +632,17 @@ def main():
 
                 # train on real data
                 try:
-                    input_data_real = next(dataiterator_source)
+                    input_data_real = next(dataiterator_source_discriminator)
                 except StopIteration:
-                    dataiterator_source = iter(dataloader_source)
-                    input_data_real = next(dataiterator_source)
+                    dataiterator_source_discriminator = iter(dataloader_source_discriminator)
+                    input_data_real = next(dataiterator_source_discriminator)
 
                 for key in input_data_real:
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                outputs_G = generator(**input_data_real)
+                outputs_G = generator(**input_data_real, mode="REAL", train_part="DISCRIMINATOR")
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
                 # use smoothed label for "REAL" - Label
@@ -574,27 +662,27 @@ def main():
             # train generator
             if USE_TARGET:
                 try:
-                    input_data_fake = next(dataiterator_target)
+                    input_data_fake = next(dataiterator_target_generator)
                 except StopIteration:
-                    dataiterator_target = iter(dataloader_target)
-                    input_data_fake = next(dataiterator_target)
+                    dataiterator_target_generator = iter(dataloader_target_generator)
+                    input_data_fake = next(dataiterator_target_generator)
 
                 for key in input_data_fake:
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
             else:
                 try:
-                    input_data_fake = next(dataiterator_source)
+                    input_data_fake = next(dataiterator_source_generator)
                 except StopIteration:
-                    dataiterator_source = iter(dataloader_source)
-                    input_data_fake = next(dataiterator_source)
+                    dataiterator_source_generator = iter(dataloader_source_generator)
+                    input_data_fake = next(dataiterator_source_generator)
 
                 for key in input_data_fake:
                     if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
-            outputs_G = generator(**input_data_fake)
+            outputs_G = generator(**input_data_fake, mode="FAKE", train_part="GENERATOR")
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]
             # also use smoothed value for GENERATOR training
@@ -628,9 +716,14 @@ def main():
         final_model = save_model(output_dir, no_save=False, model=gan)
 
     except (RuntimeError, KeyboardInterrupt):
-        del dataiterator_source
+
+        del dataiterator_source_discriminator
         if USE_TARGET:
-            del dataiterator_target
+            del dataiterator_target_discriminator
+            del dataiterator_target_generator
+        else:
+            del dataiterator_source_generator
+
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
         save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)

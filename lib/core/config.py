@@ -998,16 +998,19 @@ __C.GAN = AttrDict()
 
 __C.GAN.GAN_MODE_ON = True
 
+# threshold for area of ground-truth objects
+# objects with area bigger than this threshold are considered for REAL-training
+# objects with area smaller than this threshold are considered for FAKE-training
+# as goal is to lean tranfer from small to lage objects
+# -1 for deactivating
+__C.GAN.AREA_THRESHOLD = -1
+
 __C.GAN.MODEL = AttrDict()
 __C.GAN.MODEL.NUM_BLOCKS = 6
 __C.GAN.MODEL.CONV_BODY_FC_HEAD = 'VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head'
 __C.GAN.MODEL.CONV_BODY_RESOLUTION = 6
 __C.GAN.MODEL.LABEL_SMOOTHING = 1.0
-__C.GAN.MODEL.AREA_THRESHOLD = -1 # threshold for area of ground-truth objects
-                                   # objects with area bigger than this threshold are considered for REAL-training
-                                   # objects with area smaller than this threshold are considered for FAKE-training
-                                   # as goal is to lean tranfer from small to lage objects
-                                   # -1 for deactivating
+
 
 __C.GAN.TRAIN = AttrDict()
 __C.GAN.TRAIN.FREEZE_CONV_BODY = True
@@ -1015,6 +1018,19 @@ __C.GAN.TRAIN.PRETRAINED_WEIGHTS = ''
 __C.GAN.TRAIN.k = 1
 __C.GAN.TRAIN.DATASETS_SOURCE = ()
 __C.GAN.TRAIN.DATASETS_TARGET = ()
+
+# Discriminator
+__C.GAN.TRAIN.IMS_PER_BATCH_D = 4
+__C.GAN.TRAIN.BATCH_SIZE_PER_IM_D = 32
+__C.GAN.TRAIN.FG_FRACTION_D = 1
+
+# Generator
+__C.GAN.TRAIN.IMS_PER_BATCH_G = 2
+__C.GAN.TRAIN_BATCH_SIHE_PER_IM_G = 64
+__C.GAN.TRAIN.FG_FRACTION_G = 0.25
+
+
+
 
 __C.GAN.SOLVER = AttrDict()
 
@@ -1039,6 +1055,8 @@ __C.GAN.SOLVER.STEP_SIZE = 30000
 # Non-uniform step iterations for 'steps_with_decay' or 'steps_with_lrs'
 # policies
 __C.GAN.SOLVER.STEPS = []
+__C.GAN.SOLVER.STEPS_D = []
+__C.GAN.SOLVER.STEPS_G = []
 
 # Learning rates to use with 'steps_with_lrs' policy
 __C.GAN.SOLVER.LRS_D = []
@@ -1046,6 +1064,8 @@ __C.GAN.SOLVER.LRS_G = []
 
 # Maximum number of SGD iterations
 __C.GAN.SOLVER.MAX_ITER = 40000
+__C.GAN.SOLVER.MAX_ITER_D = 0
+__C.GAN.SOLVER.MAX_ITER_G = 0
 
 # Momentum to use with SGD
 __C.GAN.SOLVER.MOMENTUM_D = 0.9

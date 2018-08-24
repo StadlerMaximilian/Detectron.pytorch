@@ -102,11 +102,11 @@ def get_fast_rcnn_blob_names(is_training=True):
     return blob_names
 
 
-def add_fast_rcnn_blobs(blobs, im_scales, roidb):
+def add_fast_rcnn_blobs(blobs, im_scales, roidb, mode="FAKE", train_part="GENERATOR"):
     """Add blobs needed for training Fast R-CNN style models."""
     # Sample training RoIs from each image and append them to the blob lists
     for im_i, entry in enumerate(roidb):
-        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i)
+        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i, mode=mode, train_part=train_part)
         for k, v in frcn_blobs.items():
             blobs[k].append(v)
     # Concat the training blob lists into tensors
@@ -126,7 +126,14 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb):
     return valid
 
 
-def _sample_rois(roidb, im_scale, batch_idx):
+def _sample_rois(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERATOR"):
+    if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0:
+        return _sample_rois_gan(roidb, im_scale, batch_idx, mode=mode, train_part=train_part)
+    else:
+        return _sample_rois_normal(roidb, im_scale, batch_idx)
+
+
+def _sample_rois_normal(roidb, im_scale, batch_idx):
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
@@ -199,6 +206,107 @@ def _sample_rois(roidb, im_scale, batch_idx):
     if cfg.MODEL.KEYPOINTS_ON:
         roi_data.keypoint_rcnn.add_keypoint_rcnn_blobs(
             blob_dict, roidb, fg_rois_per_image, fg_inds, im_scale, batch_idx)
+
+    return blob_dict
+
+
+def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERATOR"):
+    """Generate a random sample of RoIs comprising foreground and background
+    examples.
+    """
+    assert train_part in ['GENERATOR', 'DISCRIMINATOR']  # where train_part determines batch_content corresponding on whether
+    # discriminator or generator is trained
+    assert mode in ["FAKE", "REAL"]
+
+    # TODO: before sampling from indices: choose only roi such that area is smaller or greater than area theshold
+    # TODO: loop trough all roi-entries and filter corresponding fore-ground objects
+    # TODO: maybe increase POST_NMS number in RPN --> achieved by 2x64 setting for BATCH_SIZE
+
+    area_thrs = cfg.GAN.AREA_THRESHOLD
+
+    if 'bbox_targets' not in roidb:
+        gt_inds = np.where(roidb['gt_classes'] > 0)[0]
+        gt_boxes = roidb['boxes'][gt_inds, :]
+        bboxes_ind = gt_inds[roidb['box_to_gt_ind_map']]
+        bboxes = gt_boxes[bboxes_ind]
+    else:
+        bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
+
+    if mode == "FAKE":
+        # for fake samples: keep only samples with area < area-threshold
+        keep_area_inds = box_utils.filter_large_boxes(bboxes[:, 1:], max_size=area_thrs)
+    else:  # mode == "REAL":
+        keep_area_inds = box_utils.filter_small_boxes(bboxes[:, 1:], min_size=area_thrs)
+
+    if mode == 'GENERATOR':
+        rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
+    else: # discriminator
+        rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
+
+    max_overlaps = roidb['max_overlaps']
+
+    # Select foreground RoIs as those with >= FG_THRESH overlap
+    fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
+    fg_inds = fg_inds(fg_inds != keep_area_inds)
+    # Guard against the case when an image has fewer than fg_rois_per_image
+    # foreground RoIs
+    fg_rois_per_this_image = np.minimum(fg_rois_per_image, fg_inds.size)
+
+    # Sample foreground regions without replacement
+    if fg_inds.size > 0:
+        fg_inds = npr.choice(
+            fg_inds, size=fg_rois_per_this_image, replace=False)
+
+    if mode == 'GENERATOR':
+        # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+        bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
+                           (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
+        # Compute number of background RoIs to take from this image (guarding
+        # against there being fewer than desired)
+        bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
+        bg_rois_per_this_image = np.minimum(bg_rois_per_this_image, bg_inds.size)
+        # Sample foreground regions without replacement
+        if bg_inds.size > 0:
+            bg_inds = npr.choice(
+                bg_inds, size=bg_rois_per_this_image, replace=False)
+
+        # The indices that we're selecting (both fg and bg)
+        keep_inds = np.append(fg_inds, bg_inds)
+    else:
+        # keep only foreground indices when using discriminator mode
+        keep_inds = fg_inds
+
+    # Label is the class each RoI has max overlap with
+    sampled_labels = roidb['max_classes'][keep_inds]
+    sampled_labels[fg_rois_per_this_image:] = 0  # Label bg RoIs with class 0
+    sampled_boxes = roidb['boxes'][keep_inds]
+
+    if 'bbox_targets' not in roidb:
+        gt_assignments = gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]
+        bbox_targets = _compute_targets(
+            sampled_boxes, gt_boxes[gt_assignments, :], sampled_labels)
+        bbox_targets, bbox_inside_weights = _expand_bbox_targets(bbox_targets)
+    else:
+        bbox_targets, bbox_inside_weights = _expand_bbox_targets(
+            roidb['bbox_targets'][keep_inds, :])
+
+    bbox_outside_weights = np.array(
+        bbox_inside_weights > 0, dtype=bbox_inside_weights.dtype)
+
+    # Scale rois and format as (batch_idx, x1, y1, x2, y2)
+    sampled_rois = sampled_boxes * im_scale
+    repeated_batch_idx = batch_idx * blob_utils.ones((sampled_rois.shape[0], 1))
+    sampled_rois = np.hstack((repeated_batch_idx, sampled_rois))
+
+    # Base Fast R-CNN blobs
+    blob_dict = dict(
+        labels_int32=sampled_labels.astype(np.int32, copy=False),
+        rois=sampled_rois,
+        bbox_targets=bbox_targets,
+        bbox_inside_weights=bbox_inside_weights,
+        bbox_outside_weights=bbox_outside_weights)
 
     return blob_dict
 

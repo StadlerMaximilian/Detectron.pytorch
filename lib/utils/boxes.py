@@ -119,6 +119,14 @@ def filter_small_boxes(boxes, min_size):
     return keep
 
 
+def filter_large_boxes(boxes, max_size):
+    """ Keep boxes with width and height both smaller than max_size."""
+    w = boxes[:, 2] - boxes[:, 0] + 1
+    h = boxes[:, 3] - boxes[:, 1] + 1
+    keep = np.where((w < max_size) & (h < max_size))[0]
+    return keep
+
+
 def clip_boxes_to_image(boxes, height, width):
     """Clip an array of boxes to an image with the given height and width."""
     boxes[:, [0, 2]] = np.minimum(width - 1., np.maximum(0., boxes[:, [0, 2]]))

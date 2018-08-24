@@ -417,9 +417,6 @@ def add_proposals(roidb, rois, scales, crowd_thresh):
     """
     box_list = []
 
-    # debug
-    print(len(rois[:,0]))
-
     for i in range(len(roidb)):
         inv_im_scale = 1. / scales[i]
         idx = np.where(rois[:, 0] == i)[0]
