@@ -222,7 +222,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
-    areas = box_utils.boxes_area(gt_boxes)
+    areas, _ = box_utils.boxes_area(gt_boxes)
     mean = np.mean(areas, axis=0)
 
     # debug
@@ -287,7 +287,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     sampled_boxes = roidb['boxes'][keep_inds]
 
     # debug
-    areas_after = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]])
+    areas_after, _ = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]])
     mean_after = np.mean(areas_after, axis=0)
     print("mean-area after: {}".format(mean_after))
 
