@@ -668,9 +668,10 @@ def main():
                 mem = torch.cuda.max_memory_allocated()
                 print("Finished training D2 with mem: {}".format(mem))
 
-                mem = torch.cuda.max_memory_allocated()
+                
             """
             # train generator
+            mem = torch.cuda.max_memory_allocated()
             print("Training G with mem: {}".format(mem))
             optimizer_G.zero_grad()
 
