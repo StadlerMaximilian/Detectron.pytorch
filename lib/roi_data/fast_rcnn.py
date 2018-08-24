@@ -274,8 +274,8 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         # keep only foreground indices when using discriminator mode
         keep_inds = fg_inds
 
-    #debug
-    print(type(keep_inds))
+    # for some reason, inds seem to be Floats at some point, cast to make sure
+    keep_inds.astype(int)
 
     # Label is the class each RoI has max overlap with
     sampled_labels = roidb['max_classes'][keep_inds]

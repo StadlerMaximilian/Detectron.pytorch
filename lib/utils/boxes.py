@@ -116,7 +116,7 @@ def filter_small_boxes(boxes, min_size):
     w = boxes[:, 2] - boxes[:, 0] + 1
     h = boxes[:, 3] - boxes[:, 1] + 1
     keep = np.where((w > min_size) & (h > min_size))[0]
-    return keep
+    return keep.astype(int)
 
 
 def filter_large_boxes(boxes, max_size):
@@ -124,7 +124,7 @@ def filter_large_boxes(boxes, max_size):
     w = boxes[:, 2] - boxes[:, 0] + 1
     h = boxes[:, 3] - boxes[:, 1] + 1
     keep = np.where((w <= max_size) & (h <= max_size))[0]
-    return keep
+    return keep.astype(int)
 
 
 def clip_boxes_to_image(boxes, height, width):
