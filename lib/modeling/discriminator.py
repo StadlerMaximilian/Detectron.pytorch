@@ -112,8 +112,15 @@ class Discriminator(nn.Module):
                             if mapping[name_modified]:
                                 state_dict[name_modified] = ckpt[name_modified]
                     else:
-                        if mapping[name]:
-                            state_dict[name] = ckpt[name]
+                        try:
+                            if mapping[name]:
+                                state_dict[name] = ckpt[name]
+                        except KeyError:
+                            name_parts = name.split('.')
+                            name_parts.insert(1, "fc_head")
+                            name_modified = '.'.join(name_parts)
+                            if mapping[name_modified]:
+                                state_dict[name_modified] = ckpt[name_modified]
             self.load_state_dict(state_dict, strict=False)
             del pretrained_detectron
             torch.cuda.empty_cache()
