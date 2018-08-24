@@ -41,8 +41,12 @@ class Discriminator(nn.Module):
 
         fg_labels = [x for x in rpn_ret['labels_int32'] if x == 1]
         batch_size = len(rpn_ret['labels_int32'])
-        print("\t\t batch_size in discriminator: {}, fg: {}".format(batch_size,
-                                                                    1.0 / len(fg_labels) * 100.0))
+        if len(fg_labels) != 0:
+            print("\t\t batch_size in discriminator: {}, fg: {}".format(batch_size,
+                                                                        1.0 / len(fg_labels) * 100.0))
+        else:
+            print(rpn_ret['labels_int32'])
+            
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 
         box_feat = self.Box_Head(blob_conv.view(batch_size, -1))
