@@ -282,7 +282,6 @@ def main():
 
     # Effective training sample size for one epoch
     train_size_D += roidb_size_source // args.batch_size_D * args.batch_size_D
-    train_size_G += roidb_size_source // args.batch_size_G * args.batch_size_G
 
     batchSampler_source_discriminator= BatchSampler(
         sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
@@ -298,7 +297,7 @@ def main():
     dataloader_source_discriminator = torch.utils.data.DataLoader(
         dataset_source_discriminator,
         batch_sampler=batchSampler_source_discriminator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
@@ -314,7 +313,6 @@ def main():
 
     # Effective training sample size for one epoch
     train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
-    train_size_G += roidb_size_target // args.batch_size_G * args.batch_size_G
 
     batchSampler_target_discriminator = BatchSampler(
         sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
@@ -330,32 +328,43 @@ def main():
     dataloader_target_discriminator = torch.utils.data.DataLoader(
         dataset_target_discriminator,
         batch_sampler=batchSampler_target_discriminator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
     dataiterator_target_discriminator = iter(dataloader_target_discriminator)
 
+    timers['roidb_target_G'].tic()
+    roidb_target_g, ratio_list_target_g, ratio_index_target_g = combined_roidb_for_training(
+        cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
+    timers['roidb_target_g'].toc()
+    roidb_size_target_g = len(roidb_target_g)
+    logger.info('{:d} roidb entries'.format(roidb_size_target_g))
+    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target_g'].average_time)
+
+    # Effective training sample size for one epoch
+    train_size_G += roidb_size_target_g // args.batch_size_G * args.batch_size_G
+
     batchSampler_target_generator = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+        sampler=MinibatchSampler(ratio_list_target_g, ratio_index_target_g, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
         batch_size=args.batch_size_G,
         drop_last=True
     )
 
     dataset_target_generator = RoiDataLoader(
-        roidb_target,
+        roidb_target_g,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
     dataloader_target_generator = torch.utils.data.DataLoader(
         dataset_target_generator,
         batch_sampler=batchSampler_target_generator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_generator,
         pin_memory=False)
 
     dataiterator_target_generator = iter(dataloader_target_generator)
-    train_size = max(train_size_D // 2, train_size_G // 2)
+    train_size = max(train_size_D // 2, train_size_G)
 
     # Model
     generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
@@ -506,6 +515,10 @@ def main():
     fake_dis_flags = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
     real_dis_flags = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
     fake_gen_flags = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+    # use smoothed label for "REAL" - Label
+    adv_target_smoothed = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
+    # 0.0 for fake in discriminator
+    adv_target_zero = [0.0] * cfg.NUM_GPUS
 
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
@@ -606,11 +619,9 @@ def main():
                 outputs_G_fake = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G_fake]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G_fake]
-
-                adv_target = [0.0] * cfg.NUM_GPUS # 0.0 for fake
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret,
-                                       'adv_target': adv_target
+                                       'adv_target': adv_target_zero
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
@@ -631,11 +642,9 @@ def main():
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G_real]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G_real]
-                # use smoothed label for "REAL" - Label
-                adv_target = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret,
-                                       'adv_target': adv_target
+                                       'adv_target': adv_target_smoothed
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
@@ -662,10 +671,9 @@ def main():
             blob_fake = [x['blob_fake'] for x in outputs_GG]
             rpn_ret = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
-            adv_target = [cfg.GAN.MODEL.LABEL_SMOOTHING] * cfg.NUM_GPUS
             input_discriminator = {'blob_conv': blob_fake,
                                    'rpn_ret': rpn_ret,
-                                   'adv_target': adv_target
+                                   'adv_target': adv_target_smoothed
                                    }
             outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)
