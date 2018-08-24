@@ -218,10 +218,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERA
     # discriminator or generator is trained
     assert mode in ["FAKE", "REAL"]
 
-    # TODO: before sampling from indices: choose only roi such that area is smaller or greater than area theshold
-    # TODO: loop trough all roi-entries and filter corresponding fore-ground objects
-    # TODO: maybe increase POST_NMS number in RPN --> achieved by 2x64 setting for BATCH_SIZE
-
     area_thrs = cfg.GAN.AREA_THRESHOLD
 
     if 'bbox_targets' not in roidb:
@@ -244,6 +240,10 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERA
     else: # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
+
+    # debug
+    print("rois_per_image: {}".format(rois_per_image))
+    print("fg_rois_per_image: {}".formmat(fg_rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
 

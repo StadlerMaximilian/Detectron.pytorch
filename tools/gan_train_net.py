@@ -117,8 +117,15 @@ def parse_args():
     return parser.parse_args()
 
 
-def save_ckpt(output_dir, args, step, train_size, model, optimizer):
+def save_ckpt(output_dir, args, step, train_size, model, optimizer, part="none"):
     """Save checkpoint"""
+    if part == "G":
+        batch_size = args.batch_size_G
+    elif part == "D":
+        batch_size = args.batch_size_D
+    else:
+        batch_size = args.batch_size
+
     if args.no_save:
         return
     ckpt_dir = os.path.join(output_dir, 'ckpt')
@@ -131,7 +138,7 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer):
     torch.save({
         'step': step,
         'train_size': train_size,
-        'batch_size': args.batch_size,
+        'batch_size': batch_size,
         'model': model.state_dict(),
         'optimizer': optimizer.state_dict()}, save_name)
     logger.info('save model: %s', save_name)
