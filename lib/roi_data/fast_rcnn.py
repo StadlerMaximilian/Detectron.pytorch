@@ -31,7 +31,7 @@ import roi_data.mask_rcnn
 import utils.boxes as box_utils
 import utils.blob as blob_utils
 import utils.fpn as fpn_utils
-from gan_utils import ModeFlags
+from utils.gan_utils import ModeFlags
 
 
 def get_fast_rcnn_blob_names(is_training=True):

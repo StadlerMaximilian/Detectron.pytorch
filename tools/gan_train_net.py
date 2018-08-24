@@ -28,9 +28,8 @@ from modeling.discriminator import Discriminator
 from modeling.model_builder_gan import GAN
 from utils.logging import setup_logging
 from utils.timer import Timer
-from utils.gan_utils import TrainingStats
+from utils.gan_utils import TrainingStats, ModeFlags
 from test_net import test_net_routine
-from gan_utils import ModeFlags
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
