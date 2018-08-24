@@ -277,7 +277,7 @@ def main():
 
     # Effective training sample size for one epoch
     train_size_D += roidb_size_source // args.batch_size_D * args.batch_size_D
-    train_size_G += roidb_size_source // args.batch_Size_G * args.batch_size_G
+    train_size_G += roidb_size_source // args.batch_size_G * args.batch_size_G
 
     batchSampler_source_discriminator= BatchSampler(
         sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
