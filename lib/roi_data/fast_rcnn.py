@@ -128,7 +128,7 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 
 
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
-    if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0 and flags is not None:
+    if cfg.GAN.GAN_MODE_ON and flags is not None:
         return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:
         return _sample_rois_normal(roidb, im_scale, batch_idx)
@@ -217,8 +217,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     """
     assert isinstance(flags, ModeFlags) is True
 
-    area_thrs = cfg.GAN.AREA_THRESHOLD
-
     if 'bbox_targets' not in roidb:
         gt_inds = np.where(roidb['gt_classes'] > 0)[0]
         gt_boxes = roidb['boxes'][gt_inds, :]
@@ -227,11 +225,13 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     else:
         bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
 
-    if flags.fake_mode:
-        # for fake samples: keep only samples with area < area-threshold
-        keep_area_inds = box_utils.filter_large_boxes(bboxes, max_size=area_thrs)
-    else:  # mode == "REAL":
-        keep_area_inds = box_utils.filter_small_boxes(bboxes, min_size=area_thrs)
+    if cfg.GAN.AREA_THRESHOLD > 0:
+        area_thrs = cfg.GAN.AREA_THRESHOLD
+        if flags.fake_mode:
+            # for fake samples: keep only samples with area < area-threshold
+            keep_area_inds = box_utils.filter_large_boxes(bboxes, max_size=area_thrs)
+        else:  # mode == "REAL":
+            keep_area_inds = box_utils.filter_small_boxes(bboxes, min_size=area_thrs)
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
@@ -244,7 +244,8 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
-    fg_inds = np.asarray([x for x in fg_inds if x in keep_area_inds]).astype(int)
+    if cfg.GAN.AREA_THRESHOLD > 0:
+        fg_inds = np.asarray([x for x in fg_inds if x in keep_area_inds]).astype(int)
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, int(fg_inds.size))
@@ -272,7 +273,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         keep_inds = np.append(fg_inds, bg_inds)
     else:
         # keep only foreground indices when using discriminator mode
-        keep_inds = fg_inds
+        keep_inds = np.append(fg_inds, []).astype(int)
 
     print(keep_inds)
 
