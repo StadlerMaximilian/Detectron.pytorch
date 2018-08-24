@@ -226,9 +226,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     areas, _ = box_utils.boxes_area(gt_boxes)
     mean = np.mean(areas, axis=0)
 
-    # debug
-    print("mean-area: {}".format(math.sqrt(mean)))
-
     if area_thrs > 0:
         if flags.fake_mode:
             # for fake samples: keep only samples with area < area-threshold
@@ -261,11 +258,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     if fg_inds.size > 0:
         fg_inds = npr.choice(
             fg_inds, size=fg_rois_per_this_image, replace=False)
-
-    # debug
-    areas_after, _ = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]]])
-    mean_after = np.mean(areas_after, axis=0)
-    print("mean-area after: {}".format(math.sqrt(mean_after)))
 
     # only use background RoI, if generator is trained, or not enough fg samples can be found
     if flags.train_generator or fg_rois_per_this_image < fg_rois_per_image:
