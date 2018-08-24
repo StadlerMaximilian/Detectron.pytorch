@@ -617,7 +617,7 @@ def main():
                 input_data_fake.update({"flags": fake_dis_flags})
                 outputs_G_fake = generator(**input_data_fake)
 
-                blob_fake = [Variable(torch.Tensor(x['blob_fake']).cuda()) for x in outputs_G_fake]
+                blob_fake = [Variable(torch.Tensor(x['blob_fake'])) for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
