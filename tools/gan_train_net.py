@@ -137,6 +137,12 @@ def parse_args():
         help='path to saved generator model'
     )
 
+    parser.add_argument(
+        '--multi_gpu_testing',
+        action='store_true',
+        help='Flag for activating multi_gpu_testing'
+    )
+
     return parser.parse_args()
 
 
@@ -541,10 +547,16 @@ def main():
         final_model = save_model(output_dir, no_save=False, model=gan)
 
         if final_model is not None:
-            args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-                                  load_ckpt='{}'.format(final_model), load_detectron=None,
-                                  multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
-                                  range=None, set_cfgs=[], vis=False)
+            if args.multi_gpu_testing:
+                args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                                      load_ckpt='{}'.format(final_model), load_detectron=None,
+                                      multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                                      range=None, set_cfgs=[], vis=False)
+            else:
+                args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                                      load_ckpt='{}'.format(final_model), load_detectron=None,
+                                      multi_gpu_testing=False, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                                      range=None, set_cfgs=[], vis=False)
             test_net_routine(args_test)
 
     ### Training Loop ###
