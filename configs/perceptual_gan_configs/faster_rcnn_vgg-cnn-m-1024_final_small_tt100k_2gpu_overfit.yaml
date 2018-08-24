@@ -44,8 +44,8 @@ GAN:
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_overfit_small',)
-    IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 64
+    IMS_PER_BATCH_D: 3
+    BATCH_SIZE_PER_IM_D: 42
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128
