@@ -218,12 +218,12 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     assert isinstance(flags, ModeFlags) is True
     area_thrs = cfg.GAN.AREA_THRESHOLD
 
-    # gt gt_boxes and sample such that they fulfill threshold criterion
+    # gt_boxes and sample such that they fulfill threshold criterion
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
     areas = box_utils.boxes_area(gt_boxes)
-    mean = np.mean(areas)
+    mean = np.mean(areas, axis=0)
 
     # debug
     print("mean-area: {}".format(mean))
@@ -288,7 +288,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     # debug
     areas_after = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]])
-    mean_after = np.mean(areas_after)
+    mean_after = np.mean(areas_after, axis=0)
     print("mean-area after: {}".format(mean_after))
 
     if 'bbox_targets' not in roidb:
