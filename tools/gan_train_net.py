@@ -525,7 +525,6 @@ def main():
     generator.train()
     discriminator.train()
 
-
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
     # Set index for decay steps
