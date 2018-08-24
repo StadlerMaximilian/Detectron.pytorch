@@ -603,6 +603,8 @@ def main():
             # train discriminator
             for _ in range(cfg.GAN.TRAIN.k):
 
+                optimizer_D.zero_grad()
+
                 mem = torch.cuda.max_memory_allocated()
                 print("Training D1 with mem: {}".format(mem))
 
@@ -663,7 +665,6 @@ def main():
                 loss_D = loss_D_real + loss_D_fake
                 loss_D.backward()
                 optimizer_D.step()
-                optimizer_D.zero_grad()
 
                 mem = torch.cuda.max_memory_allocated()
                 print("Finished training D2 with mem: {}".format(mem))
@@ -672,6 +673,8 @@ def main():
                 print("Training G with mem: {}".format(mem))
 
             # train generator
+            optimizer_G.zero_grad()
+
             try:
                 input_data_fake = next(dataiterator_target_generator)
             except StopIteration:
@@ -698,7 +701,6 @@ def main():
             loss_G = outputs_DG['total_loss']
             loss_G.backward()
             optimizer_G.step()
-            optimizer_G.zero_grad()
 
             mem = torch.cuda.max_memory_allocated()
             print("Finished training G with mem: {}".format(mem))
@@ -709,6 +711,9 @@ def main():
 
             # free cuda cache
             torch.cuda.empty_cache()
+
+            mem = torch.cuda.max_memory_allocated()
+            print("Freed cache: mem: {}".format(mem))
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")

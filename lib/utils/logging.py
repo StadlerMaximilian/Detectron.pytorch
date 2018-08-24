@@ -84,9 +84,11 @@ def log_gan_stats(stats, misc_args):
     if stats['head_losses_D']:
         lines += "\t\tDiscriminator: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_D'].items()) + "\n"
     if stats['adv_loss_G']:
-        lines += "\t\tadv_loss_generator: {:.6f} \n".format(stats['adv_loss_G'])
+        lines += "\t\tGenerator: " + ", ".join(
+            "%s: %.6f" % (k, v) for k, v in stats['adv_loss_G'].items()) + "\n"
     if stats['adv_loss_D']:
-        lines += "\t\tadv_loss_discriminator: {:.6f} \n".format(stats['adv_loss_D'])
+        lines += "\t\tDiscriminator: " + ", ".join(
+            "%s: %.6f" % (k, v) for k, v in stats['adv_loss_D'].items()) + "\n"
     print(lines[:-1])  # remove last new line
 
 

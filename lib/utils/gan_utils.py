@@ -89,10 +89,8 @@ class TrainingStats(object):
         self.smoothed_total_loss_G = SmoothedValue(self.WIN_SZ)
         self.smoothed_losses_D = defaultdict(create_smoothed_value)
         self.smoothed_metrics_D = defaultdict(create_smoothed_value)
+        self.smoothed_metrics_G = defaultdict(create_smoothed_value)
         self.smoothed_total_loss_D = SmoothedValue(self.WIN_SZ)
-
-        self.flag_D = False
-        self.total_loss = -1
 
     def IterTic(self):
         self.iter_timer.tic()
@@ -107,36 +105,36 @@ class TrainingStats(object):
         """Update tracked iteration statistics."""
 
         if out_D_fake is not None:  # first trained on either real/fake images (then set flag)
-            self.total_loss = 0.0
+            total_loss = 0.0
 
             for k, loss in out_D_fake['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
-                self.total_loss += loss
+                total_loss += loss
                 loss_data = loss.data[0]
                 out_D_fake['losses'][k] = loss
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D_fake['total_loss'] = self.total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss_D.AddValue(self.total_loss.data[0])
+            out_D_fake['total_loss'] = total_loss  # Add the total loss for back propagation
+            self.smoothed_total_loss_D.AddValue(total_loss.data[0])
 
             for k, metric in out_D_fake['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
         elif out_D_real is not None:
-            self.total_loss = 0.0
+            total_loss = 0.0
 
             for k, loss in out_D_real['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
-                self.total_loss += loss
+                total_loss += loss
                 loss_data = loss.data[0]
                 out_D_real['losses'][k] = loss
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D_real['total_loss'] = self.total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss_D.AddValue(self.total_loss.data[0])
+            out_D_real['total_loss'] = total_loss  # Add the total loss for back propagation
+            self.smoothed_total_loss_D.AddValue(total_loss.data[0])
 
             for k, metric in out_D_real['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
@@ -156,6 +154,10 @@ class TrainingStats(object):
             out_G['total_loss'] = total_loss  # Add the total loss for back propagation
             self.smoothed_total_loss_G.AddValue(total_loss.data[0])
 
+            for k, metric in out_G['metrics'].items():
+                metric = metric.mean(dim=0, keepdim=True)
+                self.smoothed_metrics_G[k].AddValue(metric.data[0])
+
     def _mean_and_reset_inner_list(self, attr_name, key=None):
         """Take the mean and reset list empty"""
         if key:
@@ -169,7 +171,7 @@ class TrainingStats(object):
     def LogIterStats(self, cur_iter, lr_D, lr_G):
         """Log the tracked statistics."""
         if (cur_iter % self.LOG_PERIOD == 0 or
-                cur_iter == cfg.SOLVER.MAX_ITER - 1):
+                cur_iter == cfg.GAN.SOLVER.MAX_ITER - 1):
             stats = self.GetStats(cur_iter, lr_D, lr_G)
             log_gan_stats(stats, self.misc_args)
             if self.tblogger:
@@ -205,11 +207,13 @@ class TrainingStats(object):
 
         head_losses_D = []
         head_losses_G = []
+        adv_loss_D = []
+        adv_loss_G = []
 
         for k, v in self.smoothed_losses_D.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
-                adv_loss_D = v.GetMedianValue()
+                adv_loss_D.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_D.append((k, v.GetMedianValue()))
             else:
@@ -218,7 +222,7 @@ class TrainingStats(object):
         for k, v in self.smoothed_losses_G.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
-                adv_loss_G = v.GetMedianValue()
+                adv_loss_G.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_G.append((k, v.GetMedianValue()))
             else:
@@ -226,7 +230,7 @@ class TrainingStats(object):
 
         stats['head_losses_D'] = OrderedDict(head_losses_D)
         stats['head_losses_G'] = OrderedDict(head_losses_G)
-        stats['adv_loss_D'] = adv_loss_D
-        stats['adv_loss_G'] = adv_loss_G
+        stats['adv_loss_D'] = OrderedDict(adv_loss_D)
+        stats['adv_loss_G'] = OrderedDict(adv_loss_G)
 
         return stats
