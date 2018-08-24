@@ -235,10 +235,10 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
-        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image + 1))
     else: # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
-        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image + 1))
 
     max_overlaps = roidb['max_overlaps']
 
@@ -272,7 +272,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         keep_inds = np.append(fg_inds, bg_inds)
     else:
         # keep only foreground indices when using discriminator mode
-        keep_inds = fg_inds
+        keep_inds = np.append(fg_inds)
 
     # Label is the class each RoI has max overlap with
     sampled_labels = roidb['max_classes'][keep_inds]
