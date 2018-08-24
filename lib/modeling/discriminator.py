@@ -44,7 +44,7 @@ class Discriminator(nn.Module):
         return_dict = {}
 
         batch_size = len(rpn_ret['labels_int32'])
-        fg = len(rpn_ret['labels_int32'] > 0)
+        fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
         print("batch-size in discriminator: {} (fg: {}%)".format(batch_size,
                                                                  1.0 * fg / batch_size * 100.0))
 
