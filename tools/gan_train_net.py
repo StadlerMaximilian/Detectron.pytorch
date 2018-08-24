@@ -614,7 +614,7 @@ def main():
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
-                input_data_fake.update({"flags": fake_dis_flags})
+                #input_data_fake.update({"flags": fake_dis_flags})
                 outputs_G_fake = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
@@ -650,7 +650,7 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                input_data_real.update({"flags": real_dis_flags})
+                #input_data_real.update({"flags": real_dis_flags})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
@@ -692,7 +692,7 @@ def main():
                     input_data_fake_g[key] = list(map(Variable, input_data_fake_g[key]))
 
             generator.module._set_provide_fake_features(True)
-            input_data_fake_g.update({"flags": fake_gen_flags})
+            #input_data_fake_g.update({"flags": fake_gen_flags})
             outputs_GG = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
