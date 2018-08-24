@@ -242,7 +242,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     # debug
     print("rois_per_image: {}".format(rois_per_image))
-    print("fg_rois_per_image: {}".formmat(fg_rois_per_image))
+    print("fg_rois_per_image: {}".format(fg_rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
 

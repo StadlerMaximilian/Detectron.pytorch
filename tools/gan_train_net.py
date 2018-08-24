@@ -238,8 +238,12 @@ def main():
     # Adjust solver steps
     step_scale_D = original_batch_size_D / effective_batch_size_D
     step_scale_G = original_batch_size_G / effective_batch_size_G
-    old_solver_steps_D = cfg.GAN.SOLVER.STEPS
-    old_solver_steps_G = cfg.GAN.SOLVER.STEPS
+    if not cfg.GAN.SOLVER.STEPS_D:
+        cfg.GAN.SOLVER.STEPS_D = cfg.GAN.SOLVER.STEPS
+    if not cfg.GAN.SOLVER.STEPS_G:
+        cfg.GAN.SOLVER.STEPS_G = cfg.GAN.SOLVER.STEPS
+    old_solver_steps_D = cfg.GAN.SOLVER.STEPS_D
+    old_solver_steps_G = cfg.GAN.SOLVER.STEPS_G
     old_max_iter = cfg.GAN.SOLVER.MAX_ITER
     cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale_D + 0.5), cfg.GAN.SOLVER.STEPS_D))
     cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale_G + 0.5), cfg.GAN.SOLVER.STEPS_G))
