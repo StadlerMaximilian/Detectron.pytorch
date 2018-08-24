@@ -37,13 +37,13 @@ class Discriminator(nn.Module):
         self._init_modules(pretrained_weights)
 
     def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
+        with torch.set_grad_enabled(self.training):
+            return self._forward(blob_conv, rpn_ret, adv_target)
+
+    def _forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 
-        fg_labels = [x for x in rpn_ret['labels_int32'] if x > 0]
         batch_size = len(rpn_ret['labels_int32'])
-        if len(fg_labels) != 0:
-            print("\t\t batch_size in discriminator: {}, fg: {}".format(batch_size,
-                                                                        1.0 / len(fg_labels) * 100.0))
 
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 
@@ -84,25 +84,24 @@ class Discriminator(nn.Module):
 
         return return_dict
 
-    def _init_modules(self, pretrained_weights):
+    def _init_modules(self, pretrained_weights=None):
         """
         inits layers and loads pretrained detectron-backbone-architecture (Conv_Body and RPN)
         also freezes weights of Conv_Body and RPN
         """
-        assert pretrained_weights
-
-        pretrained_detectron = torch.load(pretrained_weights)
-        load_layers = ['Box_Head', 'Box_Outs']
-        mapping, _ = self.detectron_weight_mapping()
-        state_dict = {}
-        ckpt = pretrained_detectron['model']
-        for name in ckpt:
-            if name.split('.')[0] in load_layers:
-                if mapping[name]:
-                    state_dict[name] = ckpt[name]
-        self.load_state_dict(state_dict, strict=False)
-        del pretrained_detectron
-        torch.cuda.empty_cache()
+        if pretrained_weights is not None:
+            pretrained_detectron = torch.load(pretrained_weights)
+            load_layers = ['Box_Head', 'Box_Outs']
+            mapping, _ = self.detectron_weight_mapping()
+            state_dict = {}
+            ckpt = pretrained_detectron['model']
+            for name in ckpt:
+                if name.split('.')[0] in load_layers:
+                    if mapping[name]:
+                        state_dict[name] = ckpt[name]
+            self.load_state_dict(state_dict, strict=False)
+            del pretrained_detectron
+            torch.cuda.empty_cache()
 
     def _init_weights(self):
         """

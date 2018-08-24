@@ -94,6 +94,10 @@ class Generator(nn.Module):
         freeze_params(self.RPN)
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
+        with torch.set_grad_enabled(self.training):
+            return self._forward(data, im_info, roidb, flags, **rpn_kwargs)
+
+    def _forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         im_data = data
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
