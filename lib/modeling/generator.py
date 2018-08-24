@@ -93,7 +93,7 @@ class Generator(nn.Module):
         freeze_params(self.Conv_Body)
         freeze_params(self.RPN)
 
-    def forward(self, data, im_info, roidb=None, mode="FAKE", train_part="GENERATOR"):
+    def forward(self, data, im_info, roidb=None, mode="FAKE", train_part="GENERATOR", **rpn_kwargs):
         im_data = data
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
