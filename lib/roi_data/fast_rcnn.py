@@ -218,6 +218,10 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     assert isinstance(flags, ModeFlags) is True
     area_thrs = cfg.GAN.AREA_THRESHOLD
 
+    for k, v in roidb.items():
+        print(k)
+    return
+
     if 'bbox_targets' not in roidb:
         gt_inds = np.where(roidb['gt_classes'] > 0)[0]
         gt_boxes = roidb['boxes'][gt_inds, :]
