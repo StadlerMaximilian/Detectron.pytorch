@@ -1048,6 +1048,7 @@ __C.GAN.SOLVER.LR_POLICY_G = 'step'
 __C.GAN.SOLVER.LR_POLICY_D = 'step'
 
 __C.GAN.SOLVER.GAMMA_D = 0.1
+__C.GAN.SOLVER_GAMMA_G = 0.1
 
 # Uniform step size for 'steps' policy
 __C.GAN.SOLVER.STEP_SIZE = 30000
