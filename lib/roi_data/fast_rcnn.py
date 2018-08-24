@@ -235,10 +235,10 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
-        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image + 1))
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
     else: # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
-        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image + 1))
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
 

@@ -629,7 +629,7 @@ def main():
                                        'adv_target': adv_target_zero
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D_fake=outputs_D_fake)
+                training_stats.UpdateIterStats(out_D=outputs_D_fake)
                 loss_D_fake = outputs_D_fake['total_loss']
 
                 mem = torch.cuda.max_memory_allocated()
@@ -659,7 +659,7 @@ def main():
                                        'adv_target': adv_target_smoothed
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D_real=outputs_D_real)
+                training_stats.UpdateIterStats(out_D=outputs_D_real)
                 loss_D_real = outputs_D_real['total_loss']
 
                 loss_D = loss_D_real + loss_D_fake

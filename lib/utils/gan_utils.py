@@ -101,42 +101,24 @@ class TrainingStats(object):
     def ResetIterTimer(self):
         self.iter_timer.reset()
 
-    def UpdateIterStats(self, out_D_fake=None, out_D_real = None, out_G=None):
+    def UpdateIterStats(self, out_D=None, out_G=None):
         """Update tracked iteration statistics."""
 
-        if out_D_fake is not None:  # first trained on either real/fake images (then set flag)
+        if out_D is not None:  # first trained on either real/fake images (then set flag)
             total_loss = 0.0
 
-            for k, loss in out_D_fake['losses'].items():
+            for k, loss in out_D['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
                 total_loss += loss
                 loss_data = loss.data[0]
-                out_D_fake['losses'][k] = loss
+                out_D['losses'][k] = loss
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D_fake['total_loss'] = total_loss  # Add the total loss for back propagation
+            out_D['total_loss'] = total_loss  # Add the total loss for back propagation
             self.smoothed_total_loss_D.AddValue(total_loss.data[0])
 
-            for k, metric in out_D_fake['metrics'].items():
-                metric = metric.mean(dim=0, keepdim=True)
-                self.smoothed_metrics_D[k].AddValue(metric.data[0])
-
-        elif out_D_real is not None:
-            total_loss = 0.0
-
-            for k, loss in out_D_real['losses'].items():
-                assert loss.shape[0] == cfg.NUM_GPUS
-                loss = loss.mean(dim=0, keepdim=True)
-                total_loss += loss
-                loss_data = loss.data[0]
-                out_D_real['losses'][k] = loss
-                self.smoothed_losses_D[k].AddValue(loss_data)
-
-            out_D_real['total_loss'] = total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss_D.AddValue(total_loss.data[0])
-
-            for k, metric in out_D_real['metrics'].items():
+            for k, metric in out_D['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
@@ -157,16 +139,6 @@ class TrainingStats(object):
             for k, metric in out_G['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_G[k].AddValue(metric.data[0])
-
-    def _mean_and_reset_inner_list(self, attr_name, key=None):
-        """Take the mean and reset list empty"""
-        if key:
-            mean_val = sum(getattr(self, attr_name)[key]) / self.misc_args.iter_size
-            getattr(self, attr_name)[key] = []
-        else:
-            mean_val = sum(getattr(self, attr_name)) / self.misc_args.iter_size
-            setattr(self, attr_name, [])
-        return mean_val
 
     def LogIterStats(self, cur_iter, lr_D, lr_G):
         """Log the tracked statistics."""
