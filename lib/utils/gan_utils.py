@@ -34,11 +34,13 @@ import utils.net as nu
 
 
 class ModeFlags(object):
-    def __init__(self):
+    def __init__(self, mode, train):
         self.train_generator = True
         self.train_discriminator = False
         self.fake_mode = False
         self.real_mode = True
+
+        self.set(mode, train)
 
     def set(self, mode, train):
         if mode == "fake":

@@ -527,7 +527,9 @@ def main():
     ### Training Loop ###
     generator.train()
     discriminator.train()
-    flags = ModeFlags()
+    fake_dis_flags = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
+    real_dis_flags = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
+    fake_gen_flags = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
@@ -635,7 +637,7 @@ def main():
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
-                input_data_fake.update({"flags": flags.set("fake", "discriminator")})
+                input_data_fake.update({"flags": fake_dis_flags})
                 outputs_G = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
@@ -660,7 +662,7 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                input_data_fake.update({"flags": flags.set("real", "discriminator")})
+                input_data_fake.update({"flags": real_dis_flags})
                 outputs_G = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
@@ -701,7 +703,7 @@ def main():
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
-            input_data_fake.update({"flags": flags.set("fake", "generator")})
+            input_data_fake.update({"flags": fake_gen_flags})
             outputs_G = generator(**input_data_fake)
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]
