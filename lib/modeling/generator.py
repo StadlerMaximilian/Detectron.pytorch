@@ -251,11 +251,15 @@ class ResidualBlock(nn.Module):
             'block.0.weight': 'blockConv1_w',
             'block.0.bias': 'blockConv2_b',
             'block.1.weight': 'blockBN1_w',
+            'block.1.running_mean': 'blockBN1_rm',
+            'block.1.running_var': 'blockBN1_rv',
             'block.1.bias': 'blockBN1_b',
             'block.3.weight': 'blockConv2_w',
             'block.3.bias': 'blockConv2_b',
             'block.4.weight': 'blockBN2_w',
             'block.4.bias': 'blockBN2_b',
+            'block.4.running_mean': 'blockBN4_rm',
+            'block.4.running_var': 'blockBN4_rv',
         }
         orphan_in_detectron = []
         self.mapping_to_detectron = detectron_weight_mapping
