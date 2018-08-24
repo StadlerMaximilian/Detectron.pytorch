@@ -274,6 +274,9 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         # keep only foreground indices when using discriminator mode
         keep_inds = np.append(fg_inds)
 
+    #debug
+    print(keep_inds)
+
     # Label is the class each RoI has max overlap with
     sampled_labels = roidb['max_classes'][keep_inds]
     sampled_labels[fg_rois_per_this_image:] = 0  # Label bg RoIs with class 0
