@@ -647,7 +647,7 @@ def main():
                 generator.module._set_provide_fake_features(False)
                 input_data_real.update({"flags": real_dis_flags})
                 outputs_G_real = generator(**input_data_real)
-                blob_conv_pooled = [Variable(torch.Tensor(x['blob_conv_pooled'])) for x in outputs_G_real]
+                blob_conv_pooled = [Variable(x['blob_conv_pooled']).cuda() for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
@@ -683,7 +683,7 @@ def main():
             generator.module._set_provide_fake_features(True)
             input_data_fake_g.update({"flags": fake_gen_flags})
             outputs_GG = generator(**input_data_fake_g)
-            blob_fake_g = [Variable(torch.Tensor(x['blob_fake'])) for x in outputs_GG]
+            blob_fake_g = [Variable(x['blob_fake']).cuda() for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
             input_discriminator = {'blob_conv': blob_fake_g,
