@@ -240,10 +240,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
 
-    # debug
-    print("rois_per_image: {}".format(rois_per_image))
-    print("fg_rois_per_image: {}".format(fg_rois_per_image))
-
     max_overlaps = roidb['max_overlaps']
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
@@ -253,12 +249,17 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, fg_inds.size)
 
+    # debug
+    print("rois_per_image: {}".format(rois_per_image))
+    print("fg_rois_per_image: {}".format(fg_rois_per_this_image))
+
     # Sample foreground regions without replacement
     if fg_inds.size > 0:
         fg_inds = npr.choice(
             fg_inds, size=fg_rois_per_this_image, replace=False)
 
-    if flags.train_generator:
+    # only use background RoI, if generator is trained, or not enough fg samples can be found
+    if flags.train_generator or fg_rois_per_this_image < fg_rois_per_image:
         # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
         bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
                            (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
