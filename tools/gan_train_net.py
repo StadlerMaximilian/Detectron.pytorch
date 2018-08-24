@@ -188,8 +188,10 @@ def main():
     if args.batch_size_D is None:
         args.batch_size_D = original_batch_size_D
     cfg.NUM_GPUS = torch.cuda.device_count()
-    assert (args.batch_size % cfg.NUM_GPUS) == 0, \
+    assert (args.batch_size_D % cfg.NUM_GPUS) == 0, \
         'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_D, cfg.NUM_GPUS)
+    assert (args.batch_size_G % cfg.NUM_GPUS) == 0, \
+        'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_G, cfg.NUM_GPUS)
     cfg.GAN.TRAIN.IMS_PER_BATCH_D = args.batch_size_D // cfg.NUM_GPUS
     effective_batch_size_D = args.iter_size * args.batch_size_D
     print('effective_batch_size_D = batch_size * iter_size = %d * %d' % (args.batch_size_D, args.iter_size))
