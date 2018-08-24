@@ -1029,9 +1029,6 @@ __C.GAN.TRAIN.IMS_PER_BATCH_G = 2
 __C.GAN.TRAIN.BATCH_SIZE_PER_IM_G = 64
 __C.GAN.TRAIN.FG_FRACTION_G = 0.25
 
-
-
-
 __C.GAN.SOLVER = AttrDict()
 
 # e.g 'SGD', 'Adam'
@@ -1048,7 +1045,7 @@ __C.GAN.SOLVER.LR_POLICY_G = 'step'
 __C.GAN.SOLVER.LR_POLICY_D = 'step'
 
 __C.GAN.SOLVER.GAMMA_D = 0.1
-__C.GAN.SOLVER_GAMMA_G = 0.1
+__C.GAN.SOLVER.GAMMA_G = 0.1
 
 # Uniform step size for 'steps' policy
 __C.GAN.SOLVER.STEP_SIZE = 30000
