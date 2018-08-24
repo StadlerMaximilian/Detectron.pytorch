@@ -128,6 +128,8 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 
 
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
+    #debug
+    print("sample_rois, with flags\n{}".format(str(flags)))
     if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0 and flags is not None:
         return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:

@@ -62,6 +62,12 @@ class ModeFlags(object):
             raise ValueError("train ({}) has to be either 'generator' or 'discriminator'!".format(train))
         return self
 
+    def __str__(self):
+        return "\t fake \t real \n\t {}\t {}\n \t Gen \t Dis \n \t {} \t {}".format(self.fake_mode,
+                                                                                    self.real_mode,
+                                                                                    self.train_generator,
+                                                                                    self.train_discriminator)
+
 
 class TrainingStats(object):
     """Track vital training statistics."""
