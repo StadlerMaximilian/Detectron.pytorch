@@ -122,6 +122,21 @@ def parse_args():
         help='Update once every iter_size steps, as in Caffe.',
         default=1, type=int)
 
+    # needed during debugging
+    parser.add_argument(
+        '--rebuild',
+        action='store_true',
+        help='flag for rebuilding and testing final gan model. Skips training loop'
+    )
+    parser.add_argument(
+        '--dis',
+        help='path to saved discriminator_model'
+    )
+    parser.add_argument(
+        '--gen',
+        help='path to saved generator model'
+    )
+
     return parser.parse_args()
 
 
@@ -142,7 +157,6 @@ def save_ckpt(output_dir, args, step, train_size, model, optimizer, part="none")
     save_name = os.path.join(ckpt_dir, 'model_step{}.pth'.format(step))
     if isinstance(model, mynn.DataParallel):
         model = model.module
-    model_state_dict = model.state_dict()
     torch.save({
         'step': step,
         'train_size': train_size,
@@ -165,7 +179,7 @@ def save_model(output_dir, no_save, model):
         model = model.module
     torch.save({
         'model': model.state_dict()
-    })
+    }, save_name)
     logger.info('save model: %s', save_name)
     return save_name
 
@@ -521,6 +535,18 @@ def main():
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
 
+    # during debugging
+    if args.rebuild:
+        gan = GAN(generator_weights=args.gen, discriminator_weights=args.dis)
+        final_model = save_model(output_dir, no_save=False, model=gan)
+
+        if final_model is not None:
+            args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                                  load_ckpt='{}'.format(final_model), load_detectron=None,
+                                  multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                                  range=None, set_cfgs=[], vis=False)
+            test_net_routine(args_test)
+
     ### Training Loop ###
     generator.train()
     discriminator.train()
@@ -604,7 +630,6 @@ def main():
                 decay_steps_ind_G += 1
 
             training_stats.IterTic()
-
 
             # train discriminator
             for _ in range(cfg.GAN.TRAIN.k):

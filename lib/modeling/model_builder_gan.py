@@ -1,24 +1,8 @@
 import torch.nn as nn
-import torch.nn.init as init
-import torch.nn.functional as F
-from torch.autograd import Variable
 import torch
 
-import os
-
-from core.config import cfg
-from modeling.model_builder import get_func, compare_state_dict, check_inference, Generalized_RCNN
 from modeling.generator import Generator
 from modeling.discriminator import Discriminator
-import nn as mynn
-import modeling.rpn_heads as rpn_heads
-import modeling.fast_rcnn_heads as fast_rcnn_heads
-import modeling.mask_rcnn_heads as mask_rcnn_heads
-import modeling.keypoint_rcnn_heads as keypoint_rcnn_heads
-import utils.blob as blob_utils
-import utils.net as net_utils
-import utils.detectron_weight_helper as weight_utils
-import utils.net as net_utils
 
 
 class GAN(nn.Module):
@@ -32,6 +16,8 @@ class GAN(nn.Module):
         dim_in = self.generator.RPN.dim_out
         self.discriminator = Discriminator(dim_in, resolution)
         self.provide_fake_features = True
+
+        self._init_module(generator_weights, discriminator_weights)
 
     def forward(self, data, im_info, roidb=None, **rpn_kwargs):
 
