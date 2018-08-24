@@ -381,4 +381,4 @@ def _add_multilevel_rois(blobs):
     if cfg.MODEL.MASK_ON:
         _distribute_rois_over_fpn_levels('mask_rois')
     if cfg.MODEL.KEYPOINTS_ON:
-        _distribute_rois_over_fpn_levels('keypoint_ro
+        _distribute_rois_over_fpn_levels('keypoint_rois')
