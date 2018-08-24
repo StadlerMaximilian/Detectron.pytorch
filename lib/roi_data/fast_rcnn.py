@@ -222,6 +222,12 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
+    areas = box_utils.boxes_area(gt_boxes)
+    mean = np.mean(areas)
+
+    # debug
+    print("mean-area: {}".format(mean))
+
     if area_thrs > 0:
         if flags.fake_mode:
             # for fake samples: keep only samples with area < area-threshold
@@ -235,8 +241,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     else: # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
-
-    print("sample rois: {} / {}".format(rois_per_image, fg_rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
 
@@ -281,6 +285,11 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     sampled_labels = roidb['max_classes'][keep_inds]
     sampled_labels[fg_rois_per_this_image:] = 0  # Label bg RoIs with class 0
     sampled_boxes = roidb['boxes'][keep_inds]
+
+    # debug
+    areas_after = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]])
+    mean_after = np.mean(areas_after)
+    print("mean-area after: {}".format(mean_after))
 
     if 'bbox_targets' not in roidb:
         gt_assignments = gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]
