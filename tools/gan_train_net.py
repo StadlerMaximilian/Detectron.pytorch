@@ -688,13 +688,13 @@ def main():
             training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
-                save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
-                save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
+                save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
+                save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
 
         # ---- Training ends ----
         # Save last checkpoint
-        final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
-        final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
+        final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
+        final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
 
         gan = GAN(generator_weights=final_generator, discriminator_weights=final_discriminator)
         final_model = save_model(output_dir, no_save=False, model=gan)
