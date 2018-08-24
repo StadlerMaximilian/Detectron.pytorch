@@ -44,11 +44,11 @@ GAN:
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_overfit_small',)
-    IMS_PER_BATCH_D: 4
-    BATCH_SIZE_PER_IM_D: 32
+    IMS_PER_BATCH_D: 2
+    BATCH_SIZE_PER_IM_D: 64
     FG_FRACTION_D: 1.0
-    IMS_PER_BATCH_G: 2
-    BATCH_SIZE_PER_IM_G: 64
+    IMS_PER_BATCH_G: 1
+    BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
   SOLVER:
     WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO

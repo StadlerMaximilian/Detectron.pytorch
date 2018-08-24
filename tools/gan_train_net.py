@@ -598,7 +598,7 @@ def main():
 
             training_stats.IterTic()
 
-            
+
             # train discriminator
             for _ in range(cfg.GAN.TRAIN.k):
 
@@ -668,9 +668,6 @@ def main():
                 mem = torch.cuda.max_memory_allocated()
                 print("Finished training D2 with mem: {}".format(mem))
 
-                
-
-            """
             # train generator
             mem = torch.cuda.max_memory_allocated()
             print("Training G with mem: {}".format(mem))
@@ -705,14 +702,10 @@ def main():
 
             mem = torch.cuda.max_memory_allocated()
             print("Finished training G with mem: {}".format(mem))
-            """
 
             training_stats.IterToc()
 
             training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
-
-            # free cuda cache
-            time.sleep(1)
 
             mem = torch.cuda.max_memory_allocated()
             print("Freed cache: mem: {}".format(mem))
