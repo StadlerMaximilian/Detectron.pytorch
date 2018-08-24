@@ -30,7 +30,7 @@ from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.gan_utils import TrainingStats
 from test_net import test_net_routine
-
+from gan_utils import ModeFlags
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
@@ -528,6 +528,7 @@ def main():
     ### Training Loop ###
     generator.train()
     discriminator.train()
+    flags = ModeFlags()
 
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
@@ -635,7 +636,7 @@ def main():
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
-                input_data_fake.update({"mode": "FAKE", "train_part": "DISCRIMINATOR"})
+                input_data_fake.update({"flags": flags.set("fake", "discriminator")})
                 outputs_G = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
@@ -660,7 +661,7 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                input_data_fake.update({"mode": "REAL", "train_part": "DISCRIMINATOR"})
+                input_data_fake.update({"flags": flags.set("real", "discriminator")})
                 outputs_G = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
@@ -701,7 +702,7 @@ def main():
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
-            input_data_fake.update({"mode": "FAKE", "train_part": "GENERATOR"})
+            input_data_fake.update({"flags": flags.set("fake", "generator")})
             outputs_G = generator(**input_data_fake)
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]

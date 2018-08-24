@@ -9,7 +9,7 @@ class GenerateProposalLabelsOp(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, rpn_rois, roidb, im_info, mode="FAKE", train_part="GENERATOR"):
+    def forward(self, rpn_rois, roidb, im_info, flag=None):
         """Op for generating training labels for RPN proposals. This is used
         when training RPN jointly with Fast/Mask R-CNN (as in end-to-end
         Faster R-CNN training).
@@ -24,8 +24,6 @@ class GenerateProposalLabelsOp(nn.Module):
             training the model. It does this by querying the data loader for
             the list of blobs that are needed.
         """
-
-        print("generate_props: {}, {}".format(mode, train_part))
         im_scales = im_info.data.numpy()[:, 2]
 
         output_blob_names = roi_data.fast_rcnn.get_fast_rcnn_blob_names()
@@ -36,6 +34,6 @@ class GenerateProposalLabelsOp(nn.Module):
         # Note: crowd_thresh=0 will ignore _filter_crowd_proposals
         json_dataset.add_proposals(roidb, rpn_rois, im_scales, crowd_thresh=0)
         blobs = {k: [] for k in output_blob_names}
-        roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb, mode=mode, train_part=train_part)
+        roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb, flag)
 
         return blobs

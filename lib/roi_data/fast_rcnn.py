@@ -31,6 +31,7 @@ import roi_data.mask_rcnn
 import utils.boxes as box_utils
 import utils.blob as blob_utils
 import utils.fpn as fpn_utils
+from gan_utils import ModeFlags
 
 
 def get_fast_rcnn_blob_names(is_training=True):
@@ -102,12 +103,11 @@ def get_fast_rcnn_blob_names(is_training=True):
     return blob_names
 
 
-def add_fast_rcnn_blobs(blobs, im_scales, roidb, mode="FAKE", train_part="GENERATOR"):
-    print("add_blobs: {}, {}".format(mode, train_part))
+def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
     """Add blobs needed for training Fast R-CNN style models."""
     # Sample training RoIs from each image and append them to the blob lists
     for im_i, entry in enumerate(roidb):
-        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i, mode=mode, train_part=train_part)
+        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i, flags)
         for k, v in frcn_blobs.items():
             blobs[k].append(v)
     # Concat the training blob lists into tensors
@@ -127,10 +127,9 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, mode="FAKE", train_part="GENERA
     return valid
 
 
-def _sample_rois(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERATOR"):
-    print("_sample_rois: {}, {}".format(mode, train_part))
-    if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0:
-        return _sample_rois_gan(roidb, im_scale, batch_idx, mode=mode, train_part=train_part)
+def _sample_rois(roidb, im_scale, batch_idx, flags=None):
+    if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0 and flags is not None:
+        return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:
         return _sample_rois_normal(roidb, im_scale, batch_idx)
 
@@ -212,14 +211,11 @@ def _sample_rois_normal(roidb, im_scale, batch_idx):
     return blob_dict
 
 
-def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERATOR"):
+def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
-    print("mode {} with train_part {}".format(mode, train_part))
-    assert train_part in ['GENERATOR', 'DISCRIMINATOR',
-                          "GENERATOR", "DISCRIMINATOR"]
-    assert mode in ["FAKE", "REAL"]
+    assert isinstance(flags, ModeFlags) == True
 
     area_thrs = cfg.GAN.AREA_THRESHOLD
 
@@ -231,13 +227,13 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERA
     else:
         bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
 
-    if mode == "FAKE":
+    if flags.fake_mode:
         # for fake samples: keep only samples with area < area-threshold
         keep_area_inds = box_utils.filter_large_boxes(bboxes[:, 1:], max_size=area_thrs)
     else:  # mode == "REAL":
         keep_area_inds = box_utils.filter_small_boxes(bboxes[:, 1:], min_size=area_thrs)
 
-    if mode == 'GENERATOR':
+    if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
     else: # discriminator
@@ -262,7 +258,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERA
         fg_inds = npr.choice(
             fg_inds, size=fg_rois_per_this_image, replace=False)
 
-    if mode == 'GENERATOR':
+    if flags.train_generator:
         # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
         bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
                            (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]

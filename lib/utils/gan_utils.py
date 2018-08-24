@@ -33,6 +33,34 @@ from utils.timer import Timer
 import utils.net as nu
 
 
+class ModeFlags(object):
+    def __init__(self):
+        self.train_generator = True
+        self.train_discriminator = False
+        self.fake_mode = False
+        self.real_mode = True
+
+    def set(self, mode, train):
+        if mode == "fake":
+            self.fake_mode = True
+            self.real_mode = False
+        elif mode == "real":
+            self.real_mode = True
+            self.fake_mode = False
+        else:
+            raise ValueError("mode ({}) has to be either 'real' or 'fake'!".format(mode))
+
+        if train == "generator":
+            self.train_generator = True
+            self.train_discriminator = False
+        elif train == "discriminator":
+            self.train_generator = False
+            self.train_discriminator = True
+        else:
+            raise ValueError("train ({}) has to be either 'generator' or 'discriminator'!".format(train))
+        return self
+
+
 class TrainingStats(object):
     """Track vital training statistics."""
 

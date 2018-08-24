@@ -93,8 +93,7 @@ class Generator(nn.Module):
         freeze_params(self.Conv_Body)
         freeze_params(self.RPN)
 
-    def forward(self, data, im_info, roidb=None, mode="FAKE", train_part="GENERATOR", **rpn_kwargs):
-        print("Generator: {}, {}".format(mode, train_part))
+    def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         im_data = data
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
@@ -110,7 +109,7 @@ class Generator(nn.Module):
 
         return_dict['blob_conv'] = blob_conv
 
-        rpn_ret = self.RPN(blob_conv, im_info, roidb, mode=mode, train_part=train_part)
+        rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
         return_dict['rpn_ret'] = rpn_ret
 
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
