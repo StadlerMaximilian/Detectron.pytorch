@@ -248,7 +248,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
-    fg_inds = fg_inds(np.where(fg_inds == keep_area_inds))
+    fg_inds = [x for x in fg_inds if x in keep_area_inds]
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, fg_inds.size)
