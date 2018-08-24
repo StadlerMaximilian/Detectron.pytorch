@@ -86,7 +86,7 @@ def log_gan_stats(stats, misc_args):
     if stats['adv_loss_G']:
         lines += "\t\tadv_loss_generator: {:.6f} \n".format(stats['adv_loss_G'])
     if stats['adv_loss_D']:
-        lines += "\t\tadv__loss_discriminator: {:.6f} \n".format(stats['adv_loss_D'])
+        lines += "\t\tadv_loss_discriminator: {:.6f} \n".format(stats['adv_loss_D'])
     print(lines[:-1])  # remove last new line
 
 

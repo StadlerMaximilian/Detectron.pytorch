@@ -603,6 +603,9 @@ def main():
             # train discriminator
             for _ in range(cfg.GAN.TRAIN.k):
 
+                mem = torch.cuda.max_memory_allocated()
+                print("Training D1 with mem: {}".format(mem))
+
                 # train on fake data
                 try:
                     input_data_fake = next(dataiterator_target_discriminator)
@@ -626,6 +629,12 @@ def main():
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D_fake=outputs_D_fake)
                 loss_D_fake = outputs_D_fake['total_loss']
+
+                mem = torch.cuda.max_memory_allocated()
+                print("Finished training D1 with mem: {}".format(mem))
+
+                mem = torch.cuda.max_memory_allocated()
+                print("Training D2 with mem: {}".format(mem))
 
                 # train on real data
                 try:
@@ -656,6 +665,12 @@ def main():
                 optimizer_D.step()
                 optimizer_D.zero_grad()
 
+                mem = torch.cuda.max_memory_allocated()
+                print("Finished training D2 with mem: {}".format(mem))
+
+                mem = torch.cuda.max_memory_allocated()
+                print("Training G with mem: {}".format(mem))
+
             # train generator
             try:
                 input_data_fake = next(dataiterator_target_generator)
@@ -684,6 +699,9 @@ def main():
             loss_G.backward()
             optimizer_G.step()
             optimizer_G.zero_grad()
+
+            mem = torch.cuda.max_memory_allocated()
+            print("Finished training G with mem: {}".format(mem))
 
             training_stats.IterToc()
 
