@@ -26,12 +26,11 @@ import _init_paths
 import nn as mynn
 from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
 from core.test import im_detect_all
-from modeling.model_builder import Generalized_RCNN
+from modeling.model_builder_gan import GAN
 import datasets.dummy_datasets as datasets
 import utils.misc as misc_utils
 import utils.net as net_utils
 import utils.vis as vis_utils
-from utils.detectron_weight_helper import load_detectron_weight
 from utils.timer import Timer
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
@@ -41,7 +40,7 @@ cv2.ocl.setUseOpenCL(False)
 
 def parse_args():
     """Parse in command line arguments"""
-    parser = argparse.ArgumentParser(description='Demonstrate mask-rcnn results')
+    parser = argparse.ArgumentParser(description='Demonstrate GAN results')
     parser.add_argument(
         '--dataset', required=True,
         help='training dataset')
@@ -58,8 +57,6 @@ def parse_args():
         '--no_cuda', dest='cuda', help='whether use CUDA', action='store_false')
 
     parser.add_argument('--load_ckpt', help='path of checkpoint to load')
-    parser.add_argument(
-        '--load_detectron', help='path to the detectron weight pickle file')
 
     parser.add_argument(
         '--image_dir',
@@ -91,6 +88,13 @@ def main():
 
     assert args.image_dir or args.images
     assert bool(args.image_dir) ^ bool(args.images)
+    assert args.load_ckpt
+
+    print('load cfg from file: {}'.format(args.cfg_file))
+    cfg_from_file(args.cfg_file)
+
+    if args.set_cfgs is not None:
+        cfg_from_list(args.set_cfgs)
 
     if args.dataset.startswith("coco"):
         dataset = datasets.get_coco_dataset()
@@ -101,36 +105,23 @@ def main():
     else:
         raise ValueError('Unexpected dataset name: {}'.format(args.dataset))
 
-    print('load cfg from file: {}'.format(args.cfg_file))
-    cfg_from_file(args.cfg_file)
-
-    if args.set_cfgs is not None:
-        cfg_from_list(args.set_cfgs)
-
-    assert bool(args.load_ckpt) ^ bool(args.load_detectron), \
-        'Exactly one of --load_ckpt and --load_detectron should be specified.'
-    cfg.MODEL.LOAD_IMAGENET_PRETRAINED_WEIGHTS = False  # Don't need to load imagenet pretrained weights
     assert_and_infer_cfg()
 
-    maskRCNN = Generalized_RCNN()
+    gan = GAN()
 
     if args.cuda:
-        maskRCNN.cuda()
+        gan.cuda()
 
     if args.load_ckpt:
         load_name = args.load_ckpt
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
-        net_utils.load_ckpt(maskRCNN, checkpoint['model'])
+        net_utils.load_ckpt(gan, checkpoint['model'])
 
-    if args.load_detectron:
-        print("loading detectron weights %s" % args.load_detectron)
-        load_detectron_weight(maskRCNN, args.load_detectron)
+    gan = mynn.DataParallel(gan, cpu_keywords=['im_info', 'roidb'],
+                            minibatch=True, device_ids=[0])  # only support single GPU
 
-    maskRCNN = mynn.DataParallel(maskRCNN, cpu_keywords=['im_info', 'roidb'],
-                                 minibatch=True, device_ids=[0])  # only support single GPU
-
-    maskRCNN.eval()
+    gan.eval()
     if args.image_dir:
         imglist = misc_utils.get_imagelist_from_dir(args.image_dir)
     else:
@@ -146,7 +137,7 @@ def main():
 
         timers = defaultdict(Timer)
 
-        cls_boxes, cls_segms, cls_keyps = im_detect_all(maskRCNN, im, timers=timers)
+        cls_boxes, cls_segms, cls_keyps = im_detect_all(gan, im, timers=timers)
 
         im_name, _ = os.path.splitext(os.path.basename(imglist[i]))
         vis_utils.vis_one_image(

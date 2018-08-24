@@ -11,7 +11,7 @@ import torch
 
 import _init_paths  # pylint: disable=unused-import
 from core.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
-from core.test_engine import run_inference
+from core.gan_test_engine import run_inference
 import utils.logging
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
@@ -23,16 +23,11 @@ def parse_args():
     """Parse in command line arguments"""
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
     parser.add_argument(
-        '--dataset',
-        help='training dataset')
-    parser.add_argument(
         '--cfg', dest='cfg_file', required=True,
         help='optional config file')
 
     parser.add_argument(
         '--load_ckpt', help='path of checkpoint to load')
-    parser.add_argument(
-        '--load_detectron', help='path to the detectron weight pickle file')
 
     parser.add_argument(
         '--output_dir',

@@ -33,7 +33,7 @@ from modeling.model_builder_gan import GAN
 from utils.logging import setup_logging
 from utils.timer import Timer
 from utils.gan_utils import TrainingStats, ModeFlags
-from test_net import test_net_routine
+from gan_test_net import test_net_routine
 
 # Set up logging and load config options
 logger = setup_logging(__name__)
@@ -773,8 +773,8 @@ def main():
     logger.info("Start testing final model")
 
     if final_model is not None:
-        args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-                              load_ckpt='{}'.format(final_model), load_detectron=None,
+        args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                              load_ckpt='{}'.format(final_model),
                               multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
                               range=None, set_cfgs=[], vis=False)
         test_net_routine(args_test)
