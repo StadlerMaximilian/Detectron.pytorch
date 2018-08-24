@@ -214,8 +214,8 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERA
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
-    assert train_part in ['GENERATOR', 'DISCRIMINATOR']  # where train_part determines batch_content corresponding on whether
-    # discriminator or generator is trained
+    assert train_part in ['GENERATOR', 'DISCRIMINATOR',
+                          "GENERATOR", "DISCRIMINATOR"]
     assert mode in ["FAKE", "REAL"]
 
     area_thrs = cfg.GAN.AREA_THRESHOLD
