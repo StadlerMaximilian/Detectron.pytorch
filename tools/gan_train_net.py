@@ -299,7 +299,7 @@ def main():
         batch_sampler=batchSampler_source_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
-        pin_memory=False)
+        pin_memory=True)
 
     dataiterator_source_discriminator = iter(dataloader_source_discriminator)
 
@@ -313,6 +313,7 @@ def main():
 
     # Effective training sample size for one epoch
     train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
+    train_size_G = roidb_size_target // args.batch_size_G * args.batch_size_G
 
     batchSampler_target_discriminator = BatchSampler(
         sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
@@ -330,29 +331,19 @@ def main():
         batch_sampler=batchSampler_target_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
-        pin_memory=False)
+        pin_memory=True)
 
     dataiterator_target_discriminator = iter(dataloader_target_discriminator)
 
-    timers['roidb_target_g'].tic()
-    roidb_target_g, ratio_list_target_g, ratio_index_target_g = combined_roidb_for_training(
-        cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
-    timers['roidb_target_g'].toc()
-    roidb_size_target_g = len(roidb_target_g)
-    logger.info('{:d} roidb entries'.format(roidb_size_target_g))
-    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target_g'].average_time)
-
-    # Effective training sample size for one epoch
-    train_size_G += roidb_size_target_g // args.batch_size_G * args.batch_size_G
 
     batchSampler_target_generator = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_target_g, ratio_index_target_g, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
         batch_size=args.batch_size_G,
         drop_last=True
     )
 
     dataset_target_generator = RoiDataLoader(
-        roidb_target_g,
+        roidb_target,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
@@ -361,7 +352,7 @@ def main():
         batch_sampler=batchSampler_target_generator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_generator,
-        pin_memory=False)
+        pin_memory=True)
 
     dataiterator_target_generator = iter(dataloader_target_generator)
     train_size = max(train_size_D // 2, train_size_G)

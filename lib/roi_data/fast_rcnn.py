@@ -216,17 +216,19 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     examples.
     """
     assert isinstance(flags, ModeFlags) is True
+    area_thrs = cfg.GAN.AREA_THRESHOLD
 
     if 'bbox_targets' not in roidb:
         gt_inds = np.where(roidb['gt_classes'] > 0)[0]
         gt_boxes = roidb['boxes'][gt_inds, :]
-        bboxes_ind = gt_inds[roidb['box_to_gt_ind_map']]
-        bboxes = gt_boxes[bboxes_ind]
+        if area_thrs > 0:
+            bboxes_ind = gt_inds[roidb['box_to_gt_ind_map']]
+            bboxes = gt_boxes[bboxes_ind]
     else:
-        bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
+        if area_thrs > 0:
+            bboxes = box_utils.bbox_transform(roidb['boxes'], roidb['bbox_targets'])
 
-    if cfg.GAN.AREA_THRESHOLD > 0:
-        area_thrs = cfg.GAN.AREA_THRESHOLD
+    if area_thrs > 0:
         if flags.fake_mode:
             # for fake samples: keep only samples with area < area-threshold
             keep_area_inds = box_utils.filter_large_boxes(bboxes, max_size=area_thrs)
@@ -274,8 +276,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     else:
         # keep only foreground indices when using discriminator mode
         keep_inds = np.append(fg_inds, []).astype(int)
-
-    print(keep_inds)
 
     # Label is the class each RoI has max overlap with
     sampled_labels = roidb['max_classes'][keep_inds]
