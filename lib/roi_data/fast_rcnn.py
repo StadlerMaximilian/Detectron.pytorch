@@ -244,7 +244,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # with area-threshold, only select indices of boxes, whose corresponding ground-truth-box fulfills criterion
     # i.e. whose corresponding index to gt-box is in gt_keep_inds
     if cfg.GAN.AREA_THRESHOLD > 0:
-        fg_inds = np.asarray(x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds).astype(int)
+        fg_inds = np.asarray([x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds]).astype(int)
 
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
