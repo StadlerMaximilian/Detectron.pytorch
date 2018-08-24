@@ -86,6 +86,7 @@ class single_scale_rpn_outputs(nn.Module):
         im_info: (CPU Variable)
         roidb: (list of ndarray)
         """
+        print("rpn_head: {}, {}".format(mode, train_part))
         rpn_conv = F.relu(self.RPN_conv(x), inplace=True)
 
         rpn_cls_logits = self.RPN_cls_score(rpn_conv)

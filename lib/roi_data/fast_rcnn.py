@@ -103,6 +103,7 @@ def get_fast_rcnn_blob_names(is_training=True):
 
 
 def add_fast_rcnn_blobs(blobs, im_scales, roidb, mode="FAKE", train_part="GENERATOR"):
+    print("add_blobs: {}, {}".format(mode, train_part))
     """Add blobs needed for training Fast R-CNN style models."""
     # Sample training RoIs from each image and append them to the blob lists
     for im_i, entry in enumerate(roidb):
@@ -127,6 +128,7 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, mode="FAKE", train_part="GENERA
 
 
 def _sample_rois(roidb, im_scale, batch_idx, mode="FAKE", train_part="GENERATOR"):
+    print("_sample_rois: {}, {}".format(mode, train_part))
     if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0:
         return _sample_rois_gan(roidb, im_scale, batch_idx, mode=mode, train_part=train_part)
     else:

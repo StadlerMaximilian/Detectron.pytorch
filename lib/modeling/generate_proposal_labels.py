@@ -24,6 +24,8 @@ class GenerateProposalLabelsOp(nn.Module):
             training the model. It does this by querying the data loader for
             the list of blobs that are needed.
         """
+
+        print("generate_props: {}, {}".format(mode, train_part))
         im_scales = im_info.data.numpy()[:, 2]
 
         output_blob_names = roi_data.fast_rcnn.get_fast_rcnn_blob_names()
