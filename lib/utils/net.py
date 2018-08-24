@@ -168,10 +168,22 @@ def load_ckpt(model, ckpt):
                 name_parts = [x for x in name_parts if x != "fc_head"]
                 name_modified = '.'.join(name_parts)
                 if mapping[name_modified]:
-                    state_dict[name_modified] = ckpt[name_modified]
+                    state_dict[name_modified] = ckpt[name]
         else:
-            if mapping[name]:
-                state_dict[name] = ckpt[name]
+            try:
+                if mapping[name]:
+                    state_dict[name] = ckpt[name]
+            except KeyError:
+                name_parts = name.split('.')
+                i = 0
+                for name in name_parts:
+                    i += 1
+                    if name == "Box_Head":
+                        break
+                name_parts.insert(i, "fc_head")
+                name_modified = '.'.join(name_parts)
+                if mapping[name_modified]:
+                    state_dict[name_modified] = ckpt[name]
 
     model.load_state_dict(state_dict, strict=False)
 

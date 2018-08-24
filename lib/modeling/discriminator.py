@@ -112,7 +112,7 @@ class Discriminator(nn.Module):
                             name_parts = [x for x in name_parts if x != "fc_head"]
                             name_modified = '.'.join(name_parts)
                             if mapping[name_modified]:
-                                state_dict[name_modified] = ckpt[name_modified]
+                                state_dict[name_modified] = ckpt[name]
                     else:
                         try:
                             if mapping[name]:
@@ -122,7 +122,7 @@ class Discriminator(nn.Module):
                             name_parts.insert(1, "fc_head")
                             name_modified = '.'.join(name_parts)
                             if mapping[name_modified]:
-                                state_dict[name_modified] = ckpt[name_modified]
+                                state_dict[name_modified] = ckpt[name]
             self.load_state_dict(state_dict, strict=False)
             del pretrained_detectron
             torch.cuda.empty_cache()
