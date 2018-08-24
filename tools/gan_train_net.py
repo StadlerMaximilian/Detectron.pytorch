@@ -635,7 +635,8 @@ def main():
                             input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
-                outputs_G = generator(**input_data_fake, mode="FAKE", train_part="DISCRIMINATOR")
+                input_data_fake.update({"mode": "FAKE", "train_part": "DISCRIMINATOR"})
+                outputs_G = generator(**input_data_fake)
                 blob_fake = [x['blob_fake'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
 
@@ -659,7 +660,8 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                outputs_G = generator(**input_data_real, mode="REAL", train_part="DISCRIMINATOR")
+                input_data_fake.update({"mode": "REAL", "train_part": "DISCRIMINATOR"})
+                outputs_G = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G]
                 rpn_ret = [x['rpn_ret'] for x in outputs_G]
                 # use smoothed label for "REAL" - Label
@@ -699,7 +701,8 @@ def main():
                         input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
-            outputs_G = generator(**input_data_fake, mode="FAKE", train_part="GENERATOR")
+            input_data_fake.update({"mode": "FAKE", "train_part": "GENERATOR"})
+            outputs_G = generator(**input_data_fake)
             blob_fake = [x['blob_fake'] for x in outputs_G]
             rpn_ret = [x['rpn_ret'] for x in outputs_G]
             # also use smoothed value for GENERATOR training
