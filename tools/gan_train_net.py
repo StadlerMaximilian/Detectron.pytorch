@@ -293,7 +293,7 @@ def main():
     dataloader_source_discriminator = torch.utils.data.DataLoader(
         dataset_source_discriminator,
         batch_sampler=batchSampler_source_discriminator,
-        num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
@@ -326,7 +326,7 @@ def main():
         dataloader_target_discriminator = torch.utils.data.DataLoader(
             dataset_target_discriminator,
             batch_sampler=batchSampler_target_discriminator,
-            num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+            num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
             collate_fn=collate_minibatch_discriminator,
             pin_memory=False)
 
@@ -346,7 +346,7 @@ def main():
         dataloader_target_generator = torch.utils.data.DataLoader(
             dataset_target_generator,
             batch_sampler=batchSampler_target_generator,
-            num_workers=cfg.DATA_LOADER.NUM_THREADS/ num_loaders,
+            num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
             collate_fn=collate_minibatch_generator,
             pin_memory=False)
 
