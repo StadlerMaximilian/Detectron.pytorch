@@ -197,7 +197,7 @@ def main():
     print('Adaptive config changes:')
     print('    effective_batch_size: %d --> %d' % (original_batch_size_D, effective_batch_size_D))
     print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
-    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_D, cfg.TRAIN.IMS_PER_BATCH_D))
+    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_D, cfg.GAN.TRAIN.IMS_PER_BATCH_D))
 
     # Adaptively adjust some configs for generator #
     original_batch_size_G = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_G
@@ -215,7 +215,7 @@ def main():
     print('Adaptive config changes:')
     print('    effective_batch_size: %d --> %d' % (original_batch_size_G, effective_batch_size_G))
     print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
-    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_G, cfg.TRAIN.IMS_PER_BATCH_G))
+    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_G, cfg.GAN.TRAIN.IMS_PER_BATCH_G))
 
     # Adjust learning based on batch size change linearly
     # For iter_size > 1, gradients are `accumulated`, so lr is scaled based
