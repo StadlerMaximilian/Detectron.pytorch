@@ -101,8 +101,19 @@ class Discriminator(nn.Module):
             ckpt = pretrained_detectron['model']
             for name in ckpt:
                 if name.split('.')[0] in load_layers:
-                    if mapping[name]:
-                        state_dict[name] = ckpt[name]
+                    if "fc_head" in name:
+                        try:
+                            if mapping[name]:
+                                state_dict[name] = ckpt[name]
+                        except KeyError:
+                            name_parts = name.split('.')
+                            name_parts = [x for x in name_parts if x != "fc_head"]
+                            name_modified = name_parts.join('.')
+                            if mapping[name]:
+                                state_dict[name] = ckpt[name]
+                    else:
+                        if mapping[name]:
+                            state_dict[name] = ckpt[name]
             self.load_state_dict(state_dict, strict=False)
             del pretrained_detectron
             torch.cuda.empty_cache()
