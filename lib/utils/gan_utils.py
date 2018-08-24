@@ -103,45 +103,44 @@ class TrainingStats(object):
     def ResetIterTimer(self):
         self.iter_timer.reset()
 
-    def UpdateIterStats(self, out_D=None, out_G=None):
+    def UpdateIterStats(self, out_D_fake=None, out_D_real = None, out_G=None):
         """Update tracked iteration statistics."""
 
-        if out_D is not None and not self.flag_D:  # first trained on either real/fake images (then set flag)
+        if out_D_fake is not None:  # first trained on either real/fake images (then set flag)
             self.total_loss = 0.0
-            self.flag_D = True
 
-            for k, loss in out_D['losses'].items():
+            for k, loss in out_D_fake['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
                 self.total_loss += loss
                 loss_data = loss.data[0]
-                out_D['losses'][k] = loss
+                out_D_fake['losses'][k] = loss
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D['total_loss'] = self.total_loss  # Add the total loss for back propagation
+            out_D_fake['total_loss'] = self.total_loss  # Add the total loss for back propagation
             self.smoothed_total_loss_D.AddValue(self.total_loss.data[0])
 
-            for k, metric in out_D['metrics'].items():
+            for k, metric in out_D_fake['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
 
-        elif out_D is not None and self.flag_D:  # if flag is set
-            for k, loss in out_D['losses'].items():
+        elif out_D_real is not None:
+            self.total_loss = 0.0
+
+            for k, loss in out_D_real['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
                 self.total_loss += loss
                 loss_data = loss.data[0]
-                out_D['losses'][k] += loss  # adding values for discriminator update
+                out_D_real['losses'][k] = loss
                 self.smoothed_losses_D[k].AddValue(loss_data)
 
-            out_D['total_loss'] = self.total_loss  # set to total loss including added total losses
+            out_D_real['total_loss'] = self.total_loss  # Add the total loss for back propagation
             self.smoothed_total_loss_D.AddValue(self.total_loss.data[0])
 
-            for k, metric in out_D['metrics'].items():
+            for k, metric in out_D_real['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics_D[k].AddValue(metric.data[0])
-
-            self.flag_D = False  # set flag again to false to reset alternating storing scheme
 
         elif out_G is not None:
             total_loss = 0.0

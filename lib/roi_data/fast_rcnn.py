@@ -128,8 +128,6 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 
 
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
-    #debug
-    print("sample_rois, with flags\n{}".format(str(flags)))
     if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0 and flags is not None:
         return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:
@@ -250,10 +248,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, fg_inds.size)
-
-    # debug
-    print("rois_per_image: {}".format(rois_per_image))
-    print("fg_rois_per_image: {}".format(fg_rois_per_this_image))
 
     # Sample foreground regions without replacement
     if fg_inds.size > 0:

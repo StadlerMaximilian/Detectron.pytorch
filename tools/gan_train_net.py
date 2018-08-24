@@ -624,7 +624,8 @@ def main():
                                        'adv_target': adv_target_zero
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D=outputs_D_fake)
+                training_stats.UpdateIterStats(out_D_fake=outputs_D_fake)
+                loss_D_fake = outputs_D_fake['total_loss']
 
                 # train on real data
                 try:
@@ -647,9 +648,10 @@ def main():
                                        'adv_target': adv_target_smoothed
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D=outputs_D_real)
+                training_stats.UpdateIterStats(out_D_real=outputs_D_real)
+                loss_D_real = outputs_D_real['total_loss']
 
-                loss_D = outputs_D_real['total_loss']
+                loss_D = loss_D_real + loss_D_fake
                 loss_D.backward()
                 optimizer_D.step()
                 optimizer_D.zero_grad()
@@ -686,6 +688,9 @@ def main():
             training_stats.IterToc()
 
             training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
+
+            # free cuda cache
+            torch.cuda.empty_cache()
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
