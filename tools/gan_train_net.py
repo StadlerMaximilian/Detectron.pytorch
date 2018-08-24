@@ -7,10 +7,13 @@ import pickle
 import resource
 import traceback
 import logging
+import operator as op
 from collections import defaultdict
+from functools import reduce
 
 import yaml
 import torch
+import gc
 from torch.autograd import Variable
 import cv2
 from argparse import Namespace
@@ -715,7 +718,13 @@ def main():
 
             training_stats.IterToc()
 
-            training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
+            #training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
+            try:
+                for obj in gc.get_objects():
+                    if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                        print(reduce(op.mul, obj.size()) if len(obj.size()) > 0 else 0, type(obj), obj.size())
+            except:
+                pass
 
             # free cuda cache
             torch.cuda.empty_cache()

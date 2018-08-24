@@ -426,7 +426,7 @@ def main():
             optimizer.step()
             training_stats.IterToc()
 
-            #training_stats.LogIterStats(step, lr)
+            training_stats.LogIterStats(step, lr)
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt(output_dir, args, step, train_size, maskRCNN, optimizer)
