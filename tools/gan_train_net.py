@@ -222,8 +222,8 @@ def main():
     # on batch_size instead of effective_batch_size
     old_base_lr_D = cfg.GAN.SOLVER.BASE_LR_D
     old_base_lr_G = cfg.GAN.SOLVER.BASE_LR_G
-    cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size / original_batch_size_D
-    cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size / original_batch_size_G
+    cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size_D / original_batch_size_D
+    cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size_G / original_batch_size_G
     print('Adjust BASE_LR_D linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_D, cfg.GAN.SOLVER.BASE_LR_D))
     print('Adjust BASE_LR_G linearly according to batch_size change:\n'
