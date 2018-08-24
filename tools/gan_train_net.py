@@ -638,7 +638,7 @@ def main():
                         input_data_real[key] = list(map(Variable, input_data_real[key]))
 
                 generator.module._set_provide_fake_features(False)
-                input_data_fake.update({"flags": real_dis_flags})
+                input_data_real.update({"flags": real_dis_flags})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
@@ -706,8 +706,8 @@ def main():
         del dataiterator_target_generator
 
         logger.info('Save ckpt on exception ...')
-        save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)
-        save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D)
+        save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
+        save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
         logger.info('Save ckpt done.')
         stack_trace = traceback.format_exc()
         print(stack_trace)
