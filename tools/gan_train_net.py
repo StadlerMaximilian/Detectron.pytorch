@@ -266,12 +266,7 @@ def main():
 
     timers = defaultdict(Timer)
 
-    USE_TARGET = False
-    num_loaders = 2
-    if len(cfg.GAN.TRAIN.DATASETS_TARGET) > 0:  # target training activated
-        USE_TARGET = True
-        num_loaders = 3
-
+    num_loaders = 3
     train_size_D = 0
     train_size_G = 0
     train_size = 0
@@ -309,81 +304,58 @@ def main():
 
     dataiterator_source_discriminator = iter(dataloader_source_discriminator)
 
-    if USE_TARGET:
-        timers['roidb_source'].tic()
-        roidb_target, ratio_list_target, ratio_index_target = combined_roidb_for_training(
-            cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
-        timers['roidb_target'].toc()
-        roidb_size_target = len(roidb_target)
-        logger.info('{:d} roidb entries'.format(roidb_size_target))
-        logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
+    timers['roidb_source'].tic()
+    roidb_target, ratio_list_target, ratio_index_target = combined_roidb_for_training(
+        cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
+    timers['roidb_target'].toc()
+    roidb_size_target = len(roidb_target)
+    logger.info('{:d} roidb entries'.format(roidb_size_target))
+    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
 
-        # Effective training sample size for one epoch
-        train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
-        train_size_G += roidb_size_target // args.batch_Size_G * args.batch_size_G
+    # Effective training sample size for one epoch
+    train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
+    train_size_G += roidb_size_target // args.batch_Size_G * args.batch_size_G
 
-        batchSampler_target_discriminator = BatchSampler(
-            sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
-            batch_size=args.batch_size_D,
-            drop_last=True
-        )
+    batchSampler_target_discriminator = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
+        batch_size=args.batch_size_D,
+        drop_last=True
+    )
 
-        dataset_target_discriminator = RoiDataLoader(
-            roidb_target,
-            cfg.MODEL.NUM_CLASSES,
-            training=True)
+    dataset_target_discriminator = RoiDataLoader(
+        roidb_target,
+        cfg.MODEL.NUM_CLASSES,
+        training=True)
 
-        dataloader_target_discriminator = torch.utils.data.DataLoader(
-            dataset_target_discriminator,
-            batch_sampler=batchSampler_target_discriminator,
-            num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
-            collate_fn=collate_minibatch_discriminator,
-            pin_memory=False)
+    dataloader_target_discriminator = torch.utils.data.DataLoader(
+        dataset_target_discriminator,
+        batch_sampler=batchSampler_target_discriminator,
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
+        collate_fn=collate_minibatch_discriminator,
+        pin_memory=False)
 
-        dataiterator_target_discriminator = iter(dataloader_target_discriminator)
+    dataiterator_target_discriminator = iter(dataloader_target_discriminator)
 
-        batchSampler_target_generator = BatchSampler(
-            sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
-            batch_size=args.batch_size_G,
-            drop_last=True
-        )
+    batchSampler_target_generator = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+        batch_size=args.batch_size_G,
+        drop_last=True
+    )
 
-        dataset_target_generator = RoiDataLoader(
-            roidb_target,
-            cfg.MODEL.NUM_CLASSES,
-            training=True)
+    dataset_target_generator = RoiDataLoader(
+        roidb_target,
+        cfg.MODEL.NUM_CLASSES,
+        training=True)
 
-        dataloader_target_generator = torch.utils.data.DataLoader(
-            dataset_target_generator,
-            batch_sampler=batchSampler_target_generator,
-            num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
-            collate_fn=collate_minibatch_generator,
-            pin_memory=False)
+    dataloader_target_generator = torch.utils.data.DataLoader(
+        dataset_target_generator,
+        batch_sampler=batchSampler_target_generator,
+        num_workers=int(cfg.DATA_LOADER.NUM_THREADS/ num_loaders),
+        collate_fn=collate_minibatch_generator,
+        pin_memory=False)
 
-        dataiterator_target_generator = iter(dataloader_target_generator)
-        train_size = max(train_size_D // 2, train_size_G // 2)
-    else:
-        batchSampler_source_generator = BatchSampler(
-            sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
-            batch_size=args.batch_size_G,
-            drop_last=True
-        )
-
-        dataset_source_generator = RoiDataLoader(
-            roidb_source,
-            cfg.MODEL.NUM_CLASSES,
-            training=True)
-
-        dataloader_source_generator= torch.utils.data.DataLoader(
-            dataset_source_generator,
-            batch_sampler=batchSampler_source_generator,
-            num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
-            collate_fn=collate_minibatch_generator,
-            pin_memory=False)
-
-        dataiterator_source_generator = iter(dataloader_source_generator)
-
-        train_size = max(train_size_D, train_size_G)
+    dataiterator_target_generator = iter(dataloader_target_generator)
+    train_size = max(train_size_D // 2, train_size_G // 2)
 
     # Model
     generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
@@ -619,26 +591,15 @@ def main():
             for _ in range(cfg.GAN.TRAIN.k):
 
                 # train on fake data
-                if USE_TARGET:
-                    try:
-                        input_data_fake = next(dataiterator_target_discriminator)
-                    except StopIteration:
-                        dataiterator_target_discriminator = iter(dataloader_target_discriminator)
-                        input_data_fake = next(dataiterator_target_discriminator)
+                try:
+                    input_data_fake = next(dataiterator_target_discriminator)
+                except StopIteration:
+                    dataiterator_target_discriminator = iter(dataloader_target_discriminator)
+                    input_data_fake = next(dataiterator_target_discriminator)
 
-                    for key in input_data_fake:
-                        if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                            input_data_fake[key] = list(map(Variable, input_data_fake[key]))
-                else:
-                    try:
-                        input_data_fake = next(dataiterator_source_discriminator)
-                    except StopIteration:
-                        dataiterator_source_discriminator = iter(dataloader_source_discriminator)
-                        input_data_fake = next(dataiterator_source_discriminator)
-
-                    for key in input_data_fake:
-                        if key != 'roidb': # roidb is a list of ndarrays with inconsistent length
-                            input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+                for key in input_data_fake:
+                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
                 generator.module._set_provide_fake_features(True)
                 input_data_fake.update({"flags": fake_dis_flags})
@@ -685,26 +646,15 @@ def main():
                 optimizer_D.zero_grad()
 
             # train generator
-            if USE_TARGET:
-                try:
-                    input_data_fake = next(dataiterator_target_generator)
-                except StopIteration:
-                    dataiterator_target_generator = iter(dataloader_target_generator)
-                    input_data_fake = next(dataiterator_target_generator)
+            try:
+                input_data_fake = next(dataiterator_target_generator)
+            except StopIteration:
+                dataiterator_target_generator = iter(dataloader_target_generator)
+                input_data_fake = next(dataiterator_target_generator)
 
-                for key in input_data_fake:
-                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
-            else:
-                try:
-                    input_data_fake = next(dataiterator_source_generator)
-                except StopIteration:
-                    dataiterator_source_generator = iter(dataloader_source_generator)
-                    input_data_fake = next(dataiterator_source_generator)
-
-                for key in input_data_fake:
-                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+            for key in input_data_fake:
+                if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+                    input_data_fake[key] = list(map(Variable, input_data_fake[key]))
 
             generator.module._set_provide_fake_features(True)
             input_data_fake.update({"flags": fake_gen_flags})
@@ -744,11 +694,8 @@ def main():
     except (RuntimeError, KeyboardInterrupt):
 
         del dataiterator_source_discriminator
-        if USE_TARGET:
-            del dataiterator_target_discriminator
-            del dataiterator_target_generator
-        else:
-            del dataiterator_source_generator
+        del dataiterator_target_discriminator
+        del dataiterator_target_generator
 
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G)

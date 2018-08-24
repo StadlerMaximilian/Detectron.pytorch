@@ -200,11 +200,35 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete.json'
     },
+    'tt100k_trainval_ignore_complete_small': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/train',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_small.json'
+    },
+    'tt100k_trainval_ignore_complete_large': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/train',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_large.json'
+    },
     'tt100k_trainval_ignore_complete_overfit': {
         _IM_DIR:
             _DATA_DIR + '/tt100k/train',
         _ANN_FN:
             _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_overfit.json'
+    },
+    'tt100k_trainval_ignore_complete_overfit_small': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/train',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_overfit_small.json'
+    },
+    'tt100k_trainval_ignore_complete_overfit_large': {
+        _IM_DIR:
+            _DATA_DIR + '/tt100k/train',
+        _ANN_FN:
+            _DATA_DIR + '/tt100k/annotations/tt100k_train_ignore_complete_overfit_large.json'
     },
     'tt100k_trainval_ignore': {
         _IM_DIR:

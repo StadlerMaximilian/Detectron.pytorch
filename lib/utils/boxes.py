@@ -123,7 +123,7 @@ def filter_large_boxes(boxes, max_size):
     """ Keep boxes with width and height both smaller than max_size."""
     w = boxes[:, 2] - boxes[:, 0] + 1
     h = boxes[:, 3] - boxes[:, 1] + 1
-    keep = np.where((w < max_size) & (h < max_size))[0]
+    keep = np.where((w <= max_size) & (h <= max_size))[0]
     return keep
 
 
