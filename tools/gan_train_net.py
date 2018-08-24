@@ -122,21 +122,6 @@ def parse_args():
         help='Update once every iter_size steps, as in Caffe.',
         default=1, type=int)
 
-    # needed during debugging
-    parser.add_argument(
-        '--rebuild',
-        action='store_true',
-        help='flag for rebuilding and testing final gan model. Skips training loop'
-    )
-    parser.add_argument(
-        '--dis',
-        help='path to saved discriminator_model'
-    )
-    parser.add_argument(
-        '--gen',
-        help='path to saved generator model'
-    )
-
     parser.add_argument(
         '--multi_gpu_testing',
         action='store_true',
@@ -541,27 +526,6 @@ def main():
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
 
-    # during debugging
-    if args.rebuild:
-        gan = GAN(generator_weights=args.gen, discriminator_weights=args.dis)
-        final_model = save_model(output_dir, no_save=False, model=gan)
-
-        for key, _ in gan.state_dict().items():
-            print(key)
-
-        if final_model is not None:
-            if args.multi_gpu_testing:
-                args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-                                      load_ckpt='{}'.format(final_model), load_detectron=None,
-                                      multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
-                                      range=None, set_cfgs=[], vis=False)
-            else:
-                args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-                                      load_ckpt='{}'.format(final_model), load_detectron=None,
-                                      multi_gpu_testing=False, output_dir='{}'.format(cfg.OUTPUT_DIR),
-                                      range=None, set_cfgs=[], vis=False)
-            test_net_routine(args_test)
-
     ### Training Loop ###
     generator.train()
     discriminator.train()
@@ -776,10 +740,17 @@ def main():
     logger.info("Start testing final model")
 
     if final_model is not None:
-        args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
-                              load_ckpt='{}'.format(final_model),
-                              multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
-                              range=None, set_cfgs=[], vis=False)
+        if args.multi_gpu_testing:
+            args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                  load_ckpt='{}'.format(final_model),
+                                  multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                                  range=None, set_cfgs=[], vis=False)
+        else:
+            args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                  load_ckpt='{}'.format(final_model),
+                                  multi_gpu_testing=False, output_dir='{}'.format(cfg.OUTPUT_DIR),
+                                  range=None, set_cfgs=[], vis=False)
+
         test_net_routine(args_test)
 
 
