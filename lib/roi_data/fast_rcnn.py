@@ -24,6 +24,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 import numpy.random as npr
+import math
 
 from core.config import cfg
 import roi_data.keypoint_rcnn
@@ -226,7 +227,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     mean = np.mean(areas, axis=0)
 
     # debug
-    print("mean-area: {}".format(mean))
+    print("mean-area: {}".format(math.sqrt(mean)))
 
     if area_thrs > 0:
         if flags.fake_mode:
@@ -289,7 +290,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # debug
     areas_after, _ = box_utils.boxes_area(gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]])
     mean_after = np.mean(areas_after, axis=0)
-    print("mean-area after: {}".format(mean_after))
+    print("mean-area after: {}".format(math.sqrt(mean_after)))
 
     if 'bbox_targets' not in roidb:
         gt_assignments = gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]
