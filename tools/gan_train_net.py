@@ -367,7 +367,7 @@ def main():
         dataloader_source_generator= torch.utils.data.DataLoader(
             dataset_source_generator,
             batch_sampler=batchSampler_source_generator,
-            num_workers=cfg.DATA_LOADER.NUM_THREADS / 2,
+            num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
             collate_fn=collate_minibatch_generator,
             pin_memory=False)
 
