@@ -16,7 +16,6 @@ class GAN(nn.Module):
         dim_in = self.generator.RPN.dim_out
         self.discriminator = Discriminator(dim_in, resolution)
         self.provide_fake_features = True
-        print(self.detectron_weight_mapping())
         self._init_module(generator_weights, discriminator_weights)
 
     def forward(self, data, im_info, roidb=None, **rpn_kwargs):

@@ -43,7 +43,7 @@ class Discriminator(nn.Module):
     def _forward(self, blob_conv, rpn_ret, adv_target=-1.0):
         return_dict = {}
 
-        batch_size = len(rpn_ret['labels_int32'])
+        batch_size = blob_conv.size(0)
         # debug: batch_size and fg-fraction
         # fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
         # print("batch-size in discriminator: {} (fg: {}%)".format(batch_size,
@@ -97,8 +97,6 @@ class Discriminator(nn.Module):
             pretrained_detectron = torch.load(pretrained_weights)
             load_layers = ['Box_Head', 'Box_Outs']
             mapping, _ = self.detectron_weight_mapping()
-            #debugging
-            print(mapping)
             state_dict = {}
             ckpt = pretrained_detectron['model']
             for name in ckpt:
