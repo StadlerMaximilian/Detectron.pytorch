@@ -39,6 +39,8 @@ CUSTOM_DATA:
   FORCE_TEST: True
   FORCE_JSON_DATASET_EVAL: True
 GAN:
+  GAN_MODE_ON: True
+  AREA_THRESHOLD: 55
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit',)
   SOLVER:
