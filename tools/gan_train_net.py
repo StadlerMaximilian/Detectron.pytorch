@@ -51,6 +51,12 @@ def parse_args():
     parser.add_argument(
         '--cfg', dest='cfg_file', required=True,
         help='Config file for training (and optionally testing)')
+
+    parser.add_argument(
+        '--out', dest='output_dir', required=True,
+        help='Root-Output_dir'
+    )
+
     parser.add_argument(
         '--set', dest='set_cfgs',
         help='Set config keys. Key value sequence seperate by whitespace.'
@@ -71,7 +77,6 @@ def parse_args():
         '--nw', dest='num_workers',
         help='Explicitly specify to overwrite number of workers to load data. Defaults to 4',
         type=int)
-
 
     # Epoch
     parser.add_argument(
@@ -198,6 +203,9 @@ def main():
     cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
+
+    if args.output_dir is not None:
+        cfg.OUTPUT_DIR = args.output_dir
 
     # Adaptively adjust some configs for discriminator #
     original_batch_size_D = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_D
@@ -628,12 +636,6 @@ def main():
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
                 loss_D_fake = outputs_D_fake['total_loss']
-
-                mem = torch.cuda.max_memory_allocated()
-                print("Finished training D1 with mem: {}".format(mem))
-
-                mem = torch.cuda.max_memory_allocated()
-                print("Training D2 with mem: {}".format(mem))
 
                 # train on real data
                 try:
