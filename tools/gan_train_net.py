@@ -7,6 +7,7 @@ import pickle
 import resource
 import traceback
 import logging
+import time
 import operator as op
 from collections import defaultdict
 from functools import reduce
@@ -302,7 +303,7 @@ def main():
         batch_sampler=batchSampler_source_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
-        pin_memory=True)
+        pin_memory=False)
 
     dataiterator_source_discriminator = iter(dataloader_source_discriminator)
 
@@ -334,7 +335,7 @@ def main():
         batch_sampler=batchSampler_target_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
-        pin_memory=True)
+        pin_memory=False)
 
     dataiterator_target_discriminator = iter(dataloader_target_discriminator)
 
@@ -355,7 +356,7 @@ def main():
         batch_sampler=batchSampler_target_generator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_generator,
-        pin_memory=True)
+        pin_memory=False)
 
     dataiterator_target_generator = iter(dataloader_target_generator)
     train_size = max(train_size_D // 2, train_size_G)
@@ -702,16 +703,10 @@ def main():
 
             training_stats.IterToc()
 
-            #training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
-            try:
-                for obj in gc.get_objects():
-                    if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                        print(reduce(op.mul, obj.size()) if len(obj.size()) > 0 else 0, type(obj), obj.size())
-            except:
-                pass
+            training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
 
             # free cuda cache
-            torch.cuda.empty_cache()
+            time.sleep(1)
 
             mem = torch.cuda.max_memory_allocated()
             print("Freed cache: mem: {}".format(mem))
