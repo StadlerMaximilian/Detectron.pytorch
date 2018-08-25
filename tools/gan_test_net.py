@@ -63,10 +63,10 @@ def test_net_routine(args):
 
     assert (torch.cuda.device_count() == 1) ^ bool(args.multi_gpu_testing)
 
-    assert bool(args.load_ckpt) ^ bool(args.load_detectron), \
-        'Exactly one of --load_ckpt and --load_detectron should be specified.'
+    assert bool(args.load_ckpt)
+
     if args.output_dir is None:
-        ckpt_path = args.load_ckpt if args.load_ckpt else args.load_detectron
+        ckpt_path = args.load_ckpt
         args.output_dir = os.path.join(
             os.path.dirname(os.path.dirname(ckpt_path)), 'test')
         logger.info('Automatically set output directory to %s', args.output_dir)
