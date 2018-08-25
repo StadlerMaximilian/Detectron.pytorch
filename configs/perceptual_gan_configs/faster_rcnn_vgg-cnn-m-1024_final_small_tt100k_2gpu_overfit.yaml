@@ -38,9 +38,13 @@ OUTPUT_DIR: . # insert path in run command
 CUSTOM_DATA:
   FORCE_TEST: True
   FORCE_JSON_DATASET_EVAL: True
+# options specifically for Perceptual GAN version
 GAN:
   GAN_MODE_ON: True
   AREA_THRESHOLD: 55
+  MODEL:
+    CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
+    LABEL_SMOOTHING: 1.0
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_overfit_small',)
@@ -59,5 +63,6 @@ GAN:
     BASE_LR_G: 0.0025
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 1000
-    STEPS: [0, 545, 810]
+    MAX_ITER: 200
+    WARM_UP_ITERS: 50 # default is 500
+    STEPS: [0, 100, 150]

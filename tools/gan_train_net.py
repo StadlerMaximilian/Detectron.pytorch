@@ -183,6 +183,20 @@ def create_adv_targets(value):
     return [value] * cfg.NUM_GPUS
 
 
+def create_input_data(dataiterator, dataloader):
+    try:
+        input_data = next(dataiterator)
+    except StopIteration:
+        dataiterator = iter(dataloader)
+        input_data = next(dataiterator)
+
+    for key in input_data:
+        if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
+            input_data[key] = list(map(Variable, input_data[key]))
+
+    return input_data, dataiterator
+
+
 def main():
     """Main function"""
     args = parse_args()
@@ -616,21 +630,15 @@ def main():
                 optimizer_D.zero_grad()
 
                 # train on fake data
-                try:
-                    input_data_fake = next(dataiterator_target_discriminator)
-                except StopIteration:
-                    dataiterator_target_discriminator = iter(dataloader_target_discriminator)
-                    input_data_fake = next(dataiterator_target_discriminator)
-
-                for key in input_data_fake:
-                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                        input_data_fake[key] = list(map(Variable, input_data_fake[key]))
+                input_data_fake, dataiterator_target_discriminator = create_input_data(
+                    dataiterator_target_discriminator, dataloader_target_discriminator
+                )
 
                 generator.module._set_provide_fake_features(True)
                 input_data_fake.update({"flags": create_flags("fake", "discriminator")})
                 outputs_G_fake = generator(**input_data_fake)
 
-                blob_fake = [x['blob_fake'] for x in outputs_G_fake]
+                blob_fake = [Variable(x['blob_fake'], requires_grad=False) for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
@@ -641,20 +649,14 @@ def main():
                 loss_D_fake = outputs_D_fake['total_loss']
 
                 # train on real data
-                try:
-                    input_data_real = next(dataiterator_source_discriminator)
-                except StopIteration:
-                    dataiterator_source_discriminator = iter(dataloader_source_discriminator)
-                    input_data_real = next(dataiterator_source_discriminator)
-
-                for key in input_data_real:
-                    if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                        input_data_real[key] = list(map(Variable, input_data_real[key]))
+                input_data_real, dataiterator_source_discriminator = create_input_data(
+                    dataiterator_source_discriminator, dataloader_source_discriminator
+                )
 
                 generator.module._set_provide_fake_features(False)
                 input_data_real.update({"flags": create_flags("real", "discriminator")})
                 outputs_G_real = generator(**input_data_real)
-                blob_conv_pooled = [x['blob_conv_pooled'] for x in outputs_G_real]
+                blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
@@ -670,16 +672,9 @@ def main():
 
             # train generator
             optimizer_G.zero_grad()
-
-            try:
-                input_data_fake_g = next(dataiterator_target_generator)
-            except StopIteration:
-                dataiterator_target_generator = iter(dataloader_target_generator)
-                input_data_fake_g = next(dataiterator_target_generator)
-
-            for key in input_data_fake_g:
-                if key != 'roidb':  # roidb is a list of ndarrays with inconsistent length
-                    input_data_fake_g[key] = list(map(Variable, input_data_fake_g[key]))
+            input_data_fake_g, dataiterator_target_generator = create_input_data(
+                dataiterator_target_generator, dataloader_target_generator
+            )
 
             generator.module._set_provide_fake_features(True)
             input_data_fake_g.update({"flags": create_flags("fake", "generator")})
