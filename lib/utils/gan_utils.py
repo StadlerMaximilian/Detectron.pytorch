@@ -161,7 +161,7 @@ class TrainingStats(object):
 
     def GetStats(self, cur_iter, lr_D, lr_G):
         eta_seconds = self.iter_timer.average_time * (
-            cfg.SOLVER.MAX_ITER - cur_iter
+            cfg.GAN.SOLVER.MAX_ITER - cur_iter
         )
         eta = str(datetime.timedelta(seconds=int(eta_seconds)))
         stats = OrderedDict(
