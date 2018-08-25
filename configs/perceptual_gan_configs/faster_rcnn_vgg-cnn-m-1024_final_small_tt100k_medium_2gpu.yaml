@@ -12,8 +12,8 @@ SOLVER:
   LR_POLICY: steps_with_decay
   BASE_LR: 0.002 # 0.0025
   GAMMA: 0.1
-  MAX_ITER: 165000 # 55000
-  STEPS: [0, 90000, 135000] # [0, 30000, 45000]
+  MAX_ITER: 110000 # 55000
+  STEPS: [0, 60000, 90000] # [0, 30000, 45000]
 RPN:
   SIZES: (16, 32, 64, 128, 256)
 FAST_RCNN:
@@ -25,7 +25,7 @@ TRAIN:
   MAX_SIZE: 1600
   IMS_PER_BATCH: 1
   BATCH_SIZE_PER_IM: 128
-  SNAPSHOT_ITERS: 30000
+  SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
   DATASETS: ('tt100k_test_ignore_complete',)
@@ -38,3 +38,4 @@ OUTPUT_DIR: . # insert path in run command
 CUSTOM_DATA:
   FORCE_TEST: True
   FORCE_JSON_DATASET_EVAL: True
+# GAN not supported, training too long for the moment and ressources
