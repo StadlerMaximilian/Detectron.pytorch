@@ -184,6 +184,8 @@ def multi_gpu_test_net_on_dataset(
     # Run inference in parallel in subprocesses
     # Outputs will be a list of outputs from each subprocess, where the output
     # of each subprocess is the dictionary saved by test_net().
+    
+    args.load_detectron = None # for compatibility
     outputs = subprocess_utils.process_in_parallel(
         'detection', num_images, binary, output_dir,
         args.load_ckpt, args.load_detectron, opts
