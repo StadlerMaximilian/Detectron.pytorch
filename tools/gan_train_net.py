@@ -642,7 +642,7 @@ def main():
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
-                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                                       'adv_target': create_adv_targets(0.0)
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
@@ -660,7 +660,7 @@ def main():
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
-                                       'adv_target': create_adv_targets(0.0)
+                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
