@@ -75,7 +75,7 @@ def log_gan_stats(stats, misc_args):
             misc_args.run_name, misc_args.cfg_filename, stats['iter'], cfg.GAN.SOLVER.MAX_ITER)
 
     lines += "\t\tlossGenerator: %.6f, lossDiscriminator: % .6f ,lr_D: %.6f, lr_G: %.6f time: %.6f, eta: %s\n" % (
-        stats['loss_G'], stats['loss_D'], stats['lr_D'], stats['lr_G'], stats['time'], stats['eta']
+        stats['loss_generator'], stats['loss_discriminator'], stats['lr_D'], stats['lr_G'], stats['time'], stats['eta']
     )
     if stats['metrics']:
         lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['metrics'].items()) + "\n"
