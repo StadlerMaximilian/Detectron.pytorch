@@ -43,7 +43,7 @@ GAN:
   AREA_THRESHOLD: 55
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
-    LABEL_SMOOTHING: 0.9 #1.0
+    LABEL_SMOOTHING: 0.9
   TRAIN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_small',)
