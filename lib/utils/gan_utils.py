@@ -78,6 +78,8 @@ class TrainingStats(object):
         self.LOG_PERIOD = log_period
         self.tblogger = tensorboard_logger
         self.tb_ignored_keys = ['iter', 'eta']
+        self.D_losses = ['head_losses_D', 'adv_loss_D']
+        self.G_losses = ['head_losses_G', 'adv_loss_G']
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
         self.WIN_SZ = 20
@@ -149,15 +151,21 @@ class TrainingStats(object):
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
-    def tb_log_stats(self, stats, cur_iter):
+    def tb_log_stats(self, stats, cur_iter, tag=''):
         """Log the tracked statistics to tensorboard"""
         for k in stats:
             if k not in self.tb_ignored_keys:
+                new_tag = tag
+                if k in self.D_losses:
+                    new_tag = '_discriminator'
+                elif k in self.G_losses:
+                    new_tag = '_generator'
+
                 v = stats[k]
                 if isinstance(v, dict):
-                    self.tb_log_stats(v, cur_iter)
+                    self.tb_log_stats(v, cur_iter, new_tag)
                 else:
-                    self.tblogger.add_scalar(k, v, cur_iter)
+                    self.tblogger.add_scalar(k + new_tag, v, cur_iter)
 
     def GetStats(self, cur_iter, lr_D, lr_G):
         eta_seconds = self.iter_timer.average_time * (
@@ -168,8 +176,8 @@ class TrainingStats(object):
             iter=cur_iter + 1,  # 1-indexed
             time=self.iter_timer.average_time,
             eta=eta,
-            loss_D=self.smoothed_total_loss_D.GetMedianValue(),
-            loss_G=self.smoothed_total_loss_G.GetMedianValue(),
+            loss_discriminator=self.smoothed_total_loss_D.GetMedianValue(),
+            loss_generator=self.smoothed_total_loss_G.GetMedianValue(),
             lr_D=lr_D,
             lr_G=lr_G
         )

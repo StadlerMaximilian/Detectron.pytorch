@@ -24,7 +24,6 @@ from __future__ import unicode_literals
 
 import numpy as np
 import numpy.random as npr
-import math
 
 from core.config import cfg
 import roi_data.keypoint_rcnn
@@ -224,11 +223,11 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_boxes = roidb['boxes'][gt_inds, :]
 
     areas, _ = box_utils.boxes_area(gt_boxes)
-    mean = np.mean(areas, axis=0)
 
+    gt_keep_inds = []
     if area_thrs > 0:
         if flags.fake_mode:
-            # for fake samples: keep only samples with area < area-threshold
+            #  for fake samples: keep only samples with area < area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_large_boxes(gt_boxes, max_size=area_thrs)]
         else:  # mode == "REAL":
             gt_keep_inds = gt_inds[box_utils.filter_small_boxes(gt_boxes, min_size=area_thrs)]
@@ -236,7 +235,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
-    else: # discriminator
+    else:  # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
 
@@ -283,8 +282,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     sampled_labels = roidb['max_classes'][keep_inds]
     sampled_labels[fg_rois_per_this_image:] = 0  # Label bg RoIs with class 0
     sampled_boxes = roidb['boxes'][keep_inds]
-
-
 
     if 'bbox_targets' not in roidb:
         gt_assignments = gt_inds[roidb['box_to_gt_ind_map'][keep_inds]]

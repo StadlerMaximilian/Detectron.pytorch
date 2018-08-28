@@ -7,14 +7,10 @@ import pickle
 import resource
 import traceback
 import logging
-import time
-import operator as op
 from collections import defaultdict
-from functools import reduce
 
 import yaml
 import torch
-import gc
 from torch.autograd import Variable
 import cv2
 from argparse import Namespace
@@ -43,6 +39,7 @@ cv2.setNumThreads(0)  # pytorch issue 1355: possible deadlock in dataloader
 # RuntimeError: received 0 items of ancdata. Issue: pytorch/pytorch#973
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
+
 
 def parse_args():
     """Parse input arguments"""
