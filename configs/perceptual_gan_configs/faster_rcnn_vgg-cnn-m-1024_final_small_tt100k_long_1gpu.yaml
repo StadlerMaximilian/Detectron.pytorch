@@ -38,3 +38,4 @@ OUTPUT_DIR: . # insert path in run command
 CUSTOM_DATA:
   FORCE_TEST: True
   FORCE_JSON_DATASET_EVAL: True
+# GAN not supported, training too long for the moment and ressources

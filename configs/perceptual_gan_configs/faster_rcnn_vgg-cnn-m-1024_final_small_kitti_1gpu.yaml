@@ -47,7 +47,7 @@ GAN:
   TRAIN:
     DATASETS_SOURCE: ('kitti_trainval_ignore_complete',)
     DATASETS_TARGET: ('vkitti_clone_trainval',)
-    IMS_PER_BATCH_D: 29500
+    IMS_PER_BATCH_D: 2
     BATCH_SIZE_PER_IM_D: 64
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
