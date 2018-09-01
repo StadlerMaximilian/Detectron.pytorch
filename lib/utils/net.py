@@ -79,9 +79,16 @@ def update_learning_rate(optimizer, cur_lr, new_lr):
             else:
                 param_group['lr'] = new_lr
             param_keys += param_group['params']
-        if cfg.SOLVER.TYPE in ['SGD'] and cfg.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
-                ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
-            _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
+
+        if cfg.GAN.GAN_MODE_ON:
+            if cfg.GAN.SOLVER.TYPE_D in ['SGD'] and cfg.GAN.SOLVER.TYPE_G in ['SGD'] and \
+                   cfg.GAN.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
+                   ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
+                _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
+        else:
+            if cfg.SOLVER.TYPE in ['SGD'] and cfg.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
+                    ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
+                _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
 
 
 def _CorrectMomentum(optimizer, param_keys, correction):
