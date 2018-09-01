@@ -36,7 +36,7 @@ import torch
 from core.config import cfg
 # from core.rpn_generator import generate_rpn_on_dataset  #TODO: for rpn only case
 # from core.rpn_generator import generate_rpn_on_range
-from core.test import im_detect_all
+from core.gan_test import im_detect_all
 from datasets import task_evaluation
 from datasets.json_dataset import JsonDataset
 from modeling import model_builder_gan
