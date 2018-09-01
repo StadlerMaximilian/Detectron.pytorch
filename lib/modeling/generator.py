@@ -48,11 +48,9 @@ class Generator(nn.Module):
         # For cache
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
-        self.provide_fake_features = True
 
         # Backbone for feature extraction
         self.Conv_Body = get_func(cfg.MODEL.CONV_BODY)()
-        self.Conv_Body._set_provide_fake_features(True)
 
         # Region Proposal Network
         if cfg.RPN.RPN_ON:
@@ -106,10 +104,7 @@ class Generator(nn.Module):
 
         return_dict = {}  # A dict to collect return variables
 
-        if self.provide_fake_features:
-            blob_conv, blob_conv_base = self.Conv_Body(im_data)
-        else:
-            blob_conv = self.Conv_Body(im_data)
+        blob_conv, blob_conv_base = self.Conv_Body(im_data)
 
         return_dict['blob_conv'] = blob_conv
 
@@ -119,10 +114,9 @@ class Generator(nn.Module):
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
         return_dict['blob_conv_pooled'] = blob_conv_pooled
 
-        if self.provide_fake_features:
-            blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
-            return_dict['bloc_conv_residual'] = blob_conv_residual
-            return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
+        blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
+        return_dict['bloc_conv_residual'] = blob_conv_residual
+        return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
         return return_dict
 
@@ -215,11 +209,6 @@ class Generator(nn.Module):
             self.orphans_in_detectron = d_orphan
 
         return self.mapping_to_detectron, self.orphans_in_detectron
-
-    def _set_provide_fake_features(self, bool):
-        self.provide_fake_features = bool
-        self.Conv_Body._set_provide_fake_features(bool)
-
 
 ########################################################################################################################
 

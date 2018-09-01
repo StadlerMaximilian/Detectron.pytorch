@@ -15,24 +15,20 @@ class GAN(nn.Module):
         resolution = self.generator.Conv_Body.resolution
         dim_in = self.generator.RPN.dim_out
         self.discriminator = Discriminator(dim_in, resolution)
-        self.provide_fake_features = True
         self._init_module(generator_weights, discriminator_weights)
 
     def forward(self, data, im_info, roidb=None, **rpn_kwargs):
 
         gen_out = self.generator(data, im_info, roidb, **rpn_kwargs)
 
-        if self.provide_fake_features:
-            blob_conv = gen_out['blob_fake']
-        else:
-            blob_conv = gen_out['blob_conv']
+        blob_conv = gen_out['blob_fake']
         rpn_ret = gen_out['rpn_ret']
 
         dis_out = self.discriminator(blob_conv, rpn_ret)
 
-        copy_blobs = ['blob_conv', 'blob_conv_pooled', 'blob_fake']
-        for key in copy_blobs:
-            dis_out[key] = gen_out[key]
+        # copy_blobs = ['blob_conv', 'blob_conv_pooled', 'blob_fake']
+        # for key in copy_blobs:
+        #    dis_out[key] = gen_out[key]
 
         return dis_out
 
@@ -74,7 +70,3 @@ class GAN(nn.Module):
             self.orphans_in_detectron = d_orphan
 
         return self.mapping_to_detectron, self.orphans_in_detectron
-
-    def _set_provide_fake_features(self, bool):
-        self.provide_fake_features = bool
-        self.generator.set_provide_fake_features(bool)

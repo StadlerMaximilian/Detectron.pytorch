@@ -507,7 +507,6 @@ def main():
 
     generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
                                   minibatch=True, batch_outputs=False) # keep batch split onto GPUs for generator
-    generator.module._set_provide_fake_features(True)
     discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
                                       minibatch=True)
 
@@ -631,7 +630,6 @@ def main():
                     dataiterator_target_discriminator, dataloader_target_discriminator
                 )
 
-                generator.module._set_provide_fake_features(True)
                 input_data_fake.update({"flags": create_flags("fake", "discriminator")})
                 outputs_G_fake = generator(**input_data_fake)
 
@@ -650,7 +648,6 @@ def main():
                     dataiterator_source_discriminator, dataloader_source_discriminator
                 )
 
-                generator.module._set_provide_fake_features(False)
                 input_data_real.update({"flags": create_flags("real", "discriminator")})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
@@ -673,7 +670,6 @@ def main():
                 dataiterator_target_generator, dataloader_target_generator
             )
 
-            generator.module._set_provide_fake_features(True)
             input_data_fake_g.update({"flags": create_flags("fake", "generator")})
             outputs_GG = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
@@ -702,6 +698,10 @@ def main():
         # Save last checkpoint
         final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
         final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
+
+        # free memory of generator and discriminator
+        del generator
+        del discriminator
 
         gan = GAN(generator_weights=final_generator, discriminator_weights=final_discriminator)
         final_model = save_model(output_dir, no_save=False, model=gan)

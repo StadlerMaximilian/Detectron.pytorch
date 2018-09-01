@@ -81,16 +81,16 @@ class VGG16_conv5_body():
 
         return mapping_to_detectron, orphan_in_detectron
 
-    def forward(self, x, req_fake_features=False):
+    def forward(self, x):
         x = self.conv1(x)
 
-        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+        if cfg.GAN.GAN_MODE_ON:
             x_base = x.clone()
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)
 
-        if cfg.GAN.GAN_MODE_ON and req_fake_features:
+        if cfg.GAN.GAN_MODE_ON:
             return x, x_base
         else:
             return x

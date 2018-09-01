@@ -11,7 +11,6 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         super().__init__()
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
-        self.provide_fake_features = False
 
         self.conv1 = nn.Sequential(nn.Conv2d(3, 96, 7, padding=0, stride=2),
                                    nn.ReLU(inplace=True),
@@ -62,19 +61,16 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
 
-        if cfg.GAN.GAN_MODE_ON and self.provide_fake_features:
+        if cfg.GAN.GAN_MODE_ON:
             x_base = x.clone()
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)
 
-        if cfg.GAN.GAN_MODE_ON and self.provide_fake_features:
+        if cfg.GAN.GAN_MODE_ON:
             return x, x_base
         else:
             return x
-
-    def _set_provide_fake_features(self, bool):
-        self.provide_fake_features = bool
 
 
 class VGG_CNN_M_1024_fc_head(nn.Module):

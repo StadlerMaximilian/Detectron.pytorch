@@ -42,7 +42,7 @@ CUSTOM_DATA:
 # options specifically for Perceptual GAN version
 GAN:
   GAN_MODE_ON: True
-  AREA_THRESHOLD: -1
+  AREA_THRESHOLD: 55
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
@@ -50,20 +50,22 @@ GAN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_overfit_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_overfit_small',)
     IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 64
+    BATCH_SIZE_PER_IM_D: 32
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
   SOLVER:
+    TYPE_G: 'Adam'
+    TYPE_D: 'Adam'
     WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO
     WEIGHT_DECAY_G: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
-    BASE_LR_D: 0.0025
-    BASE_LR_G: 0.0025
+    BASE_LR_D: 0.0002 #0.00125 for SGD
+    BASE_LR_G: 0.0002 #0.00125 for SGD
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 200
-    WARM_UP_ITERS: 50 # default is 500
-    STEPS: [0, 100, 150]
+    MAX_ITER: 200 # 400
+    WARM_UP_ITERS: 5 # default is 500, 1GPU: 10
+    STEPS: [0, 100] # [0, 200]
