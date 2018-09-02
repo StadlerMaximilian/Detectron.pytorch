@@ -22,6 +22,7 @@ class Discriminator(nn.Module):
         self.fc_dim = dim_in * resolution * resolution
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
+        self.pre_training = False
 
         self.adversarial = nn.Sequential(nn.Linear(self.fc_dim, 4096),
                                          #nn.ReLU(inplace=True),
@@ -58,16 +59,20 @@ class Discriminator(nn.Module):
         cls_score, bbox_pred = self.Box_Outs(box_feat)
 
         if self.training:
-            if adv_target < 0.0 or adv_target > 1.0:
-                raise ValueError("INVALID adv_target specified!")
-
-            adv_target_tensor = Variable(self.Tensor(batch_size, 1).fill_(adv_target),
-                                         requires_grad=False)
-
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
+            if adv_target < 0.0 or adv_target > 1.0:
+                raise ValueError("INVALID adv_target specified!")
+            adv_target_tensor = Variable(self.Tensor(batch_size, 1).fill_(adv_target),
+                                         requires_grad=False)
+
             loss_adv = self.adversarial_loss(adv_score, adv_target_tensor)
+            if self.pre_training:
+                # do not use adversarial loss during pre-training
+                # only train perceptual branch
+                loss_adv = torch.zeros_like(loss_adv, requires_grad=False)
+
             return_dict['losses']['loss_adv'] = loss_adv
 
             loss_cls, loss_bbox, accuracy_cls = fast_rcnn_heads.fast_rcnn_losses(
@@ -168,4 +173,7 @@ class Discriminator(nn.Module):
 
     def adversarial_loss(self, blob, target):
         return F.binary_cross_entropy(blob, target)
+
+    def set_pretraining_flag(self, flag):
+        self.pre_training = flag
 

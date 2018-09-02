@@ -546,6 +546,7 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
+            tblogger_pre = SummaryWriter(output_dir)
 
     ### Training Loop ###
     generator.train()
@@ -570,10 +571,10 @@ def main():
     if decay_steps_ind_G is None:
         decay_steps_ind_G = len(cfg.GAN.SOLVER.STEPS_G)
 
-    training_stats = TrainingStats(
+    training_stats_pre = TrainingStats(
         args,
         args.disp_interval,
-        tblogger if args.use_tfboard and not args.no_save else None)
+        tblogger_pre if args.use_tfboard and not args.no_save else None)
 
     # use maximum max_iter for training
     max_iter = max(cfg.GAN.SOLVER.MAX_ITER_D, cfg.GAN.SOLVER.MAX_ITER_G)
@@ -582,29 +583,66 @@ def main():
         logger.info('Training starts !')
         step = args.start_step
 
-        # implement discriminator pre-training here
-        # train on real data
-        input_data_real, dataiterator_source_discriminator = create_input_data(
-            dataiterator_source_discriminator, dataloader_source_discriminator
-        )
+        # pre-training of perceptual branch
+        if not args.init_dis_pretrained:
+            logger.info('Pre-Training: training perceptual-branch on large objects')
+            discriminator.set_pretraining_flag(True)
+            for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
 
-        input_data_real.update({"flags": create_flags("real", "discriminator")})
-        outputs_G_real = generator(**input_data_real)
-        blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
-        rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
-        input_discriminator = {'blob_conv': blob_conv_pooled,
-                               'rpn_ret': rpn_ret_real,
-                               'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
-                               }
-        outputs_D_real = discriminator(**input_discriminator)
-        training_stats.UpdateIterStats(out_D=outputs_D_real)
-        loss_D_real = outputs_D_real['total_loss']
+                # Warm up
+                # for simplicity: equal for generator and discriminator
+                if step < cfg.GAN.SOLVER.GAN.SOLVER.PRE_WARM_UP_ITERS :
+                    method = cfg.GAN.SOLVER.WARM_UP_METHOD
+                    if method == 'constant':
+                        warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR
+                    elif method == 'linear':
+                        alpha = step / cfg.GAN.SOLVER.PRE_WARM_UP_ITERS
+                        warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR * (1 - alpha) + alpha
+                    else:
+                        raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
+                    lr_new_D = cfg.GAN.SOLVER.BASE_LR_D * warmup_factor
+                    net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
+                    lr_D = optimizer_D.param_groups[0]['lr']
+                    assert lr_D == lr_new_D
+                elif step == cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
+                    net_utils.update_learning_rate(optimizer_D, lr_D, cfg.GAN.SOLVER.BASE_LR_D)
+                    lr_D = optimizer_D.param_groups[0]['lr']
+                    assert lr_D == cfg.GAN.SOLVER.BASE_LR_D
 
-        loss_D = loss_D_real
-        loss_D.backward()
-        optimizer_D.step()
+                training_stats_pre.IterTic()
+
+                input_data_real, dataiterator_source_discriminator = create_input_data(
+                    dataiterator_source_discriminator, dataloader_source_discriminator
+                )
+
+                input_data_real.update({"flags": create_flags("real", "discriminator")})
+                outputs_G_real = generator(**input_data_real)
+                blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
+                rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
+                input_discriminator = {'blob_conv': blob_conv_pooled,
+                                       'rpn_ret': rpn_ret_real,
+                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                                       }
+                outputs_D_real = discriminator(**input_discriminator)
+                training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
+                loss_D_real = outputs_D_real['total_loss']
+
+                loss_D = loss_D_real
+                loss_D.backward()
+                optimizer_D.step()
+
+                training_stats_pre.IterToc()
+                training_stats_pre.LogIterStats(step, lr_D=lr_D, lr_G=0.0)
+
+        # combined training
+        discriminator.set_pretraining_flag(False)
+        training_stats = TrainingStats(
+            args,
+            args.disp_interval,
+            tblogger if args.use_tfboard and not args.no_save else None)
 
 
+        logger.info('Combined GAN-training starts now!')
         for step in range(args.start_step, max_iter):
 
             # Warm up
@@ -800,12 +838,12 @@ def main():
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
                                   load_ckpt='{}'.format(final_model),
                                   multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
-                                  range=None, set_cfgs=[], vis=False)
+                                  range=None, set_cfgs=args.set_cfgs, vis=False)
         else:
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
                                   load_ckpt='{}'.format(final_model),
                                   multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
-                                  range=None, set_cfgs=[], vis=False)
+                                  range=None, set_cfgs=args.set_cfgs, vis=False)
 
         test_net_routine(args_test)
 

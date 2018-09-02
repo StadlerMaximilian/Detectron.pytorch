@@ -66,6 +66,8 @@ GAN:
     BASE_LR_G: 0.0001 #0.00125 for SGD
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 400
-    WARM_UP_ITERS: 10 # default is 500
-    STEPS: [0, 200]
+    MAX_ITER: 600
+    PRE_ITER: 300
+    PRE_WARM_UP_ITERS: 10
+    WARM_UP_ITERS: 20
+    STEPS: [0, 300]
