@@ -125,6 +125,12 @@ def parse_args():
         help='Flag for activating multi_gpu_testing'
     )
 
+    parser.add_argument(
+        '--init_dis_pretrained',
+        action='store_true',
+        help='Flag for initializing discriminator with pretrained weights. Else: pre-train on large objects'
+    )
+
     return parser.parse_args()
 
 
@@ -394,10 +400,15 @@ def main():
     train_size = max(train_size_D // 2, train_size_G)
 
     # Model
-    generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS) # pretrained_weights
+    generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
     resolution = generator.Conv_Body.resolution
     dim_in = generator.RPN.dim_out
-    discriminator = Discriminator(dim_in, resolution, pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+
+    # only load pre-trained discriminator explicitly specified
+    if args.init_dis_pretrained:
+        discriminator = Discriminator(dim_in, resolution, pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+    else:
+        discriminator = Discriminator(dim_in, resolution)
 
     if cfg.CUDA:
         generator.cuda()
