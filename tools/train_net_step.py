@@ -466,7 +466,7 @@ def main():
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
                                   load_ckpt='{}'.format(final_model), load_detectron=None,
                                   multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
-                                  range=None, set_cfgs=set_cfgs, vis=False)
+                                  range=None, set_cfgs=args.set_cfgs, vis=False)
         else:
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
                                   load_ckpt='{}'.format(final_model), load_detectron=None,
