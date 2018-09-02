@@ -131,6 +131,12 @@ def parse_args():
         help='Flag for initializing discriminator with pretrained weights. Else: pre-train on large objects'
     )
 
+    parser.add_argument(
+        '--online_cleanup',
+        action='store_true',
+        help='Flag for deleting objects and freeing GPU-cache, may increase run-time.'
+    )
+
     return parser.parse_args()
 
 
@@ -754,21 +760,22 @@ def main():
                 loss_D.backward()
                 optimizer_D.step()
 
-                del input_data_fake
-                del outputs_G_fake
-                del blob_fake
-                del rpn_ret_fake
-                del input_discriminator
-                del outputs_D_fake
-                del loss_D_fake
-                del input_data_real
-                del outputs_G_real
-                del blob_conv_pooled
-                del rpn_ret_real
-                del outputs_D_real
-                del loss_D_real
-                del loss_D
-                torch.cuda.empty_cache()
+                if args.online_cleanup:
+                    del input_data_fake
+                    del outputs_G_fake
+                    del blob_fake
+                    del rpn_ret_fake
+                    del input_discriminator
+                    del outputs_D_fake
+                    del loss_D_fake
+                    del input_data_real
+                    del outputs_G_real
+                    del blob_conv_pooled
+                    del rpn_ret_real
+                    del outputs_D_real
+                    del loss_D_real
+                    del loss_D
+                    torch.cuda.empty_cache()
 
             # train generator
             optimizer_G.zero_grad()
@@ -792,14 +799,15 @@ def main():
             loss_G.backward()
             optimizer_G.step()
 
-            del input_data_fake_g
-            del outputs_GG
-            del blob_fake_g
-            del rpn_ret_g
-            del input_discriminator
-            del outputs_DG
-            del loss_G
-            torch.cuda.empty_cache()
+            if args.online_cleanup:
+                del input_data_fake_g
+                del outputs_GG
+                del blob_fake_g
+                del rpn_ret_g
+                del input_discriminator
+                del outputs_DG
+                del loss_G
+                torch.cuda.empty_cache()
 
             training_stats.IterToc()
 
