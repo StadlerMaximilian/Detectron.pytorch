@@ -631,8 +631,6 @@ def main():
                 input_data_real.update({"flags": real_dis_flag})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
-                del input_data_real
-                del outputs_G_real
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
@@ -738,8 +736,6 @@ def main():
                 outputs_G_fake = generator(**input_data_fake)
                 blob_fake = [Variable(x['blob_fake'], requires_grad=False) for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
-                del input_data_fake
-                del outputs_G_fake
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
                                        'adv_target': adv_target_fake
@@ -757,8 +753,6 @@ def main():
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
-                del input_data_real
-                del outputs_G_real
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
                                        'adv_target': adv_target_real
