@@ -6,12 +6,14 @@ import os
 import pprint
 import sys
 import time
+import re
 
 import torch
 
 import _init_paths  # pylint: disable=unused-import
 from core.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
 from core.gan_test_engine import run_inference
+from modeling.model_builder_gan import GAN
 import utils.logging
 
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
@@ -28,6 +30,14 @@ def parse_args():
 
     parser.add_argument(
         '--load_ckpt', help='path of checkpoint to load')
+
+    parser.add_argument(
+        '--load_dis', help='specific disriminator path, if no GAN model is loaded'
+    )
+
+    parser.add_argument(
+        '--load_gen', help='specific generator path, if no GAN model is loaded'
+    )
 
     parser.add_argument(
         '--output_dir',
@@ -89,6 +99,29 @@ def test_net_routine(args):
     args.test_net_file, _ = os.path.splitext(__file__)
     # manually set args.cuda
     args.cuda = True
+
+    if args.load_dis is not None and args.load_gen is not None:
+        dirs = args.load_gen.split('/')
+        dirs_gan = []
+        path_gan = ''
+        step = 0
+        for dir in dirs:
+            if dir == 'generator':
+                _, file = os.path.split(args.load_gen)
+                file = str(file.split('.')[0])
+                step = int(re.findall(r'\d+', file)[0])
+                break
+            else:
+                dirs_gan.append(dir)
+        path_gan = os.path.join(dirs_gan)
+        path_gan = os.path.join(path_gan, 'ckpt')
+        if not os.path.exists(path_gan):
+            os.makedirs(path_gan)
+        save_name = os.path.join(path_gan, 'model_step_{}.pth'.format(step))
+        gan = GAN(generator_weights=args.load_gen, discriminator_weights=args.load_dis)
+        torch.save({'model': gan.state_dict()}, save_name)
+        args.load_ckpt = save_name
+        del gan
 
     run_inference(
         args,
