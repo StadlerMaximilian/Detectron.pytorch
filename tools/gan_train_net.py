@@ -584,8 +584,11 @@ def main():
         # prepare flags and adv_targets for training
         Tensor = torch.cuda.FloatTensor
         batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
+        batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
         adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
         fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
@@ -794,7 +797,7 @@ def main():
             # also use smoothed value for GENERATOR training
             input_discriminator = {'blob_conv': blob_fake_g,
                                    'rpn_ret': rpn_ret_g,
-                                   'adv_target': adv_target_real
+                                   'adv_target': adv_target_gen
                                    }
             outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)
