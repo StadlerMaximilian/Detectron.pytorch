@@ -591,7 +591,7 @@ def main():
 
                 # Warm up
                 # for simplicity: equal for generator and discriminator
-                if step < cfg.GAN.SOLVER.GAN.SOLVER.PRE_WARM_UP_ITERS :
+                if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
                     method = cfg.GAN.SOLVER.WARM_UP_METHOD
                     if method == 'constant':
                         warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR
