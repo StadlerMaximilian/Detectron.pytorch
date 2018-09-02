@@ -22,7 +22,6 @@ class Discriminator(nn.Module):
         self.fc_dim = dim_in * resolution * resolution
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
-        self.pre_training = False
 
         self.adversarial = nn.Sequential(nn.Linear(self.fc_dim, 4096),
                                          #nn.ReLU(inplace=True),
@@ -62,10 +61,6 @@ class Discriminator(nn.Module):
             return_dict['metrics'] = {}
 
             loss_adv = self.adversarial_loss(adv_score, adv_target)
-            if self.pre_training:
-                # do not use adversarial loss during pre-training
-                # only train perceptual branch
-                loss_adv = torch.zeros_like(loss_adv, requires_grad=False)
 
             return_dict['losses']['loss_adv'] = loss_adv
 
@@ -167,7 +162,3 @@ class Discriminator(nn.Module):
 
     def adversarial_loss(self, blob, target):
         return F.binary_cross_entropy(blob, target)
-
-    def set_pretraining_flag(self, flag):
-        self.pre_training = flag
-
