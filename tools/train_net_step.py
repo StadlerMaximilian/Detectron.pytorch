@@ -235,7 +235,7 @@ def main():
     train_size = roidb_size // args.batch_size * args.batch_size
 
     batchSampler = BatchSampler(
-        sampler=MinibatchSampler(ratio_list, ratio_index),
+        sampler=MinibatchSampler(ratio_list, ratio_index, cfg.TRAIN.IMS_PER_BATCH),
         batch_size=args.batch_size,
         drop_last=True
     )
