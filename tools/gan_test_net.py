@@ -102,22 +102,18 @@ def test_net_routine(args):
 
     if args.load_dis is not None and args.load_gen is not None:
         dirs = args.load_gen.split('/')
-        dirs_gan = []
-        path_gan = ''
-        step = 0
-        for dir in dirs:
-            if dir == 'generator':
-                _, file = os.path.split(args.load_gen)
-                file = str(file.split('.')[0])
-                step = int(re.findall(r'\d+', file)[0])
-                break
-            else:
-                dirs_gan.append(dir)
-        path_gan = os.path.join(dirs_gan)
+        dirs = [x for x in dirs if x not in ['generator', 'ckpt']]
+        dirs = [x for x in dirs if 'model_step' not in x]
+        path_gan = os.path.join(dirs)
+        _, file = os.path.split(args.load_gen)
+        file = str(file.split('.')[0])
+        step = int(re.findall(r'\d+', file)[0])
         path_gan = os.path.join(path_gan, 'ckpt')
         if not os.path.exists(path_gan):
             os.makedirs(path_gan)
         save_name = os.path.join(path_gan, 'model_step_{}.pth'.format(step))
+        if os.path.exists(save_name):
+            raise ValueError('CKPT already exists!!')
         gan = GAN(generator_weights=args.load_gen, discriminator_weights=args.load_dis)
         torch.save({'model': gan.state_dict()}, save_name)
         args.load_ckpt = save_name
