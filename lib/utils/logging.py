@@ -64,7 +64,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(stats, misc_args):
+def log_gan_stats(stats, misc_args, max_iter=cfg.GAN.SOLVER.MAX_ITER):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
@@ -72,7 +72,7 @@ def log_gan_stats(stats, misc_args):
             misc_args.epoch, misc_args.step, misc_args.iters_per_epoch)
     else:
         lines = "[%s][%s][Step %d / %d]\n" % (
-            misc_args.run_name, misc_args.cfg_filename, stats['iter'], cfg.GAN.SOLVER.MAX_ITER)
+            misc_args.run_name, misc_args.cfg_filename, stats['iter'], max_iter)
 
     lines += "\t\tlossGenerator: %.6f, lossDiscriminator: % .6f ,lr_D: %.6f, lr_G: %.6f time: %.6f, eta: %s\n" % (
         stats['loss_generator'], stats['loss_discriminator'], stats['lr_D'], stats['lr_G'], stats['time'], stats['eta']

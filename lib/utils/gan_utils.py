@@ -72,8 +72,9 @@ class ModeFlags(object):
 class TrainingStats(object):
     """Track vital training statistics."""
 
-    def __init__(self, misc_args, log_period=20, tensorboard_logger=None):
+    def __init__(self, misc_args, log_period=20, max_iter = cfg.GAN.SOLVER.MAX_ITER, tensorboard_logger=None):
         # Output logging period in SGD iterations
+        self.max_iter =max_iter
         self.misc_args = misc_args
         self.LOG_PERIOD = log_period
         self.tblogger = tensorboard_logger
@@ -145,7 +146,7 @@ class TrainingStats(object):
     def LogIterStats(self, cur_iter, lr_D, lr_G):
         """Log the tracked statistics."""
         if (cur_iter % self.LOG_PERIOD == 0 or
-                cur_iter == cfg.GAN.SOLVER.MAX_ITER - 1):
+                cur_iter == self.max_iter - 1):
             stats = self.GetStats(cur_iter, lr_D, lr_G)
             log_gan_stats(stats, self.misc_args)
             if self.tblogger:
@@ -169,7 +170,7 @@ class TrainingStats(object):
 
     def GetStats(self, cur_iter, lr_D, lr_G):
         eta_seconds = self.iter_timer.average_time * (
-            cfg.GAN.SOLVER.MAX_ITER - cur_iter
+            self.max_iter - cur_iter
         )
         eta = str(datetime.timedelta(seconds=int(eta_seconds)))
         stats = OrderedDict(

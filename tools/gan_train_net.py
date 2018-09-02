@@ -574,6 +574,7 @@ def main():
     training_stats_pre = TrainingStats(
         args,
         args.disp_interval,
+        cfg.GAN.SOLVER.PRE_ITER,
         tblogger_pre if args.use_tfboard and not args.no_save else None)
 
     # use maximum max_iter for training
@@ -587,11 +588,12 @@ def main():
         if not args.init_dis_pretrained:
             logger.info('Pre-Training: training perceptual-branch on large objects')
             discriminator.module.set_pretraining_flag(True)
+
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
 
                 # Warm up
                 # for simplicity: equal for generator and discriminator
-                if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
+                if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS:
                     method = cfg.GAN.SOLVER.WARM_UP_METHOD
                     if method == 'constant':
                         warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR
@@ -634,11 +636,25 @@ def main():
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStats(step, lr_D=lr_D, lr_G=0.0)
 
+            # clean up
+            if args.use_tfboard and not args.no_save:
+                tblogger_pre.close()
+            del input_data_real
+            del outputs_G_real
+            del blob_conv_pooled
+            del rpn_ret_real
+            del input_discriminator
+            del outputs_D_real
+            del loss_D_real
+            del training_stats_pre
+            torch.cuda.empty_cache()
+
         # combined training
         discriminator.module.set_pretraining_flag(False)
         training_stats = TrainingStats(
             args,
             args.disp_interval,
+            max_iter,
             tblogger if args.use_tfboard and not args.no_save else None)
 
 
