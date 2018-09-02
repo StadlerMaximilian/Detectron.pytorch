@@ -73,7 +73,7 @@ def test_net_routine(args):
 
     assert (torch.cuda.device_count() == 1) ^ bool(args.multi_gpu_testing)
 
-    assert bool(args.load_ckpt)
+    assert bool(args.load_ckpt) or (bool(args.load_gen) and bool(args.load_dis))
 
     if args.output_dir is None:
         ckpt_path = args.load_ckpt
