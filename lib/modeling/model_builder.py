@@ -160,8 +160,11 @@ class Generalized_RCNN(nn.Module):
 
         return_dict = {}  # A dict to collect return variables
 
-        # Conv_Body always returns blob_conv, blob_base for GAN training
-        blob_conv, _ = self.Conv_Body(im_data)
+        if cfg.GAN.GAN_MODE_ON:
+            # Conv_Body always returns blob_conv, blob_base for GAN training
+            blob_conv, _ = self.Conv_Body(im_data)
+        else:
+            blob_conv = self.Conv_Body(im_data)
 
         rpn_ret = self.RPN(blob_conv, im_info, roidb)
 
