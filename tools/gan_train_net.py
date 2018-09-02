@@ -637,9 +637,9 @@ def main():
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 # only train perceptual branch
-                for out in outputs_D_real:
-                    out['losses']['loss_adv'] = torch.zeros_like(out['losses']['loss_adv'],
-                                                                 requires_grad=False).cuda()
+                # remove adv loss
+                outputs_D_real['losses']['loss_adv'] = torch.zeros_like(outputs_D_real['losses']['loss_adv'],
+                                                                        requires_grad=False).cuda()
                 training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
                 loss_D_real = outputs_D_real['total_loss']
 
