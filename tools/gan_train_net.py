@@ -586,7 +586,7 @@ def main():
         # pre-training of perceptual branch
         if not args.init_dis_pretrained:
             logger.info('Pre-Training: training perceptual-branch on large objects')
-            discriminator.set_pretraining_flag(True)
+            discriminator.module.set_pretraining_flag(True)
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
 
                 # Warm up
@@ -635,7 +635,7 @@ def main():
                 training_stats_pre.LogIterStats(step, lr_D=lr_D, lr_G=0.0)
 
         # combined training
-        discriminator.set_pretraining_flag(False)
+        discriminator.module.set_pretraining_flag(False)
         training_stats = TrainingStats(
             args,
             args.disp_interval,
