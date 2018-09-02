@@ -50,7 +50,7 @@ def parse_args():
         help='start (inclusive) and end (exclusive) indices',
         type=int, nargs=2)
     parser.add_argument(
-        '--multi-gpu-testing', help='using multiple gpus for inference',
+        '--multi_gpu_testing', help='using multiple gpus for inference',
         action='store_true')
     parser.add_argument(
         '--vis', dest='vis', help='visualize detections', action='store_true')

@@ -581,6 +581,30 @@ def main():
     try:
         logger.info('Training starts !')
         step = args.start_step
+
+        # implement discriminator pre-training here
+        # train on real data
+        input_data_real, dataiterator_source_discriminator = create_input_data(
+            dataiterator_source_discriminator, dataloader_source_discriminator
+        )
+
+        input_data_real.update({"flags": create_flags("real", "discriminator")})
+        outputs_G_real = generator(**input_data_real)
+        blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
+        rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
+        input_discriminator = {'blob_conv': blob_conv_pooled,
+                               'rpn_ret': rpn_ret_real,
+                               'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                               }
+        outputs_D_real = discriminator(**input_discriminator)
+        training_stats.UpdateIterStats(out_D=outputs_D_real)
+        loss_D_real = outputs_D_real['total_loss']
+
+        loss_D = loss_D_real
+        loss_D.backward()
+        optimizer_D.step()
+
+
         for step in range(args.start_step, max_iter):
 
             # Warm up
