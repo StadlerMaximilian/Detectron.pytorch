@@ -584,7 +584,7 @@ def main():
         # prepare flags and adv_targets for training
         Tensor = torch.cuda.FloatTensor
         batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
-        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(GAN.MODEL.LABEL_SMOOTHING),
+        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
         adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
