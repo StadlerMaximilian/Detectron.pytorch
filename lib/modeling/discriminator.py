@@ -33,17 +33,16 @@ class Discriminator(nn.Module):
                                          nn.Linear(1024, 1),
                                          nn.Sigmoid())
         self._init_weights()
-        self.Tensor = torch.cuda.FloatTensor
 
         self.Box_Head = get_func(cfg.GAN.MODEL.CONV_BODY_FC_HEAD)(dim_in, resolution)
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-    def forward(self, blob_conv, rpn_ret, adv_target=-1.0):
+    def forward(self, blob_conv, rpn_ret, adv_target):
         with torch.set_grad_enabled(self.training):
             return self._forward(blob_conv, rpn_ret, adv_target)
 
-    def _forward(self, blob_conv, rpn_ret, adv_target=-1.0):
+    def _forward(self, blob_conv, rpn_ret, adv_target):
         return_dict = {}
 
         batch_size = blob_conv.size(0)
@@ -62,12 +61,7 @@ class Discriminator(nn.Module):
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            if adv_target < 0.0 or adv_target > 1.0:
-                raise ValueError("INVALID adv_target specified!")
-            adv_target_tensor = Variable(self.Tensor(batch_size, 1).fill_(adv_target),
-                                         requires_grad=False)
-
-            loss_adv = self.adversarial_loss(adv_score, adv_target_tensor)
+            loss_adv = self.adversarial_loss(adv_score, adv_target)
             if self.pre_training:
                 # do not use adversarial loss during pre-training
                 # only train perceptual branch

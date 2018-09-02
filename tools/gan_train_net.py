@@ -183,15 +183,6 @@ def save_model(output_dir, no_save, model):
     logger.info('save model: %s', save_name)
     return save_name
 
-
-def create_flags(mode, train):
-    return [ModeFlags(mode, train) for _ in range(cfg.NUM_GPUS)]
-
-
-def create_adv_targets(value):
-    return [value] * cfg.NUM_GPUS
-
-
 def create_input_data(dataiterator, dataloader):
     try:
         input_data = next(dataiterator)
@@ -626,6 +617,8 @@ def main():
                 input_data_real.update({"flags": create_flags("real", "discriminator")})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
+                del input_data_real
+                del outputs_G_real
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
@@ -645,8 +638,6 @@ def main():
             # clean up
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
-            del input_data_real
-            del outputs_G_real
             del blob_conv_pooled
             del rpn_ret_real
             del input_discriminator
@@ -664,6 +655,16 @@ def main():
             max_iter,
             tblogger if args.use_tfboard and not args.no_save else None)
 
+        # prepare flags and adv_targets for training
+        Tensor = torch.cuda.FloatTensor
+        batch_size = GAN.TRAIN.IMS_PER_BATCH_D * GAN.TRAIN.BATCH_SIZE_PER_IM_D
+        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(GAN.MODEL.LABEL_SMOOTHING),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
+        real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
+        fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
         logger.info('Combined GAN-training starts now!')
         for step in range(args.start_step, max_iter):
@@ -726,14 +727,15 @@ def main():
                     dataiterator_target_discriminator, dataloader_target_discriminator
                 )
 
-                input_data_fake.update({"flags": create_flags("fake", "discriminator")})
+                input_data_fake.update({"flags": fake_dis_flag})
                 outputs_G_fake = generator(**input_data_fake)
-
                 blob_fake = [Variable(x['blob_fake'], requires_grad=False) for x in outputs_G_fake]
                 rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
+                del input_data_fake
+                del outputs_G_fake
                 input_discriminator = {'blob_conv': blob_fake,
                                        'rpn_ret': rpn_ret_fake,
-                                       'adv_target': create_adv_targets(0.0)
+                                       'adv_target': adv_target_fake
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
@@ -744,13 +746,15 @@ def main():
                     dataiterator_source_discriminator, dataloader_source_discriminator
                 )
 
-                input_data_real.update({"flags": create_flags("real", "discriminator")})
+                input_data_real.update({"flags": real_dis_flag})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
+                del input_data_real
+                del outputs_G_real
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
-                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                                       'adv_target': adv_target_real
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
@@ -783,14 +787,14 @@ def main():
                 dataiterator_target_generator, dataloader_target_generator
             )
 
-            input_data_fake_g.update({"flags": create_flags("fake", "generator")})
+            input_data_fake_g.update({"flags": fake_gen_flag})
             outputs_GG = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
             input_discriminator = {'blob_conv': blob_fake_g,
                                    'rpn_ret': rpn_ret_g,
-                                   'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                                   'adv_target': adv_target_real
                                    }
             outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)
