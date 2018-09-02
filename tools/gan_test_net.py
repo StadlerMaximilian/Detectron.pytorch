@@ -104,7 +104,7 @@ def test_net_routine(args):
         dirs = args.load_gen.split('/')
         dirs = [x for x in dirs if x not in ['generator', 'ckpt']]
         dirs = [x for x in dirs if 'model_step' not in x]
-        path_gan = os.path.join(dirs)
+        path_gan = os.path.join(*dirs)
         _, file = os.path.split(args.load_gen)
         file = str(file.split('.')[0])
         step = int(re.findall(r'\d+', file)[0])
