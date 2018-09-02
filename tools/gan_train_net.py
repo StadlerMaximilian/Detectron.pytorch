@@ -586,11 +586,11 @@ def main():
         batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
         batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                   requires_grad=False).cuda(device_id=i) for i in range(cfg.NUM_GPUS)]
+                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                    requires_grad=False).cuda(device_id=i) for i in range(cfg.NUM_GPUS)]
+                                   requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
-                                   requires_grad=False).cuda(device_id=i) for i in range(cfg.NUM_GPUS)]
+                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
         real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
         fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
