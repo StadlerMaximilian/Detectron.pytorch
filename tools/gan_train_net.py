@@ -581,6 +581,17 @@ def main():
         logger.info('Training starts !')
         step = args.start_step
 
+        # prepare flags and adv_targets for training
+        Tensor = torch.cuda.FloatTensor
+        batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
+        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(GAN.MODEL.LABEL_SMOOTHING),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
+        real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
+        fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+
         # pre-training of perceptual branch
         if not args.init_dis_pretrained:
             logger.info('Pre-Training: training perceptual-branch on large objects')
@@ -614,7 +625,7 @@ def main():
                     dataiterator_source_discriminator, dataloader_source_discriminator
                 )
 
-                input_data_real.update({"flags": create_flags("real", "discriminator")})
+                input_data_real.update({"flags": real_dis_flag})
                 outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 del input_data_real
@@ -622,7 +633,7 @@ def main():
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
-                                       'adv_target': create_adv_targets(cfg.GAN.MODEL.LABEL_SMOOTHING)
+                                       'adv_target': adv_target_real
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
@@ -654,17 +665,6 @@ def main():
             args.disp_interval,
             max_iter,
             tblogger if args.use_tfboard and not args.no_save else None)
-
-        # prepare flags and adv_targets for training
-        Tensor = torch.cuda.FloatTensor
-        batch_size = GAN.TRAIN.IMS_PER_BATCH_D * GAN.TRAIN.BATCH_SIZE_PER_IM_D
-        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(GAN.MODEL.LABEL_SMOOTHING),
-                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
-        adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
-                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
-        fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
-        real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
-        fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
         logger.info('Combined GAN-training starts now!')
         for step in range(args.start_step, max_iter):
