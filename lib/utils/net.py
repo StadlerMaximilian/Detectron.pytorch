@@ -163,7 +163,10 @@ def save_ckpt(output_dir, args, model, optimizer):
 
 def load_ckpt(model, ckpt):
     """Load checkpoint"""
-    mapping, _ = model.detectron_weight_mapping()
+    if cfg.GAN.GAN_MODE_ON:
+        mapping, _ = model.detectron_weight_mapping()
+    else:
+        mapping, _ = model.detectron_weight_mapping
     state_dict = {}
     for name in ckpt:
         if "fc_head" in name:
