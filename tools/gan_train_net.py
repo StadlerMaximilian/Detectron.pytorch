@@ -590,7 +590,7 @@ def main():
             discriminator.module.set_pretraining_flag(True)
 
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
-
+                optimizer_D.zero_grad()
                 # Warm up
                 # for simplicity: equal for generator and discriminator
                 if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS:
@@ -648,6 +648,7 @@ def main():
             del loss_D_real
             del training_stats_pre
             torch.cuda.empty_cache()
+            save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_D, "D")
 
         # combined training
         discriminator.module.set_pretraining_flag(False)
