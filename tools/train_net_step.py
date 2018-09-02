@@ -113,6 +113,12 @@ def parse_args():
         '--use_tfboard', help='Use tensorflow tensorboard to log training info',
         action='store_true')
 
+    parser.add_argument(
+        '--multi_gpu_testing',
+        action='store_true',
+        help='Flag for multi-gpu-testing'
+    )
+
     return parser.parse_args()
 
 
@@ -451,11 +457,22 @@ def main():
 
     logger.info("Start testing final model")
 
+    test_output_dir = os.path.join(output_dir, 'testing')
+    if not os.path.exists(test_output_dir):
+        os.makedirs(test_output_dir)
+
     if final_model is not None:
-        args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
-                              load_ckpt='{}'.format(final_model), load_detectron=None,
-                              multi_gpu_testing=True, output_dir='{}'.format(cfg.OUTPUT_DIR),
-                              range=None, set_cfgs=[], vis=False)
+        if args.multi_gpu_testing:
+            args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                                  load_ckpt='{}'.format(final_model), load_detectron=None,
+                                  multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
+                                  range=None, set_cfgs=[], vis=False)
+        else:
+            args_test = Namespace(cfg_file='{}'.format(args.cfg_file), dataset=None,
+                                  load_ckpt='{}'.format(final_model), load_detectron=None,
+                                  multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
+                                  range=None, set_cfgs=[], vis=False)
+
         test_net_routine(args_test)
 
 
