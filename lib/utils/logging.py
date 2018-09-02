@@ -64,7 +64,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(stats, misc_args, max_iter=cfg.GAN.SOLVER.MAX_ITER):
+def log_gan_stats(stats, misc_args, max_iter):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (

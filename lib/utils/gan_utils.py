@@ -72,7 +72,7 @@ class ModeFlags(object):
 class TrainingStats(object):
     """Track vital training statistics."""
 
-    def __init__(self, misc_args, log_period=20, max_iter = cfg.GAN.SOLVER.MAX_ITER, tensorboard_logger=None):
+    def __init__(self, misc_args, log_period=20, max_iter=cfg.GAN.SOLVER.MAX_ITER, tensorboard_logger=None):
         # Output logging period in SGD iterations
         self.max_iter =max_iter
         self.misc_args = misc_args
@@ -148,7 +148,7 @@ class TrainingStats(object):
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == self.max_iter - 1):
             stats = self.GetStats(cur_iter, lr_D, lr_G)
-            log_gan_stats(stats, self.misc_args)
+            log_gan_stats(stats, self.misc_args, self.max_iter)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
