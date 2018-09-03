@@ -284,6 +284,18 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/kitti/annotations/kitti_train_full_complete.json'
     },
+    'kitti_trainval_full_complete_small': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_train_full_complete_small.json'
+    },
+    'kitti_trainval_full_complete_large': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_train_full_complete_large.json'
+    },
     'kitti_trainval_full': {
         _IM_DIR:
             _DATA_DIR + '/kitti/training/image_2',
@@ -446,6 +458,18 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/vkitti/annotations/vkitti_clone_train.json'
     },
+    'vkitti_clone_trainval_small': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_clone_train_small.json'
+    },
+    'vkitti_clone_trainval_large': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_clone_train_large.json'
+    },
     'vkitti_clonefog_trainval': {
         _IM_DIR:
             _DATA_DIR + '/vkitti/Images',
@@ -482,6 +506,18 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/vkitti/annotations/vkitti_rain_train.json'
     },
+    'vkitti_rain_trainval_small': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_rain_train_small.json'
+    },
+    'vkitti_rain_trainval_large': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_rain_train_large.json'
+    },
     'vkitti_rain_test': {
         _IM_DIR:
             _DATA_DIR + '/vkitti/Images',
@@ -517,6 +553,18 @@ _DATASETS = {
             _DATA_DIR + '/vkitti/Images',
         _ANN_FN:
             _DATA_DIR + '/vkitti/annotations/vkitti_fog_train.json'
+    },
+    'vkitti_fog_trainval_small': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_fog_train_small.json'
+    },
+    'vkitti_fog_trainval_large': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_fog_train_large.json'
     },
     'vkitti_fog_test': {
         _IM_DIR:
