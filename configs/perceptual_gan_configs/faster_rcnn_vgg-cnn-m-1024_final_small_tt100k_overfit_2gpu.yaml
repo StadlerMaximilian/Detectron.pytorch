@@ -55,19 +55,20 @@ GAN:
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
+    SNAPSHOT_ITERS: 500
   SOLVER:
-    TYPE_G: 'Adam'
-    TYPE_D: 'Adam'
+    TYPE_G: 'SGD'
+    TYPE_D: 'SGD'
     WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO
     WEIGHT_DECAY_G: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
-    BASE_LR_D: 0.0002 #0.00125 for SGD
-    BASE_LR_G: 0.0002 #0.00125 for SGD
+    BASE_LR_D: 0.0002 # 0.0001
+    BASE_LR_G: 0.0002 # 0.0001
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 300 #600
-    PRE_ITER: 150 #300
-    PRE_WARM_UP_ITERS: 5 #10
-    WARM_UP_ITERS: 10 #20
-    STEPS: [0, 150] #[0, 300]
+    MAX_ITER: 600 #1200
+    PRE_ITER: 300 #600
+    PRE_WARM_UP_ITERS: 10 #20
+    WARM_UP_ITERS: 15 #30
+    STEPS: [0, 450] #[0, 900]

@@ -278,11 +278,35 @@ _DATASETS = {
         _ANN_FN:
             _DATA_DIR + '/kitti/annotations/kitti_train.json'
     },
+    'kitti_trainval_full_complete': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_train_full_complete.json'
+    },
+    'kitti_trainval_full': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_train_full.json'
+    },
     'kitti_test': {
         _IM_DIR:
             _DATA_DIR + '/kitti/training/image_2',
         _ANN_FN:
             _DATA_DIR + '/kitti/annotations/kitti_test.json'
+    },
+    'kitti_test_full': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_test_full.json'
+    },
+    'kitti_test_full_complete': {
+        _IM_DIR:
+            _DATA_DIR + '/kitti/training/image_2',
+        _ANN_FN:
+            _DATA_DIR + '/kitti/annotations/kitti_test_full_complete.json'
     },
     'kitti_trainval_ignore': {
         _IM_DIR:
@@ -421,6 +445,24 @@ _DATASETS = {
             _DATA_DIR + '/vkitti/Images',
         _ANN_FN:
             _DATA_DIR + '/vkitti/annotations/vkitti_clone_train.json'
+    },
+    'vkitti_clonefog_trainval': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_clonefog_train.json'
+    },
+    'vkitti_clonerain_trainval': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_clonerain_train.json'
+    },
+    'vkitti_clonefograin_trainval': {
+        _IM_DIR:
+            _DATA_DIR + '/vkitti/Images',
+        _ANN_FN:
+            _DATA_DIR + '/vkitti/annotations/vkitti_clonefograin_train.json'
     },
     'vkitti_clone_test': {
         _IM_DIR:

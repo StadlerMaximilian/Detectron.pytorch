@@ -20,7 +20,7 @@ FAST_RCNN:
   ROI_BOX_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_roi_fc_head
   ROI_XFORM_METHOD: RoIAlign
 TRAIN:
-  DATASETS: ('kitti_trainval_ignore_complete',)
+  DATASETS: ('kitti_trainval_full_complete',)
   SCALES: (370,)
   MAX_SIZE: 1242
   IMS_PER_BATCH: 1
@@ -28,7 +28,7 @@ TRAIN:
   SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('kitti_test_ignore_complete',)
+  DATASETS: ('kitti_test_full_complete',)
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3
@@ -45,8 +45,8 @@ GAN:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
   TRAIN:
-    DATASETS_SOURCE: ('kitti_trainval_ignore_complete',)
-    DATASETS_TARGET: ('vkitti_clone_trainval',)
+    DATASETS_SOURCE: ('kitti_trainval_full_complete',)
+    DATASETS_TARGET: ('kitti_trainval_full_complete',)
     IMS_PER_BATCH_D: 2
     BATCH_SIZE_PER_IM_D: 32
     FG_FRACTION_D: 1.0

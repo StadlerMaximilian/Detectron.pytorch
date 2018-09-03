@@ -48,19 +48,25 @@ GAN:
     DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_large',)
     DATASETS_TARGET: ('tt100k_trainval_ignore_complete_small',)
     IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 64
+    BATCH_SIZE_PER_IM_D: 32
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
+    SNAPSHOT_ITERS: 18000
   SOLVER:
-    WEIGHT_DECAY_D: 0.0005 # originally 0.0001 for COCO
+    TYPE_G: 'SGD'
+    TYPE_D: 'SGD'
+    WEIGHT_DECAY_D: 0.0005
     WEIGHT_DECAY_G: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
-    BASE_LR_D: 0.00125
-    BASE_LR_G: 0.00125
+    BASE_LR_D: 0.0001
+    BASE_LR_G: 0.0001
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 60000 # 110000
-    STEPS: [0, 33000, 50000] # [0, 60000, 90000]
+    MAX_ITER: 60000 #90000 - 30000
+    PRE_ITER: 30000
+    PRE_WARM_UP_ITERS: 500
+    WARM_UP_ITERS: 500
+    STEPS: [0, 45000]
