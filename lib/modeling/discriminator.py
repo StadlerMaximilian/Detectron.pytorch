@@ -37,11 +37,11 @@ class Discriminator(nn.Module):
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-    def forward(self, blob_conv, rpn_ret, adv_target):
+    def forward(self, blob_conv, rpn_ret, adv_target=None):
         with torch.set_grad_enabled(self.training):
             return self._forward(blob_conv, rpn_ret, adv_target)
 
-    def _forward(self, blob_conv, rpn_ret, adv_target):
+    def _forward(self, blob_conv, rpn_ret, adv_target=None):
         return_dict = {}
 
         batch_size = blob_conv.size(0)
@@ -57,6 +57,8 @@ class Discriminator(nn.Module):
         cls_score, bbox_pred = self.Box_Outs(box_feat)
 
         if self.training:
+            if adv_target is None:
+                raise ValueError("adv_target must not be None during training!!")
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 

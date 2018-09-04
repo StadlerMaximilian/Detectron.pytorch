@@ -865,11 +865,13 @@ def main():
         if args.multi_gpu_testing:
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
                                   load_ckpt='{}'.format(final_model),
+                                  load_dis=None, load_gen=None,
                                   multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
                                   range=None, set_cfgs=args.set_cfgs, vis=False)
         else:
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
                                   load_ckpt='{}'.format(final_model),
+                                  load_dis=None, load_gen=None,
                                   multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
                                   range=None, set_cfgs=args.set_cfgs, vis=False)
 
