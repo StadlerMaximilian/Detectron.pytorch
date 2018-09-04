@@ -62,12 +62,12 @@ GAN:
     WEIGHT_DECAY_G: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
-    BASE_LR_D: 0.0001
-    BASE_LR_G: 0.0001
+    BASE_LR_D: 0.000625
+    BASE_LR_G: 0.000625
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 16000 # 24000 - 8000
-    STEPS: [0, 12000]
-    PRE_ITER: 8000
+    MAX_ITER: 24000
+    STEPS: [0, 18000]
+    PRE_ITER: 3500
     PRE_WARM_UP_ITERS: 150
     WARM_UP_ITERS: 500

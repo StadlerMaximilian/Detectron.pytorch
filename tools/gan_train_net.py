@@ -543,7 +543,7 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
-            tblogger_pre = SummaryWriter(output_dir)
+            tblogger_pre = SummaryWriter(os.path.join(output_dir, 'discriminator', 'pre'))
 
     ### Training Loop ###
     generator.train()
