@@ -266,7 +266,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
             fg_inds, size=fg_rois_per_this_image, replace=False)
 
     # only use background RoI, if generator is trained, or not enough fg samples can be found
-    if flags.train_generator or fg_rois_per_this_image < fg_rois_per_image:
+    if flags.train_generator or flags.train_pre or fg_rois_per_this_image < fg_rois_per_image:
         # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
         bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
                            (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
@@ -281,7 +281,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
         # The indices that we're selecting (both fg and bg)
         keep_inds = np.append(fg_inds, bg_inds)
-    else:
+    elif flags.train_discriminator:
         # keep only foreground indices when using discriminator mode
         keep_inds = np.append(fg_inds, []).astype(int)
 
