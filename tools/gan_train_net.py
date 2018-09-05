@@ -901,7 +901,6 @@ def main():
         del outputs_GG
         del blob_fake_g
         del rpn_ret_g
-        del input_discriminator
         del outputs_DG
         del loss_G
         torch.cuda.empty_cache()
