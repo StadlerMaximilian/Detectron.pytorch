@@ -7,6 +7,7 @@ import pickle
 import resource
 import traceback
 import logging
+import time
 from collections import defaultdict
 
 import yaml
@@ -904,6 +905,12 @@ def main():
         del outputs_DG
         del loss_G
         del gan
+        del dataiterator_real_discriminator
+        del dataiterator_fake_discriminator
+        del dataiterator_fake_generator
+        del dataloader_fake_discriminator
+        del dataloader_fake_generator
+        del dataloader_real_discriminator
         torch.cuda.empty_cache()
 
         logger.info("Closing dataloader and tfboard if used")
@@ -930,7 +937,7 @@ def main():
         return
 
     logger.info('Finished training.')
-
+    time.sleep(5) # sleep some time to make sure that cache is free for testing
     logger.info("Start testing final model")
 
     test_output_dir = os.path.join(output_dir, 'testing')
