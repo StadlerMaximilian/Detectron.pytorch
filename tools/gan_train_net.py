@@ -704,8 +704,11 @@ def main():
             del rpn_ret_real
             del input_discriminator
             del outputs_D_real
+            del outputs_G_real
             del loss_D_real
             del training_stats_pre
+            del adv_target_pre
+            del pre_flag
             torch.cuda.empty_cache()
             save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_D, "D")
 
@@ -872,12 +875,41 @@ def main():
         final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
         final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
 
-        # free memory of generator and discriminator
         del generator
         del discriminator
+        torch.cuda.empty_cache()
 
         gan = GAN(generator_weights=final_generator, discriminator_weights=final_discriminator)
         final_model = save_model(output_dir, no_save=False, model=gan)
+
+        # cleanup
+        del input_data_fake
+        del outputs_G_fake
+        del blob_fake
+        del rpn_ret_fake
+        del input_discriminator
+        del outputs_D_fake
+        del loss_D_fake
+        del input_data_real
+        del outputs_G_real
+        del blob_conv_pooled
+        del rpn_ret_real
+        del outputs_D_real
+        del loss_D_real
+        del loss_D
+        del input_data_fake_g
+        del outputs_GG
+        del blob_fake_g
+        del rpn_ret_g
+        del input_discriminator
+        del outputs_DG
+        del loss_G
+        torch.cuda.empty_cache()
+
+        logger.info("Closing dataloader and tfboard if used")
+        if args.use_tfboard and not args.no_save:
+            tblogger.close()
+        del training_stats
 
     except (RuntimeError, KeyboardInterrupt):
 
@@ -897,9 +929,6 @@ def main():
         logger.info('Aborted training.')
         return
 
-    logger.info("Closing dataloader and tfboard if used")
-    if args.use_tfboard and not args.no_save:
-        tblogger.close()
     logger.info('Finished training.')
 
     logger.info("Start testing final model")
