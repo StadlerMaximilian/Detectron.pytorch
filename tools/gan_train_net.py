@@ -680,7 +680,7 @@ def main():
                                        'rpn_ret': rpn_ret_real,
                                        'adv_target': adv_target_real
                                        }
-                outputs_D_real = discriminator(**input_discriminator, **rpn_kwargs)
+                outputs_D_real = discriminator(**input_discriminator)
                 # only train perceptual branch
                 # remove adv loss
                 training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
@@ -792,14 +792,14 @@ def main():
                 )
 
                 input_data_real.update({"flags": real_dis_flag})
-                outputs_G_real, rpn_kwargs = generator(**input_data_real)
+                outputs_G_real = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
                                        'adv_target': adv_target_real
                                        }
-                outputs_D_real = discriminator(**input_discriminator, **rpn_kwargs)
+                outputs_D_real = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
                 loss_D_real = outputs_D_real['losses']['loss_adv']  # adversarial loss for discriminator
 
@@ -831,7 +831,7 @@ def main():
             )
 
             input_data_fake_g.update({"flags": fake_gen_flag})
-            outputs_GG, rpn_kwargs = generator(**input_data_fake_g)
+            outputs_GG = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
@@ -839,7 +839,7 @@ def main():
                                    'rpn_ret': rpn_ret_g,
                                    'adv_target': adv_target_gen
                                    }
-            outputs_DG = discriminator(**input_discriminator, **rpn_kwargs)
+            outputs_DG = discriminator(**input_discriminator)
             training_stats.UpdateIterStats(out_G=outputs_DG)
 
             loss_G = outputs_DG['total_loss']  # total loss for generator
