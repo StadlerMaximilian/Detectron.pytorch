@@ -903,6 +903,7 @@ def main():
         del rpn_ret_g
         del outputs_DG
         del loss_G
+        del gan
         torch.cuda.empty_cache()
 
         logger.info("Closing dataloader and tfboard if used")
