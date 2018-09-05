@@ -221,6 +221,9 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
+    if cfg.GAN.MODEL.DEBUG:
+        print("sample from {} gt boxes".format(len(gt_boxes)))
+
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
         #area_thres = cfg.GAN.AREA_THRESHOLD * im_scale  # re-scale set area-threshold for unscaled image
