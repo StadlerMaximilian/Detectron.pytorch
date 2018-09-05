@@ -645,6 +645,7 @@ def main():
 
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
                 optimizer_D.zero_grad()
+
                 # Warm up
                 # for simplicity: equal for generator and discriminator
                 if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS:
@@ -672,7 +673,7 @@ def main():
                 )
 
                 input_data_pre.update({"flags": pre_flag})
-                outputs_G_real, rpn_kwargs = generator(**input_data_pre)
+                outputs_G_real = generator(**input_data_pre)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,

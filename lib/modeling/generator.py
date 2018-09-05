@@ -90,7 +90,6 @@ class Generator(nn.Module):
         # finaly freeze Conv_Body and RPN
         if cfg.GAN.TRAIN.FREEZE_CONV_BODY:
             freeze_params(self.Conv_Body)
-        if cfg.GAN.TRAIN.FREEZE_RPN:
             freeze_params(self.RPN)
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
@@ -122,7 +121,7 @@ class Generator(nn.Module):
             return_dict['bloc_conv_residual'] = blob_conv_residual
         return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
-        return return_dict, rpn_kwargs
+        return return_dict
 
     def roi_feature_transform(self, blobs_in, rpn_ret, blob_rois='rois', method='RoIPoolF',
                               resolution=7, spatial_scale=1. / 16., sampling_ratio=0):

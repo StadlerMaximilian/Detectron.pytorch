@@ -88,9 +88,6 @@ class TrainingStats(object):
         self.tb_ignored_keys = ['iter', 'eta']
         self.D_losses = ['head_losses_D', 'adv_loss_D']
         self.G_losses = ['head_losses_G', 'adv_loss_G']
-        if cfg.GAN.TRAIN.FREEZE_RPN:
-            self.D_losses.append('rpn_losses_D')
-            self.G_losses.append('rpn_losses_G')
 
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
@@ -201,18 +198,12 @@ class TrainingStats(object):
         adv_loss_D = []
         adv_loss_G = []
 
-        # only used when cfg.GAN.TRAIN.FREEZE_RPN is False
-        rpn_losses_D = []
-        rpn_losses_G = []
-
         for k, v in self.smoothed_losses_D.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
                 adv_loss_D.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_D.append((k, v.GetMedianValue()))
-            elif len(toks) == 3 and not cfg.GAN.TRAIN.FREEZE_RPN:
-                rpn_losses_D.append((k, v.GetMedianValue()))
             else:
                 raise ValueError("Unexpected loss key: %s" % k)
 
@@ -222,8 +213,6 @@ class TrainingStats(object):
                 adv_loss_G.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_G.append((k, v.GetMedianValue()))
-            elif len(toks) == 3 and not cfg.GAN.TRAIN.FREEZE_RPN:
-                rpn_losses_G.append((k, v.GetMedianValue()))
             else:
                 raise ValueError("Unexpected loss key: %s" % k)
 
@@ -231,9 +220,5 @@ class TrainingStats(object):
         stats['head_losses_G'] = OrderedDict(head_losses_G)
         stats['adv_loss_D'] = OrderedDict(adv_loss_D)
         stats['adv_loss_G'] = OrderedDict(adv_loss_G)
-
-        if not cfg.GAN.TRAIN.FREEZE_RPN:
-            stats['rpn_losses_D'] = OrderedDict(rpn_losses_D)
-            stats['rpn_losses_G'] = OrderedDict(rpn_losses_G)
 
         return stats
