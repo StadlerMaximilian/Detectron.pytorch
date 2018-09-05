@@ -628,9 +628,12 @@ def main():
         Tensor = torch.cuda.FloatTensor
         batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
         batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
+        batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                     requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                   requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
+        adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
                                     requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
@@ -678,7 +681,7 @@ def main():
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
-                                       'adv_target': adv_target_real
+                                       'adv_target': adv_target_pre
                                        }
                 outputs_D_real = discriminator(**input_discriminator)
                 # only train perceptual branch
