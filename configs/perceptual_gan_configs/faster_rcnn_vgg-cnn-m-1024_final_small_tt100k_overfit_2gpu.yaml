@@ -70,8 +70,8 @@ GAN:
     BASE_LR_G: 0.0002 # 0.0001
     GAMMA_D: 0.1
     GAMMA_G: 0.1
-    MAX_ITER: 600 #1200
-    PRE_ITER: 300 #600
-    PRE_WARM_UP_ITERS: 10 #20
-    WARM_UP_ITERS: 15 #30
-    STEPS: [0, 450] #[0, 900]
+    MAX_ITER: 20 #40
+    PRE_ITER: 10 #20
+    PRE_WARM_UP_ITERS: 5
+    WARM_UP_ITERS: 5
+    STEPS: [0, 10] #[0, 20]
