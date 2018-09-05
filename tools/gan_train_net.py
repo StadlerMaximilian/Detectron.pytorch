@@ -701,6 +701,10 @@ def main():
             # clean up
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
+            del dataiterator_pre
+            del dataloader_pre
+            del batchSampler_pre
+            del dataset_pre
             del blob_conv_pooled
             del rpn_ret_real
             del input_discriminator
@@ -911,6 +915,14 @@ def main():
         del dataloader_fake_discriminator
         del dataloader_fake_generator
         del dataloader_real_discriminator
+        del batchSampler_fake_discriminator
+        del batchSampler_fake_generator
+        del batchSampler_real_discriminator
+        del dataset_fake_discriminator
+        del dataset_real_discriminator
+        del dataset_fake_generator
+        del optimizer_G
+        del optimizer_D
         torch.cuda.empty_cache()
 
         logger.info("Closing dataloader and tfboard if used")
