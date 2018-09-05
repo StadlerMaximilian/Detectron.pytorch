@@ -88,8 +88,10 @@ class Generator(nn.Module):
         torch.cuda.empty_cache()
 
         # finaly freeze Conv_Body and RPN
-        freeze_params(self.Conv_Body)
-        freeze_params(self.RPN)
+        if cfg.GAN.TRAIN.FREEZE_CONV_BODY:
+            freeze_params(self.Conv_Body)
+        if cfg.GAN.TRAIN.FREEZE_RPN:
+            freeze_params(self.RPN)
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):
@@ -106,7 +108,8 @@ class Generator(nn.Module):
 
         blob_conv, blob_conv_base = self.Conv_Body(im_data)
 
-        return_dict['blob_conv'] = blob_conv
+        if not self.training:
+            return_dict['blob_conv'] = blob_conv
 
         rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
         return_dict['rpn_ret'] = rpn_ret
@@ -115,10 +118,11 @@ class Generator(nn.Module):
         return_dict['blob_conv_pooled'] = blob_conv_pooled
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
-        return_dict['bloc_conv_residual'] = blob_conv_residual
+        if not self.training:
+            return_dict['bloc_conv_residual'] = blob_conv_residual
         return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
-        return return_dict
+        return return_dict, rpn_kwargs
 
     def roi_feature_transform(self, blobs_in, rpn_ret, blob_rois='rois', method='RoIPoolF',
                               resolution=7, spatial_scale=1. / 16., sampling_ratio=0):
@@ -257,9 +261,9 @@ class ResidualBlock(nn.Module):
 
     def _init_weights(self):
         init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.block[0].bias, 0)
+        #init.constant_(self.block[0].bias, 0)
         init.kaiming_uniform_(self.block[3].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.block[3].bias, 0)
+        #init.constant_(self.block[3].bias, 0)
 
 ########################################################################################################################
 
@@ -288,9 +292,9 @@ class GeneratorBlock(nn.Module):
 
     def _init_weights(self):
         init.kaiming_uniform_(self.gen_base[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.gen_base[0].bias, 0)
+        #init.constant_(self.gen_base[0].bias, 0)
         init.kaiming_uniform_(self.gen_base[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.gen_base[2].bias, 0)
+        #init.constant_(self.gen_base[2].bias, 0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)

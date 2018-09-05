@@ -37,11 +37,11 @@ class Discriminator(nn.Module):
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-    def forward(self, blob_conv, rpn_ret, adv_target=None):
+    def forward(self, blob_conv, rpn_ret, adv_target=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):
-            return self._forward(blob_conv, rpn_ret, adv_target)
+            return self._forward(blob_conv, rpn_ret, adv_target, **rpn_kwargs)
 
-    def _forward(self, blob_conv, rpn_ret, adv_target=None):
+    def _forward(self, blob_conv, rpn_ret, adv_target=None, **rpn_kwargs):
         return_dict = {}
 
         batch_size = blob_conv.size(0)
@@ -65,6 +65,15 @@ class Discriminator(nn.Module):
             loss_adv = self.adversarial_loss(adv_score, adv_target)
 
             return_dict['losses']['loss_adv'] = loss_adv
+
+            if not cfg.GAN.TRAIN.FREEZE_RPN:
+                rpn_kwargs.update(dict(
+                    (k, rpn_ret[k]) for k in rpn_ret.keys()
+                    if (k.startswith('rpn_cls_logits') or k.startswith('rpn_bbox_pred'))
+                ))
+                loss_rpn_cls, loss_rpn_bbox = rpn_heads.generic_rpn_losses(**rpn_kwargs)
+                return_dict['losses']['loss_rpn_cls'] = loss_rpn_cls
+                return_dict['losses']['loss_rpn_bbox'] = loss_rpn_bbox
 
             loss_cls, loss_bbox, accuracy_cls = fast_rcnn_heads.fast_rcnn_losses(
                 cls_score, bbox_pred, rpn_ret['labels_int32'], rpn_ret['bbox_targets'],
@@ -129,9 +138,9 @@ class Discriminator(nn.Module):
         initialize layers before ReLU activation with kaiming initialization
         """
         init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.adversarial[0].bias, 0)
+        #init.constant_(self.adversarial[0].bias, 0)
         init.kaiming_uniform_(self.adversarial[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.adversarial[2].bias, 0)
+        #init.constant_(self.adversarial[2].bias, 0)
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:

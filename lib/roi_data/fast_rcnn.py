@@ -221,25 +221,27 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
-    areas, _ = box_utils.boxes_area(gt_boxes)
-
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
-        area_thres = cfg.GAN.AREA_THRESHOLD * im_scale  # re-scale set area-threshold for unscaled image
+        #area_thres = cfg.GAN.AREA_THRESHOLD * im_scale  # re-scale set area-threshold for unscaled image
+        area_thres = cfg.GAN.AREA_THRESHOLD # no scaling, as rois are scaled latter
         if cfg.GAN.MODEL.DEBUG:
             print("area_thres: {}".format(area_thres))
         if flags.fake_mode:
             #  for fake samples: keep only samples with area < area-threshold
-            gt_keep_inds = gt_inds[box_utils.filter_large_boxes(gt_boxes, max_size=area_thres)]
-        else:  # mode == "REAL":
-            gt_keep_inds = gt_inds[box_utils.filter_small_boxes(gt_boxes, min_size=area_thres)]
+            gt_keep_inds = gt_inds[box_utils.filter_large_boxes_area(gt_boxes, max_area=area_thres)]
+        elif flags.real_mode:
+            gt_keep_inds = gt_inds[box_utils.filter_small_boxes_area(gt_boxes, min_area=area_thres)]
 
     if flags.train_generator:
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_G * rois_per_image))
-    else:  # discriminator
+    elif flags.train_discriminator:  # discriminator
         rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D)
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_D * rois_per_image))
+    elif flags.train_pre:
+        rois_per_image = int(cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE)
+        fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_PRE * rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
 

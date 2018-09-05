@@ -45,10 +45,13 @@ GAN:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
   TRAIN:
-    DATASETS_SOURCE: ('tt100k_trainval_ignore_complete_large',)
-    DATASETS_TARGET: ('tt100k_trainval_ignore_complete_small',)
+    DATASETS_REAL: ('tt100k_trainval_ignore_complete_large',)
+    DATASETS_FAKE: ('tt100k_trainval_ignore_complete_small',)
+    IMS_PER_BATCH_PRE: 1
+    BATCH_SIZE_PER_IM_PRE: 128
+    FG_FRACTION_PRE: 0.25
     IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 32
+    BATCH_SIZE_PER_IM_D: 8
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128

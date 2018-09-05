@@ -21,10 +21,10 @@ class GAN(nn.Module):
 
         gen_out = self.generator(data, im_info, roidb, **rpn_kwargs)
 
-        blob_conv = gen_out['blob_fake']
+        blob_fake = gen_out['blob_fake']
         rpn_ret = gen_out['rpn_ret']
 
-        dis_out = self.discriminator(blob_conv, rpn_ret)
+        dis_out = self.discriminator(blob_fake, rpn_ret)
 
         copy_blobs = ['blob_conv_pooled', 'blob_fake', 'bloc_conv_residual']
         for key in copy_blobs:

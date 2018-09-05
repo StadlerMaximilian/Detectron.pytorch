@@ -22,7 +22,7 @@ import utils.misc as misc_utils
 from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
 from datasets.roidb import combined_roidb_for_training
 from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, \
-    collate_minibatch_discriminator, collate_minibatch_generator
+    collate_minibatch_discriminator, collate_minibatch_generator, collate_minibatch_pre
 from modeling.generator import Generator
 from modeling.discriminator import Discriminator
 from modeling.model_builder_gan import GAN
@@ -111,6 +111,11 @@ def parse_args():
 
     parser.add_argument(
         '--bs_D', dest='batch_size_D',
+        help='Explicitly specify to overwrite the value comed from cfg_file.',
+        type=int)
+
+    parser.add_argument(
+        '--bs_pre', dest='batch_size_pre',
         help='Explicitly specify to overwrite the value comed from cfg_file.',
         type=int)
 
@@ -226,13 +231,31 @@ def main():
     if args.output_dir is not None:
         cfg.OUTPUT_DIR = args.output_dir
 
+    # Adaptively adjust some configs
+    original_num_gpus = cfg.NUM_GPUS
+    cfg.NUM_GPUS = torch.cuda.device_count()
+
+    # Adaptively adjust some configs for the PRE-TRAINING
+    original_batch_size_pre = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_PRE
+    original_ims_per_batch_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE
+    if args.batch_size_pre is None:
+        args.batch_size_pre = original_batch_size_pre
+    assert (args.batch_size_pre % cfg.NUM_GPUS) == 0, \
+        'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_pre, cfg.NUM_GPUS)
+    cfg.GAN.TRAIN.IMS_PER_BATCH_PRE = args.batch_size_pre // cfg.NUM_GPUS
+    effective_batch_size_pre = args.iter_size * args.batch_size_pre
+    print('effective_batch_size_pre = batch_size * iter_size = %d * %d' % (args.batch_size_pre, args.iter_size))
+
+    print('Adaptive config changes:')
+    print('    effective_batch_size: %d --> %d' % (original_batch_size_pre, effective_batch_size_pre))
+    print('    NUM_GPUS:             %d --> %d' % (original_num_gpus, cfg.NUM_GPUS))
+    print('    IMS_PER_BATCH:        %d --> %d' % (original_ims_per_batch_pre, cfg.GAN.TRAIN.IMS_PER_BATCH_PRE))
+
     # Adaptively adjust some configs for discriminator #
     original_batch_size_D = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_D
     original_ims_per_batch_D = cfg.GAN.TRAIN.IMS_PER_BATCH_D
-    original_num_gpus = cfg.NUM_GPUS
     if args.batch_size_D is None:
         args.batch_size_D = original_batch_size_D
-    cfg.NUM_GPUS = torch.cuda.device_count()
     assert (args.batch_size_D % cfg.NUM_GPUS) == 0, \
         'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_D, cfg.NUM_GPUS)
     cfg.GAN.TRAIN.IMS_PER_BATCH_D = args.batch_size_D // cfg.NUM_GPUS
@@ -247,10 +270,8 @@ def main():
     # Adaptively adjust some configs for generator #
     original_batch_size_G = cfg.NUM_GPUS * cfg.GAN.TRAIN.IMS_PER_BATCH_G
     original_ims_per_batch_G = cfg.GAN.TRAIN.IMS_PER_BATCH_G
-    original_num_gpus = cfg.NUM_GPUS
     if args.batch_size_G is None:
         args.batch_size_G = original_batch_size_G
-    cfg.NUM_GPUS = torch.cuda.device_count()
     assert (args.batch_size_G % cfg.NUM_GPUS) == 0, \
         'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_G, cfg.NUM_GPUS)
     cfg.GAN.TRAIN.IMS_PER_BATCH_G = args.batch_size_G // cfg.NUM_GPUS
@@ -310,90 +331,109 @@ def main():
     train_size_G = 0
     train_size = 0
 
-    # Dataset #
-    timers['roidb_source'].tic()
-    roidb_source, ratio_list_source, ratio_index_source = combined_roidb_for_training(
-        cfg.GAN.TRAIN.DATASETS_SOURCE, cfg.TRAIN.PROPOSAL_FILES)
-    timers['roidb_source'].toc()
-    roidb_size_source = len(roidb_source)
-    logger.info('{:d} roidb entries'.format(roidb_size_source))
-    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_source'].average_time)
+    # Datasets #
+    timers['roidb_real'].tic()
+    roidb_real, ratio_list_real, ratio_index_real = combined_roidb_for_training(
+        cfg.GAN.TRAIN.DATASETS_REAL, cfg.TRAIN.PROPOSAL_FILES)
+    timers['roidb_real'].toc()
+    roidb_size_real = len(roidb_real)
+    logger.info('{:d} roidb entries'.format(roidb_size_real))
+    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_real'].average_time)
 
     # Effective training sample size for one epoch
-    train_size_D += roidb_size_source // args.batch_size_D * args.batch_size_D
+    train_size_D += roidb_size_real // args.batch_size_D * args.batch_size_D
 
-    batchSampler_source_discriminator= BatchSampler(
-        sampler=MinibatchSampler(ratio_list_source, ratio_index_source, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
+    batchSampler_pre = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_real, ratio_index_real, cfg.GAN.TRAIN.IMS_PER_BATCH_PRE),
+        batch_size=args.batch_size_pre,
+        drop_last=True
+    )
+
+    dataset_pre = RoiDataLoader(
+        roidb_real,
+        cfg.MODEL.NUM_CLASSES,
+        training=True)
+
+    dataloader_pre = torch.utils.data.DataLoader(
+        dataset_pre,
+        batch_sampler=batchSampler_pre,
+        num_workers=cfg.DATA_LOADER.NUM_THREADS,
+        collate_fn=collate_minibatch_pre,
+        pin_memory=False)
+
+    dataiterator_pre = iter(dataloader_pre)
+
+    batchSampler_real_discriminator= BatchSampler(
+        sampler=MinibatchSampler(ratio_list_real, ratio_index_real, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
         batch_size=args.batch_size_D,
         drop_last=True
     )
 
-    dataset_source_discriminator = RoiDataLoader(
-        roidb_source,
+    dataset_real_discriminator = RoiDataLoader(
+        roidb_real,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
-    dataloader_source_discriminator = torch.utils.data.DataLoader(
-        dataset_source_discriminator,
-        batch_sampler=batchSampler_source_discriminator,
+    dataloader_real_discriminator = torch.utils.data.DataLoader(
+        dataset_real_discriminator,
+        batch_sampler=batchSampler_real_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
-    dataiterator_source_discriminator = iter(dataloader_source_discriminator)
+    dataiterator_real_discriminator = iter(dataloader_real_discriminator)
 
-    timers['roidb_target'].tic()
-    roidb_target, ratio_list_target, ratio_index_target = combined_roidb_for_training(
-        cfg.GAN.TRAIN.DATASETS_TARGET, cfg.TRAIN.PROPOSAL_FILES)
-    timers['roidb_target'].toc()
-    roidb_size_target = len(roidb_target)
-    logger.info('{:d} roidb entries'.format(roidb_size_target))
-    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_target'].average_time)
+    timers['roidb_fake'].tic()
+    roidb_fake, ratio_list_fake, ratio_index_fake = combined_roidb_for_training(
+        cfg.GAN.TRAIN.DATASETS_FAKE, cfg.TRAIN.PROPOSAL_FILES)
+    timers['roidb_fake'].toc()
+    roidb_size_fake = len(roidb_fake)
+    logger.info('{:d} roidb entries'.format(roidb_size_fake))
+    logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_fake'].average_time)
 
     # Effective training sample size for one epoch
-    train_size_D += roidb_size_target // args.batch_size_D * args.batch_size_D
-    train_size_G = roidb_size_target // args.batch_size_G * args.batch_size_G
+    train_size_D += roidb_size_fake // args.batch_size_D * args.batch_size_D
+    train_size_G = roidb_size_fake // args.batch_size_G * args.batch_size_G
 
-    batchSampler_target_discriminator = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
+    batchSampler_fake_discriminator = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_fake, ratio_index_fake, cfg.GAN.TRAIN.IMS_PER_BATCH_D),
         batch_size=args.batch_size_D,
         drop_last=True
     )
 
-    dataset_target_discriminator = RoiDataLoader(
-        roidb_target,
+    dataset_fake_discriminator = RoiDataLoader(
+        roidb_fake,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
-    dataloader_target_discriminator = torch.utils.data.DataLoader(
-        dataset_target_discriminator,
-        batch_sampler=batchSampler_target_discriminator,
+    dataloader_fake_discriminator = torch.utils.data.DataLoader(
+        dataset_fake_discriminator,
+        batch_sampler=batchSampler_fake_discriminator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
-    dataiterator_target_discriminator = iter(dataloader_target_discriminator)
+    dataiterator_fake_discriminator = iter(dataloader_fake_discriminator)
 
-
-    batchSampler_target_generator = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_target, ratio_index_target, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+    batchSampler_fake_generator = BatchSampler(
+        sampler=MinibatchSampler(ratio_list_fake, ratio_index_fake, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
         batch_size=args.batch_size_G,
         drop_last=True
     )
 
-    dataset_target_generator = RoiDataLoader(
-        roidb_target,
+    dataset_fake_generator = RoiDataLoader(
+        roidb_fake,
         cfg.MODEL.NUM_CLASSES,
         training=True)
 
-    dataloader_target_generator = torch.utils.data.DataLoader(
-        dataset_target_generator,
-        batch_sampler=batchSampler_target_generator,
+    dataloader_fake_generator = torch.utils.data.DataLoader(
+        dataset_fake_generator,
+        batch_sampler=batchSampler_fake_generator,
         num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
         collate_fn=collate_minibatch_generator,
         pin_memory=False)
 
-    dataiterator_target_generator = iter(dataloader_target_generator)
+    dataiterator_fake_generator = iter(dataloader_fake_generator)
     train_size = max(train_size_D // 2, train_size_G)
 
     # Model
@@ -412,8 +452,7 @@ def main():
         discriminator.cuda()
 
     # Discriminator Parameters
-    params = {}
-    params['D'] = {
+    params_list_D = {
         'bias_params': [],
         'bias_param_names': [],
         'nonbias_params': [],
@@ -424,27 +463,27 @@ def main():
     for key, value in discriminator.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
-                params['D']['bias_params'].append(value)
-                params['D']['bias_param_names'].append(key)
+                params_list_D['bias_params'].append(value)
+                params_list_D['bias_param_names'].append(key)
             else:
-                params['D']['nonbias_params'].append(value)
-                params['D']['nonbias_param_names'].append(key)
+                params_list_D['nonbias_params'].append(value)
+                params_list_D['nonbias_param_names'].append(key)
         else:
-            params['D']['nograd_param_names'].append(key)
+            params_list_D['nograd_param_names'].append(key)
 
     params_D = [
-        {'params': params['D']['nonbias_params'],
+        {'params': params_list_D['nonbias_params'],
          'lr': 0,
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D},
-        {'params': params['D']['bias_params'],
+        {'params': params_list_D['bias_params'],
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_D + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
     ]
     # names of paramerters for each paramter
-    param_names_D = [params['D']['nonbias_param_names'], params['D']['bias_param_names']]
+    param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
     ### Generator Parameters ###
-    params['G'] = {
+    params_list_G = {
         'bias_params': [],
         'bias_param_names': [],
         'nonbias_params': [],
@@ -455,24 +494,28 @@ def main():
     for key, value in generator.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
-                params['G']['bias_params'].append(value)
-                params['G']['bias_param_names'].append(key)
+                params_list_G['bias_params'].append(value)
+                params_list_G['bias_param_names'].append(key)
             else:
-                params['G']['nonbias_params'].append(value)
-                params['G']['nonbias_param_names'].append(key)
+                params_list_G['nonbias_params'].append(value)
+                params_list_G['nonbias_param_names'].append(key)
         else:
-            params['G']['nograd_param_names'].append(key)
+            params_list_G['nograd_param_names'].append(key)
 
     params_G = [
-        {'params': params['G']['nonbias_params'],
+        {'params': params_list_G['nonbias_params'],
          'lr': 0,
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G},
-        {'params': params['G']['bias_params'],
+        {'params': params_list_G['bias_params'],
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_G + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0}
     ]
     # names of parameters for each parameter
-    param_names_G = [params['G']['nonbias_param_names'], params['G']['bias_param_names']]
+    param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
+
+    logger.info("GAN is trained on following parameters")
+    logger.info("Generator: {}".format(param_names_G))
+    logger.info('Discriminator: {}'.format(param_names_D))
 
     ### Optimizers ###
     if cfg.GAN.SOLVER.TYPE_G == "SGD":
@@ -594,6 +637,7 @@ def main():
         fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
         real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
         fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+        pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
         # pre-training of perceptual branch
         if not args.init_dis_pretrained:
@@ -623,25 +667,24 @@ def main():
 
                 training_stats_pre.IterTic()
 
-                input_data_real, dataiterator_source_discriminator = create_input_data(
-                    dataiterator_source_discriminator, dataloader_source_discriminator
+                input_data_pre, dataiterator_pre = create_input_data(
+                    dataiterator_pre, dataloader_pre
                 )
 
-                input_data_real.update({"flags": real_dis_flag})
-                outputs_G_real = generator(**input_data_real)
+                input_data_pre.update({"flags": pre_flag})
+                outputs_G_real, rpn_kwargs = generator(**input_data_pre)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
                                        'adv_target': adv_target_real
                                        }
-                outputs_D_real = discriminator(**input_discriminator)
+                outputs_D_real = discriminator(**input_discriminator, **rpn_kwargs)
                 # only train perceptual branch
                 # remove adv loss
-                outputs_D_real['losses']['loss_adv'] = torch.zeros_like(outputs_D_real['losses']['loss_adv'],
-                                                                        requires_grad=False).cuda()
                 training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
-                loss_D_real = outputs_D_real['total_loss']
+                # train only on the Perceptual Branch
+                loss_D_real = outputs_D_real['losses']['loss_cls'] + outputs_D_real['losses']['loss_bbox']
 
                 loss_D = loss_D_real
                 loss_D.backward()
@@ -720,14 +763,14 @@ def main():
 
             training_stats.IterTic()
 
-            # train discriminator
+            # train discriminator only on adversarial branch
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
 
                 # train on fake data
-                input_data_fake, dataiterator_target_discriminator = create_input_data(
-                    dataiterator_target_discriminator, dataloader_target_discriminator
+                input_data_fake, dataiterator_fake_discriminator = create_input_data(
+                    dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
                 input_data_fake.update({"flags": fake_dis_flag})
@@ -740,24 +783,24 @@ def main():
                                        }
                 outputs_D_fake = discriminator(**input_discriminator)
                 training_stats.UpdateIterStats(out_D=outputs_D_fake)
-                loss_D_fake = outputs_D_fake['total_loss']
+                loss_D_fake = outputs_D_fake['losses']['loss_adv']  # adversarial loss for discriminator
 
                 # train on real data
-                input_data_real, dataiterator_source_discriminator = create_input_data(
-                    dataiterator_source_discriminator, dataloader_source_discriminator
+                input_data_real, dataiterator_real_discriminator = create_input_data(
+                    dataiterator_real_discriminator, dataloader_real_discriminator
                 )
 
                 input_data_real.update({"flags": real_dis_flag})
-                outputs_G_real = generator(**input_data_real)
+                outputs_G_real, rpn_kwargs = generator(**input_data_real)
                 blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
                 rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
                 input_discriminator = {'blob_conv': blob_conv_pooled,
                                        'rpn_ret': rpn_ret_real,
                                        'adv_target': adv_target_real
                                        }
-                outputs_D_real = discriminator(**input_discriminator)
+                outputs_D_real = discriminator(**input_discriminator, **rpn_kwargs)
                 training_stats.UpdateIterStats(out_D=outputs_D_real)
-                loss_D_real = outputs_D_real['total_loss']
+                loss_D_real = outputs_D_real['losses']['loss_adv']  # adversarial loss for discriminator
 
                 loss_D = loss_D_real + loss_D_fake
                 loss_D.backward()
@@ -780,14 +823,14 @@ def main():
                     del loss_D
                     torch.cuda.empty_cache()
 
-            # train generator
+            # train generator on total loss of discriminator (all losses weighted simply with 1)
             optimizer_G.zero_grad()
-            input_data_fake_g, dataiterator_target_generator = create_input_data(
-                dataiterator_target_generator, dataloader_target_generator
+            input_data_fake_g, dataiterator_fake_generator = create_input_data(
+                dataiterator_fake_generator, dataloader_fake_generator
             )
 
             input_data_fake_g.update({"flags": fake_gen_flag})
-            outputs_GG = generator(**input_data_fake_g)
+            outputs_GG, rpn_kwargs = generator(**input_data_fake_g)
             blob_fake_g = [x['blob_fake'] for x in outputs_GG]
             rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
             # also use smoothed value for GENERATOR training
@@ -795,10 +838,10 @@ def main():
                                    'rpn_ret': rpn_ret_g,
                                    'adv_target': adv_target_gen
                                    }
-            outputs_DG = discriminator(**input_discriminator)
+            outputs_DG = discriminator(**input_discriminator, **rpn_kwargs)
             training_stats.UpdateIterStats(out_G=outputs_DG)
 
-            loss_G = outputs_DG['total_loss']
+            loss_G = outputs_DG['total_loss']  # total loss for generator
             loss_G.backward()
             optimizer_G.step()
 
@@ -834,9 +877,9 @@ def main():
 
     except (RuntimeError, KeyboardInterrupt):
 
-        del dataiterator_source_discriminator
-        del dataiterator_target_discriminator
-        del dataiterator_target_generator
+        del dataiterator_real_discriminator
+        del dataiterator_fake_discriminator
+        del dataiterator_fake_generator
 
         logger.info('Save ckpt on exception ...')
         save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")

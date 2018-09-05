@@ -241,6 +241,10 @@ def collate_minibatch_discriminator(list_of_blobs):
     return _collate_minibatch(list_of_blobs, cfg.GAN.TRAIN.IMS_PER_BATCH_D)
 
 
+def collate_minibatch_pre(list_of_blobs):
+    return _collate_minibatch(list_of_blobs, cfg.GAN.TRAIN.IMS_PER_BATCH_PRE)
+
+
 def _collate_minibatch(list_of_blobs, train_imgs_per_batch):
     """Stack samples seperately and return a list of minibatches
     A batch contains NUM_GPUS minibatches and image size in different minibatch may be different.

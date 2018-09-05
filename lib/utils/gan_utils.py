@@ -37,6 +37,7 @@ class ModeFlags(object):
     def __init__(self, mode, train):
         self.train_generator = True
         self.train_discriminator = False
+        self.train_pre = False
         self.fake_mode = False
         self.real_mode = True
 
@@ -55,9 +56,15 @@ class ModeFlags(object):
         if train == "generator":
             self.train_generator = True
             self.train_discriminator = False
+            self.train_pre = False
         elif train == "discriminator":
             self.train_generator = False
             self.train_discriminator = True
+            self.train_pre = False
+        elif train == "pre":
+            self.train_generator = False
+            self.train_discriminator = False
+            self.train_pre = True
         else:
             raise ValueError("train ({}) has to be either 'generator' or 'discriminator'!".format(train))
         return self
@@ -81,6 +88,10 @@ class TrainingStats(object):
         self.tb_ignored_keys = ['iter', 'eta']
         self.D_losses = ['head_losses_D', 'adv_loss_D']
         self.G_losses = ['head_losses_G', 'adv_loss_G']
+        if cfg.GAN.TRAIN.FREEZE_RPN:
+            self.D_losses.append('rpn_losses_D')
+            self.G_losses.append('rpn_losses_G')
+
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
         self.WIN_SZ = 20
@@ -106,7 +117,6 @@ class TrainingStats(object):
 
     def UpdateIterStats(self, out_D=None, out_G=None):
         """Update tracked iteration statistics."""
-
         if out_D is not None:  # first trained on either real/fake images (then set flag)
             total_loss = 0
 
@@ -191,12 +201,18 @@ class TrainingStats(object):
         adv_loss_D = []
         adv_loss_G = []
 
+        # only used when cfg.GAN.TRAIN.FREEZE_RPN is False
+        rpn_losses_D = []
+        rpn_losses_G = []
+
         for k, v in self.smoothed_losses_D.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
                 adv_loss_D.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_D.append((k, v.GetMedianValue()))
+            elif len(toks) == 3 and not cfg.GAN.TRAIN.FREEZE_RPN:
+                rpn_losses_D.append((k, v.GetMedianValue()))
             else:
                 raise ValueError("Unexpected loss key: %s" % k)
 
@@ -206,6 +222,8 @@ class TrainingStats(object):
                 adv_loss_G.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
                 head_losses_G.append((k, v.GetMedianValue()))
+            elif len(toks) == 3 and not cfg.GAN.TRAIN.FREEZE_RPN:
+                rpn_losses_G.append((k, v.GetMedianValue()))
             else:
                 raise ValueError("Unexpected loss key: %s" % k)
 
@@ -213,5 +231,9 @@ class TrainingStats(object):
         stats['head_losses_G'] = OrderedDict(head_losses_G)
         stats['adv_loss_D'] = OrderedDict(adv_loss_D)
         stats['adv_loss_G'] = OrderedDict(adv_loss_G)
+
+        if not cfg.GAN.TRAIN.FREEZE_RPN:
+            stats['rpn_losses_D'] = OrderedDict(rpn_losses_D)
+            stats['rpn_losses_G'] = OrderedDict(rpn_losses_G)
 
         return stats

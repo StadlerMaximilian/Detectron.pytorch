@@ -43,7 +43,8 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         self.resolution = 6
 
         # freeze gradients for first bottom convolutional blocks
-        freeze_params(self.conv1)
+        if cfg.GAN.TRAIN.FREEZE_CONV1:
+            freeze_params(self.conv1)
 
     def detectron_weight_mapping(self):
         mapping_to_detectron = {}
@@ -90,9 +91,9 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
 
     def _init_weights(self):
         init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.fc1[0].bias, 0)
+        #init.constant_(self.fc1[0].bias, 0)
         init.kaiming_uniform_(self.fc2[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.fc2[0].bias, 0)
+        #init.constant_(self.fc2[0].bias, 0)
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
