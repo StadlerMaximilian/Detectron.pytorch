@@ -231,7 +231,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         if cfg.GAN.MODEL.DEBUG:
             areas, _ = box_utils.boxes_area(gt_boxes)
             areas = np.sqrt(areas)
-            print("area_thres: {} vs areas: {}".format(area_thres, areas))
+            print("area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas))
         if flags.fake_mode:
             #  for fake samples: keep only samples with area < area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_large_boxes_area(gt_boxes, max_area=area_thres)]
@@ -249,11 +249,6 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         fg_rois_per_image = int(np.round(cfg.GAN.TRAIN.FG_FRACTION_PRE * rois_per_image))
 
     max_overlaps = roidb['max_overlaps']
-
-    if cfg.GAN.MODEL.DEBUG:
-        print("max overlaps: {}".format(max_overlaps))
-        print("gt_keep_inds: {}".format(gt_keep_inds))
-        print("box_to_gt_ind_map: {}".format(roidb['box_to_gt_ind_map']))
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
