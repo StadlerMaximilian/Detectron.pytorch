@@ -1,7 +1,7 @@
 MODEL:
   TYPE: generalized_rcnn
   CONV_BODY: VGG_CNN_M_1024.VGG_CNN_M_1024_conv5_body
-  NUM_CLASSES: 7 # car, van, truck, tram, cyclist, pedestrian, person_sitting + background
+  NUM_CLASSES: 8 # car, van, truck, tram, cyclist, pedestrian, person_sitting + background
   FASTER_RCNN: True
   BACKBONE_TYPE: 'CNN_M_1024'
   PRETRAINED_BACKBONE_WEIGHTS: ''

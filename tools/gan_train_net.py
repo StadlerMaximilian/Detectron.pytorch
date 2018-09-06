@@ -550,12 +550,14 @@ def main():
         optimizer_D = torch.optim.SGD(params_D, momentum=cfg.GAN.SOLVER.MOMENTUM_D)
     elif cfg.GAN.SOLVER.TYPE_D == "Adam":
         optimizer_D = torch.optim.Adam(params_D)
+    else:
+        raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
     if cfg.GAN.SOLVER.TYPE_PRE == "SGD":
         optimizer_pre = torch.optim.SGD(params_pre, momentum=cfg.GAN.SOLVER.MOMENTUM_PRE)
     elif cfg.GAN.SOLVER.TYPE_PRE == "Adam":
         optimizer_pre = torch.optim.Adam(params_pre)
     else:
-        raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
+        raise ValueError("INVALID Optimizer_pre specified. Must be SGD or Adam!")
 
     optimizer_D.zero_grad()
     optimizer_G.zero_grad()
@@ -667,7 +669,7 @@ def main():
         batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                     requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
-        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(1.0),
                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
@@ -761,6 +763,8 @@ def main():
             del pre_flag
             torch.cuda.empty_cache()
             save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_pre, "D")
+            save_ckpt(os.path.join(output_dir_G, 'pre'), args, step, train_size, generator, optimizer_G, "G")
+
 
         # combined training
         training_stats = TrainingStats(
