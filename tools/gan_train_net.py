@@ -189,6 +189,7 @@ def save_model(output_dir, no_save, model):
     logger.info('save model: %s', save_name)
     return save_name
 
+
 def create_input_data(dataiterator, dataloader):
     try:
         input_data = next(dataiterator)
