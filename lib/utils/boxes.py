@@ -132,7 +132,7 @@ def filter_small_boxes_area(boxes, min_area):
     w = boxes[:, 2] - boxes[:, 0] + 1
     h = boxes[:, 3] - boxes[:, 1] + 1
     area = np.multiply(w, h)
-    keep = np.where(area > min_area * min_area)[0]
+    keep = np.where(area > min_area)[0]
     return keep.astype(int)
 
 
@@ -141,7 +141,7 @@ def filter_large_boxes_area(boxes, max_area):
     w = boxes[:, 2] - boxes[:, 0] + 1
     h = boxes[:, 3] - boxes[:, 1] + 1
     area = np.multiply(w, h)
-    keep = np.where(area <= max_area * max_area)[0]
+    keep = np.where(area <= max_area)[0]
     return keep.astype(int)
 
 

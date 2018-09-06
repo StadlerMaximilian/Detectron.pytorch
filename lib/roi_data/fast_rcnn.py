@@ -227,9 +227,9 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
         #area_thres = cfg.GAN.AREA_THRESHOLD * im_scale  # re-scale set area-threshold for unscaled image
-        area_thres = cfg.GAN.AREA_THRESHOLD # no scaling, as rois are scaled latter
+        area_thres = cfg.GAN.AREA_THRESHOLD * cfg.GAN.AREA_THRESHOLD # no scaling, as rois are scaled latter
         if cfg.GAN.MODEL.DEBUG:
-            areas = box_utils.boxes_area(gt_boxes)
+            areas, _ = box_utils.boxes_area(gt_boxes)
             areas = np.sqrt(areas)
             print("area_thres: {} vs areas: {}".format(area_thres, areas))
         if flags.fake_mode:
