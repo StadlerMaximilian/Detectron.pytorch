@@ -535,9 +535,9 @@ def main():
     # names of parameters for each parameter
     param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
 
-    logger.info("GAN is trained on following parameters")
-    logger.info("Generator: {}".format(param_names_G))
-    logger.info('Discriminator: {}'.format(param_names_D))
+    #logger.info("GAN is trained on following parameters")
+    #logger.info("Generator: {}".format(param_names_G))
+    #logger.info('Discriminator: {}'.format(param_names_D))
 
     ### Optimizers ###
     if cfg.GAN.SOLVER.TYPE_G == "SGD":
@@ -698,11 +698,11 @@ def main():
                         raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
                     lr_new_pre = cfg.GAN.SOLVER.BASE_LR_PRE * warmup_factor
                     net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre)
-                    lr_pre = optimizer_D.param_groups[0]['lr']
+                    lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == lr_new_pre
                 elif step == cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
                     net_utils.update_learning_rate(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE)
-                    lr_pre = optimizer_D.param_groups[0]['lr']
+                    lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == cfg.GAN.SOLVER.BASE_LR_PRE
 
                 # Learning rate decay
