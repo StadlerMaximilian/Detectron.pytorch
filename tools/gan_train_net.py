@@ -289,14 +289,19 @@ def main():
     # on batch_size instead of effective_batch_size
     old_base_lr_D = cfg.GAN.SOLVER.BASE_LR_D
     old_base_lr_G = cfg.GAN.SOLVER.BASE_LR_G
+    old_base_lr_pre = cfg.GAN.SOLVER.BASE_LR_PRE
     cfg.GAN.SOLVER.BASE_LR_D *= args.batch_size_D / original_batch_size_D
+    cfg.GAN.SOLVER.BASE_LR_PRE *= args.batch_size_pre / original_batch_size_pre
     cfg.GAN.SOLVER.BASE_LR_G *= args.batch_size_G / original_batch_size_G
+    print('Adjust BASE_LR_PRE linearly according to batch_size change:\n'
+          '    BASE_LR: {} --> {}'.format(old_base_lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE))
     print('Adjust BASE_LR_D linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_D, cfg.GAN.SOLVER.BASE_LR_D))
     print('Adjust BASE_LR_G linearly according to batch_size change:\n'
           '    BASE_LR: {} --> {}'.format(old_base_lr_G, cfg.GAN.SOLVER.BASE_LR_G))
 
     # Adjust solver steps
+    step_scale_pre = original_batch_size_pre / effective_batch_size_pre
     step_scale_D = original_batch_size_D / effective_batch_size_D
     step_scale_G = original_batch_size_G / effective_batch_size_G
     if not cfg.GAN.SOLVER.STEPS_D:
@@ -305,11 +310,19 @@ def main():
         cfg.GAN.SOLVER.STEPS_G = cfg.GAN.SOLVER.STEPS
     old_solver_steps_D = cfg.GAN.SOLVER.STEPS_D
     old_solver_steps_G = cfg.GAN.SOLVER.STEPS_G
+    old_solver_steps_pre = cfg.GAN.SOLVER.STEPS_PRE
     old_max_iter = cfg.GAN.SOLVER.MAX_ITER
+    old_max_iter_pre = cfg.GAN.SOLVER.PRE_ITER
+    cfg.GAN.SOLVER.STEPS_PRE = list(map(lambda x: int(x * step_scale_pre + 0.5), cfg.GAN.SOLVER.STEPS_PRE))
     cfg.GAN.SOLVER.STEPS_D = list(map(lambda x: int(x * step_scale_D + 0.5), cfg.GAN.SOLVER.STEPS_D))
     cfg.GAN.SOLVER.STEPS_G = list(map(lambda x: int(x * step_scale_G + 0.5), cfg.GAN.SOLVER.STEPS_G))
     cfg.GAN.SOLVER.MAX_ITER_D = int(cfg.GAN.SOLVER.MAX_ITER * step_scale_D + 0.5)
     cfg.GAN.SOLVER.MAX_ITER_G = int(cfg.GAN.SOLVER.MAX_ITER * step_scale_G + 0.5)
+    cfg.GAN.SOLVER.PRE_ITER = int(cfg.GAN.SOLVER.PRE_ITER * step_scale_pre + 0.5)
+    print('PRE: Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
+          '    SOLVER.STEPS: {} --> {}\n'
+          '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_pre, cfg.GAN.SOLVER.STEPS_PRE,
+                                                  old_max_iter_pre, cfg.GAN.SOLVER.PRE_ITER))
     print('DIS: Adjust SOLVER.STEPS and SOLVER.MAX_ITER linearly based on effective_batch_size change:\n'
           '    SOLVER.STEPS: {} --> {}\n'
           '    SOLVER.MAX_ITER: {} --> {}'.format(old_solver_steps_D, cfg.GAN.SOLVER.STEPS_D,
@@ -480,6 +493,14 @@ def main():
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_D + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
     ]
+    params_pre = [
+        {'params': params_list_D['nonbias_params'],
+         'lr': 0,
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_PRE},
+        {'params': params_list_D['bias_params'],
+         'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_PRE + 1),
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_PRE if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_PRE else 0}
+    ]
     # names of paramerters for each paramter
     param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
@@ -529,11 +550,16 @@ def main():
         optimizer_D = torch.optim.SGD(params_D, momentum=cfg.GAN.SOLVER.MOMENTUM_D)
     elif cfg.GAN.SOLVER.TYPE_D == "Adam":
         optimizer_D = torch.optim.Adam(params_D)
+    if cfg.GAN.SOLVER.TYPE_PRE == "SGD":
+        optimizer_pre = torch.optim.SGD(params_pre, momentum=cfg.GAN.SOLVER.MOMENTUM_PRE)
+    elif cfg.GAN.SOLVER.TYPE_PRE == "Adam":
+        optimizer_pre = torch.optim.Adam(params_pre)
     else:
         raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
 
     optimizer_D.zero_grad()
     optimizer_G.zero_grad()
+    optimizer_pre.zero_grad()
 
     ### Load checkpoint
     if args.load_ckpt_G and args.load_ckpt_D:
@@ -556,6 +582,7 @@ def main():
 
     lr_D = optimizer_D.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
     lr_G = optimizer_G.param_groups[0]['lr']
+    lr_pre = optimizer_pre.param_groups[0]['lr']
 
     generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
                                   minibatch=True, batch_outputs=False) # keep batch split onto GPUs for generator
@@ -598,6 +625,7 @@ def main():
     # Set index for decay steps
     decay_steps_ind_D = None
     decay_steps_ind_G = None
+    decay_steps_ind_pre = None
     for i in range(1, len(cfg.GAN.SOLVER.STEPS_D)):
         if cfg.GAN.SOLVER.STEPS_D[i] >= args.start_step:
             decay_steps_ind_D = i
@@ -611,6 +639,13 @@ def main():
             break
     if decay_steps_ind_G is None:
         decay_steps_ind_G = len(cfg.GAN.SOLVER.STEPS_G)
+
+    for i in range(1, len(cfg.GAN.SOLVER.STEPS_PRE)):
+        if cfg.GAN.SOLVER.STEPS_PRE[i] >= args.start_step:
+            decay_steps_ind_pre = i
+            break
+    if decay_steps_ind_pre is None:
+        decay_steps_ind_pre = len(cfg.GAN.SOLVER.STEPS_PRE)
 
     training_stats_pre = TrainingStats(
         args,
@@ -648,7 +683,7 @@ def main():
             logger.info('Pre-Training: training perceptual-branch on large objects')
 
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
-                optimizer_D.zero_grad()
+                optimizer_pre.zero_grad()
 
                 # Warm up
                 # for simplicity: equal for generator and discriminator
@@ -661,14 +696,24 @@ def main():
                         warmup_factor = cfg.GAN.SOLVER.WARM_UP_FACTOR * (1 - alpha) + alpha
                     else:
                         raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
-                    lr_new_D = cfg.GAN.SOLVER.BASE_LR_D * warmup_factor
-                    net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
-                    lr_D = optimizer_D.param_groups[0]['lr']
-                    assert lr_D == lr_new_D
+                    lr_new_pre = cfg.GAN.SOLVER.BASE_LR_PRE * warmup_factor
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre)
+                    lr_pre = optimizer_D.param_groups[0]['lr']
+                    assert lr_pre == lr_new_pre
                 elif step == cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
-                    net_utils.update_learning_rate(optimizer_D, lr_D, cfg.GAN.SOLVER.BASE_LR_D)
-                    lr_D = optimizer_D.param_groups[0]['lr']
-                    assert lr_D == cfg.GAN.SOLVER.BASE_LR_D
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE)
+                    lr_pre = optimizer_D.param_groups[0]['lr']
+                    assert lr_pre == cfg.GAN.SOLVER.BASE_LR_PRE
+
+                # Learning rate decay
+                if decay_steps_ind_pre < len(cfg.GAN.SOLVER.STEPS_PRE) and \
+                        step == cfg.GAN.SOLVER.STEPS_PRE[decay_steps_ind_pre]:
+                    logger.info('Decay the learning (pre-training) on step %d', step)
+                    lr_new_pre = lr_pre * cfg.GAN.SOLVER.GAMMA_PRE
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre)
+                    lr_pre = optimizer_pre.param_groups[0]['lr']
+                    assert lr_pre == lr_new_pre
+                    decay_steps_ind_pre += 1
 
                 training_stats_pre.IterTic()
 
@@ -693,7 +738,7 @@ def main():
 
                 loss_D = loss_D_real
                 loss_D.backward()
-                optimizer_D.step()
+                optimizer_pre.step()
 
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStats(step, lr_D=lr_D, lr_G=0.0)
@@ -715,7 +760,7 @@ def main():
             del adv_target_pre
             del pre_flag
             torch.cuda.empty_cache()
-            save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_D, "D")
+            save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_pre, "D")
 
         # combined training
         training_stats = TrainingStats(

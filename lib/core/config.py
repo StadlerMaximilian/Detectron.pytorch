@@ -1041,18 +1041,22 @@ __C.GAN.SOLVER = AttrDict()
 # e.g 'SGD', 'Adam'
 __C.GAN.SOLVER.TYPE_G = 'SGD'
 __C.GAN.SOLVER.TYPE_D = 'SGD'
+__C.GAN.SOLVER.TYPE_PRE = 'SGD'
 
 # Base learning rate for the specified schedule
 __C.GAN.SOLVER.BASE_LR_D = 0.001
 __C.GAN.SOLVER.BASE_LR_G= 0.001
+__C.GAN.SOLVER.BASE_LR_PRE = 0.001
 
 # Schedule type (see functions in utils.lr_policy for options)
 # E.g., 'step', 'steps_with_decay', ...
 __C.GAN.SOLVER.LR_POLICY_G = 'step'
 __C.GAN.SOLVER.LR_POLICY_D = 'step'
+__C.GAN.SOLVER.LR_POLICY_PRE = 'step'
 
 __C.GAN.SOLVER.GAMMA_D = 0.1
 __C.GAN.SOLVER.GAMMA_G = 0.1
+__C.GAN.SOLVER.GAMMA_PRE = 0.1
 
 # Uniform step size for 'steps' policy
 __C.GAN.SOLVER.STEP_SIZE = 30000
@@ -1061,6 +1065,7 @@ __C.GAN.SOLVER.STEP_SIZE = 30000
 __C.GAN.SOLVER.STEPS = []
 __C.GAN.SOLVER.STEPS_D = []
 __C.GAN.SOLVER.STEPS_G = []
+__C.GAN.SOLVER.STEPS_PRE = []
 
 # Learning rates to use with 'steps_with_lrs' policy
 __C.GAN.SOLVER.LRS_D = []
@@ -1077,18 +1082,22 @@ __C.GAN.SOLVER.PRE_WARM_UP_ITERS = 200
 # Momentum to use with SGD
 __C.GAN.SOLVER.MOMENTUM_D = 0.9
 __C.GAN.SOLVER.MOMENTUM_G = 0.9
+__C.GAN.SOLVER.MOMENTUM_PRE = 0.9
 
 # L2 regularization hyperparameter
 __C.GAN.SOLVER.WEIGHT_DECAY_D = 0.0005
 __C.GAN.SOLVER.WEIGHT_DECAY_G = 0.0005
+__C.GAN.SOLVER.WEIGHT_DECAY_PRE = 0.0005
 
 # Whether to double the learning rate for bias
 __C.GAN.SOLVER.BIAS_DOUBLE_LR_D = True
 __C.GAN.SOLVER.BIAS_DOUBLE_LR_G = True
+__C.GAN.SOLVER.BIAS_DOUBLE_LR_PRE = True
 
 # Whether to have weight decay on bias as well
 __C.GAN.SOLVER.BIAS_WEIGHT_DECAY_G = False
 __C.GAN.SOLVER.BIAS_WEIGHT_DECAY_D = False
+__C.GAN.SOLVER.BIAS_WEIGHT_DECAY_PRE = False
 
 # Warm up to SOLVER.BASE_LR over this number of SGD iterations
 __C.GAN.SOLVER.WARM_UP_ITERS = 500
