@@ -75,7 +75,8 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
         # Update learning rate, note that different parameter may have different learning rate
         param_keys = []
         for ind, param_group in enumerate(optimizer.param_groups):
-            param_keys.extend(param_group['params'].keys())
+            print(param_group['params'])
+            param_keys.extend(param_group['params'])
             if ind == 1 and cfg.SOLVER.BIAS_DOUBLE_LR:  # bias params
                 param_group['lr'] = new_lr * 2
             else:
@@ -111,7 +112,7 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     compatible in scale with lr * grad.
     """
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
-
+    print(optimizer.state_dict())
     for p_key in param_keys:
         optimizer.state[p_key]['momentum_buffer'] *= correction
 
