@@ -879,7 +879,7 @@ def main():
                     torch.cuda.empty_cache()
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
-            training_stats_gen.IterToc()
+            training_stats_gen.IterTic()
 
             optimizer_G.zero_grad()
             input_data_fake_g, dataiterator_fake_generator = create_input_data(
