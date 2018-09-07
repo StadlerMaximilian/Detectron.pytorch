@@ -695,7 +695,6 @@ def main():
             logger.info('Pre-Training: training perceptual-branch on large objects')
 
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
-                print(optimizer_pre.state_dict())
                 # Warm up
                 # for simplicity: equal for generator and discriminator
                 if step < cfg.GAN.SOLVER.PRE_WARM_UP_ITERS:
