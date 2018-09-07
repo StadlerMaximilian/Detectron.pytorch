@@ -689,11 +689,11 @@ def main():
                     else:
                         raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
                     lr_new_pre = cfg.GAN.SOLVER.BASE_LR_PRE * warmup_factor
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre)
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == lr_new_pre
                 elif step == cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE)
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == cfg.GAN.SOLVER.BASE_LR_PRE
 
@@ -702,7 +702,7 @@ def main():
                         step == cfg.GAN.SOLVER.STEPS_PRE[decay_steps_ind_pre]:
                     logger.info('Decay the learning (pre-training) on step %d', step)
                     lr_new_pre = lr_pre * cfg.GAN.SOLVER.GAMMA_PRE
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre)
+                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == lr_new_pre
                     decay_steps_ind_pre += 1
@@ -744,7 +744,7 @@ def main():
 
             # save model after pre-training
             save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
-                          model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
+                          model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
         # combined training
         training_stats = TrainingStats(
