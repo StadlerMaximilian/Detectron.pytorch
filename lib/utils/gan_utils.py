@@ -129,7 +129,7 @@ class TrainingStats(object):
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == self.max_iter - 1):
             stats = self.GetStats(cur_iter, lr)
-            log_gan_stats(stats, self.misc_args, self.max_iter)
+            log_gan_stats(stats, defaultdict(), defaultdict(), self.misc_args, self.max_iter)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
