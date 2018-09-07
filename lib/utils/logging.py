@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from datetime import datetime, timedelta
 from collections import deque
 from email.mime.text import MIMEText
 import json
@@ -75,8 +76,12 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
             misc_args.run_name, misc_args.cfg_filename, stats_dis_real['iter'], max_iter)
 
     if stats_gen is None and stats_dis_real is not None:
+        lines += "\t\tlossDiscriminatorReal: % .6f , lr_dis: %.6f time: %.6f, eta: %s\n" % (
+                  stats_dis_real['loss'], stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
+        )
+
         if stats_dis_real['metrics']:
-            lines += "metrics_real_real " + ", ".join("%s: %.6f" %
+            lines += "\t\tmetrics_real_real " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
         if stats_dis_real["head_losses"]:
             lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
@@ -88,18 +93,26 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
     else:
         assert stats_dis_real is not None and stats_dis_fake is not None
 
+        t_gen = datetime.strptime(stats_gen['eta'], "%H:%M:%S")
+        t_dis_fake = datetime.strptime(stats_dis_fake['eta'], "%H:%M:%S")
+        delta_gen = timedelta(hours=t_gen.hour, minutes=t_gen.minute, seconds=t_gen.second)
+        delta_dis_fake = timedelta(hours=t_dis_fake.hour, minutes=t_dis_fake.minute, seconds=t_dis_fake.second)
+
+        eta = str(delta_gen + delta_dis_fake)
+
         lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
-                 "lr_gen: %.6f, lr_dis: %.6f time: %.6f, eta: %s\n" % (
+                 "lr_gen: %.6f, lr_dis: %.6f time_dis: %.6f, time_gen: %.6g, eta: %s\n" % (
                   stats_gen['loss'], stats_dis_real['loss'], stats_dis_fake['loss'], stats_gen['lr'],
-                  stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
+                  stats_dis_real['lr'], stats_dis_real['time'], stats_gen['time'], eta
                  )
+        
         if stats_gen['metrics']:
             lines += "\t\tmetrics_gen:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items()) + "\n"
         if stats_dis_fake['metrics']:
-            lines += "metrics_dis_fake: " + ", ".join("%s: %.6f" %
+            lines += "\t\tmetrics_dis_fake: " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis_fake['metrics'].items()) +  "\n"
         if stats_dis_real['metrics']:
-            lines += "metrics_real_real " + ", ".join("%s: %.6f" %
+            lines += "\t\tmetrics_real_real " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
         if stats_gen['head_losses']:
             lines += "\t\tGenerator_head: " + ", ".join("%s: %.6f" %
