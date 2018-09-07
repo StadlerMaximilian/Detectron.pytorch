@@ -745,7 +745,7 @@ def main():
                 optimizer_pre.step()
 
                 training_stats_pre.IterToc()
-                training_stats_pre.LogIterStats(step, lr=lr_pre)
+                training_stats_pre.LogIterStatsReal(step, lr=lr_pre)
 
                 if args.online_cleanup:
                     del input_data_pre

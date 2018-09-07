@@ -64,7 +64,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(stats_gen, stats_dis_real, stats_dis_fake, misc_args, max_iter):
+def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stats_dis_fake=None):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
@@ -72,39 +72,53 @@ def log_gan_stats(stats_gen, stats_dis_real, stats_dis_fake, misc_args, max_iter
             misc_args.epoch, misc_args.step, misc_args.iters_per_epoch)
     else:
         lines = "[%s][%s][Step %d / %d]\n" % (
-            misc_args.run_name, misc_args.cfg_filename, stats_gen['iter'], max_iter)
+            misc_args.run_name, misc_args.cfg_filename, stats_dis_real['iter'], max_iter)
 
-    lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
-             "lr_gen: %.6f, lr_dis: %.6f time: %.6f, eta: %s\n" % (
-              stats_gen['loss'], stats_dis_real['loss'], stats_dis_fake['loss'], stats_gen['lr'],
-              stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
-             )
-    if stats_gen['metrics']:
-        lines += "\t\tmetrics_gen:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items()) + "\n"
-    if stats_dis_fake['metrics']:
-        lines += "metrics_dis_fake: " + ", ".join("%s: %.6f" %
-                                                  (k, v) for k, v in stats_dis_fake['metrics'].items()) +  "\n"
-    if stats_dis_real['metrics']:
-        lines += "metrics_real_real " + ", ".join("%s: %.6f" %
-                                                  (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
-    if stats_gen['head_losses']:
-        lines += "\t\tGenerator_head: " + ", ".join("%s: %.6f" %
-                                                    (k, v) for k, v in stats_gen['head_losses'].items()) + "\n"
-    if stats_dis_fake["head_losses"]:
-        lines += "\t\tDiscriminator_fake_head: " + ", ".join("%s: %.6f" %
-                                                             (k, v) for k, v in stats_dis_fake['head_losses'].items())
-    if stats_dis_real["head_losses"]:
-        lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
-                                                             (k, v) for k, v in stats_dis_real['head_losses'].items())
-    if stats_gen['adv_loss']:
-        lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
-                                                   (k, v) for k, v in stats_gen['adv_loss'].items()) + "\n"
-    if stats_dis_fake['adv_loss']:
-        lines += "\t\tDiscriminator_fake_adv: " + ", ".join("%s: %.6f" %
-                                                        (k, v) for k, v in stats_dis_fake['adv_loss'].items()) + "\n"
-    if stats_dis_real['adv_loss']:
-        lines += "\t\tDiscriminator_real_adv: " + ", ".join("%s: %.6f" %
-                                                        (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
+    if stats_gen is None and stats_dis_real is not None:
+        if stats_dis_real['metrics']:
+            lines += "metrics_real_real " + ", ".join("%s: %.6f" %
+                                                      (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
+        if stats_dis_real["head_losses"]:
+            lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
+                                                                 (k, v) for k, v in stats_dis_real['head_losses'].items())
+        if stats_dis_real['adv_loss']:
+            lines += "\t\tDiscriminator_real_adv: " + ", ".join("%s: %.6f" %
+                                                            (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
+
+    else:
+        assert stats_dis_real is not None and stats_dis_fake is not None
+
+        lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
+                 "lr_gen: %.6f, lr_dis: %.6f time: %.6f, eta: %s\n" % (
+                  stats_gen['loss'], stats_dis_real['loss'], stats_dis_fake['loss'], stats_gen['lr'],
+                  stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
+                 )
+        if stats_gen['metrics']:
+            lines += "\t\tmetrics_gen:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items()) + "\n"
+        if stats_dis_fake['metrics']:
+            lines += "metrics_dis_fake: " + ", ".join("%s: %.6f" %
+                                                      (k, v) for k, v in stats_dis_fake['metrics'].items()) +  "\n"
+        if stats_dis_real['metrics']:
+            lines += "metrics_real_real " + ", ".join("%s: %.6f" %
+                                                      (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
+        if stats_gen['head_losses']:
+            lines += "\t\tGenerator_head: " + ", ".join("%s: %.6f" %
+                                                        (k, v) for k, v in stats_gen['head_losses'].items()) + "\n"
+        if stats_dis_fake["head_losses"]:
+            lines += "\t\tDiscriminator_fake_head: " + ", ".join("%s: %.6f" %
+                                                                 (k, v) for k, v in stats_dis_fake['head_losses'].items())
+        if stats_dis_real["head_losses"]:
+            lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
+                                                                 (k, v) for k, v in stats_dis_real['head_losses'].items())
+        if stats_gen['adv_loss']:
+            lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
+                                                       (k, v) for k, v in stats_gen['adv_loss'].items()) + "\n"
+        if stats_dis_fake['adv_loss']:
+            lines += "\t\tDiscriminator_fake_adv: " + ", ".join("%s: %.6f" %
+                                                            (k, v) for k, v in stats_dis_fake['adv_loss'].items()) + "\n"
+        if stats_dis_real['adv_loss']:
+            lines += "\t\tDiscriminator_real_adv: " + ", ".join("%s: %.6f" %
+                                                            (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
 
     print(lines[:-1])  # remove last new line
 

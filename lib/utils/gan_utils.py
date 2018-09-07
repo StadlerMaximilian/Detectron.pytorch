@@ -124,12 +124,12 @@ class TrainingStats(object):
                 metric = metric.mean(dim=0, keepdim=True)
                 self.smoothed_metrics[k].AddValue(metric.data[0])
 
-    def LogIterStats(self, cur_iter, lr):
+    def LogIterStatsReal(self, cur_iter, lr):
         """Log the tracked statistics."""
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == self.max_iter - 1):
             stats = self.GetStats(cur_iter, lr)
-            log_gan_stats(stats, defaultdict(), defaultdict(), self.misc_args, self.max_iter)
+            log_gan_stats(self.misc_args, self.max_iter, stats_dis_real=stats)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
