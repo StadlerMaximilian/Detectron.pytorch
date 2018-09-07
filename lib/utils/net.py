@@ -74,13 +74,13 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
             logger.info('Changing learning rate %.6f -> %.6f', cur_lr, new_lr)
         # Update learning rate, note that different parameter may have different learning rate
         param_keys = []
-        for ind, param_group in enumerate(optimizer.param_groups):
-            print(param_group['params'])
-            param_keys.extend(param_group['params'])
+        for ind, param_group in enumerate(optimizer.param_group):
             if ind == 1 and cfg.SOLVER.BIAS_DOUBLE_LR:  # bias params
                 param_group['lr'] = new_lr * 2
             else:
                 param_group['lr'] = new_lr
+        for param_group in optimizer.state_dict()['param_group']:
+            param_keys.extend(param_group['params'])
 
         print(param_keys)
 
@@ -98,6 +98,8 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
             if cfg.SOLVER.TYPE in ['SGD'] and cfg.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
                     ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
                 _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
+    return optimizer
+
 
 
 def _CorrectMomentum(optimizer, param_keys, correction):
