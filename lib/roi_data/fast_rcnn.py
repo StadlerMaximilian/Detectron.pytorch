@@ -106,11 +106,11 @@ def get_fast_rcnn_blob_names(is_training=True):
     return blob_names
 
 
-def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None, gan_mode=False):
+def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
     """Add blobs needed for training Fast R-CNN style models."""
     # Sample training RoIs from each image and append them to the blob lists
     for im_i, entry in enumerate(roidb):
-        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i, flags, gan_mode)
+        frcn_blobs = _sample_rois(entry, im_scales[im_i], im_i, flags)
         for k, v in frcn_blobs.items():
             blobs[k].append(v)
     # Concat the training blob lists into tensors
@@ -130,8 +130,8 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None, gan_mode=False):
     return valid
 
 
-def _sample_rois(roidb, im_scale, batch_idx, flags=None, gan_mode=False):
-    if gan_mode and cfg.GAN.GAN_MODE_ON and flags is not None:
+def _sample_rois(roidb, im_scale, batch_idx, flags=None):
+    if cfg.GAN.GAN_MODE_ON and flags is not None:
         return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:
         return _sample_rois_normal(roidb, im_scale, batch_idx)
