@@ -80,7 +80,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
                                                       (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
         if stats_dis_real["head_losses"]:
             lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
-                                                                 (k, v) for k, v in stats_dis_real['head_losses'].items())
+                                                    (k, v) for k, v in stats_dis_real['head_losses'].items()) "\n"
         if stats_dis_real['adv_loss']:
             lines += "\t\tDiscriminator_real_adv: " + ", ".join("%s: %.6f" %
                                                             (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
@@ -106,10 +106,10 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
                                                         (k, v) for k, v in stats_gen['head_losses'].items()) + "\n"
         if stats_dis_fake["head_losses"]:
             lines += "\t\tDiscriminator_fake_head: " + ", ".join("%s: %.6f" %
-                                                                 (k, v) for k, v in stats_dis_fake['head_losses'].items())
+                                                    (k, v) for k, v in stats_dis_fake['head_losses'].items()) + "\n"
         if stats_dis_real["head_losses"]:
             lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
-                                                                 (k, v) for k, v in stats_dis_real['head_losses'].items())
+                                                     (k, v) for k, v in stats_dis_real['head_losses'].items()) + "\n"
         if stats_gen['adv_loss']:
             lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
                                                        (k, v) for k, v in stats_gen['adv_loss'].items()) + "\n"
@@ -130,8 +130,8 @@ def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, tr
             stats_gen = training_stats_gen.GetStats(cur_iter, lr_gen)
             stats_dis_real = training_stats_dis_real.GetStats(cur_iter, lr_dis)
             stats_dis_fake = training_stats_dis_fake.GetStats(cur_iter, lr_dis)
-            log_gan_stats(stats_gen, stats_dis_real, stats_dis_fake, training_stats_gen.misc_args,
-                          training_stats_gen.max_iter)
+            log_gan_stats(training_stats_gen.misc_args, training_stats_gen.max_iter,
+                          stats_gen, stats_dis_real, stats_dis_fake)
             if training_stats_gen.tblogger:
                 training_stats_gen.tb_log_stats(stats_gen, cur_iter)
             if training_stats_dis_real.tblogger:
