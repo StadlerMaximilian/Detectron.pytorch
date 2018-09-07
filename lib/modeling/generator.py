@@ -118,7 +118,7 @@ class Generator(nn.Module):
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
         if not self.training:
-            return_dict['bloc_conv_residual'] = blob_conv_residual
+            return_dict['blob_conv_residual'] = blob_conv_residual
         return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
         return return_dict

@@ -1,8 +1,11 @@
 import torch.nn as nn
+from torch.autograd import Variable
 import torch
+
 
 from modeling.generator import Generator
 from modeling.discriminator import Discriminator
+from core.config import cfg
 
 
 class GAN(nn.Module):
@@ -11,49 +14,75 @@ class GAN(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
 
-        self.generator = Generator()
+        Tensor = torch.cuda.FloatTensor
+        batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
+        batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
+        batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
+
+        self.adv_target_real = Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                        requires_grad=False)
+        self.adv_target_gen = Variable(Tensor(batch_size_gen, 1).fill_(1.0),
+                                       requires_grad=False)
+        self.adv_target_pre = Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                       requires_grad=False)
+        self.adv_target_fake = Variable(Tensor(batch_size, 1).fill_(0.0),
+                                        requires_grad=False)
+
+        self.generator = Generator(generator_weights)
         resolution = self.generator.Conv_Body.resolution
         dim_in = self.generator.RPN.dim_out
-        self.discriminator = Discriminator(dim_in, resolution)
-        self._init_module(generator_weights, discriminator_weights)
+        self.discriminator = Discriminator(dim_in, resolution, discriminator_weights)
 
-    def forward(self, data, im_info, roidb=None, **rpn_kwargs):
+    def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
+        with torch.set_grad_enabled(self.training):
+            return self._forward(data, im_info, roidb, flags, **rpn_kwargs)
 
-        gen_out = self.generator(data, im_info, roidb, **rpn_kwargs)
+    def _forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
 
-        blob_fake = gen_out['blob_fake']
-        rpn_ret = gen_out['rpn_ret']
+        gen_out = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
 
-        dis_out = self.discriminator(blob_fake, rpn_ret)
+        if self.training:
+            blob_conv = None
 
-        copy_blobs = ['blob_conv_pooled', 'blob_fake', 'bloc_conv_residual']
-        for key in copy_blobs:
-           dis_out[key] = gen_out[key]
+            outputs_gen = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
+
+            if flags.real_mode:
+                blob_conv = outputs_gen['blob_conv_pooled']
+            elif flags.fake_mode:
+                blob_conv = outputs_gen['blob_fake']
+
+            adv_target = None
+
+            if flags.train_generator:
+                adv_target = self.adv_target_gen
+            elif flags.train_pre:
+                adv_target = self.adv_target_pre
+            elif flags.train_discriminator:
+                if flags.real_mode:
+                    adv_target = self.adv_target_real
+                elif flags.fake_mode:
+                    adv_target = self.adv_target_fake
+
+            rpn_ret = outputs_gen['rpn_ret']
+            input_discriminator = {'blob_conv': blob_conv,
+                                   'rpn_ret': rpn_ret,
+                                   'adv_target': adv_target
+                                   }
+        else:
+            blob_fake = gen_out['blob_fake']
+            rpn_ret = gen_out['rpn_ret']
+            input_discriminator = {'blob_conv': blob_fake,
+                                   'rpn_ret': rpn_ret
+                                   }
+
+        dis_out = self.discriminator(**input_discriminator)
+
+        if not self.training: # if eval only
+            copy_blobs = ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual']
+            for key in copy_blobs:
+               dis_out[key] = gen_out[key]
 
         return dis_out
-
-    def _init_module(self, generator_weights=None, discriminator_weights=None):
-        if generator_weights is None or discriminator_weights is None:
-            return
-        else:
-            pretrained_generator = torch.load(generator_weights)
-            pretrained_discriminator = torch.load(discriminator_weights)
-
-            ckpt = pretrained_discriminator['model']
-            state_dict = {}
-            for name in ckpt:
-                state_dict[name] = ckpt[name]
-            self.discriminator.load_state_dict(state_dict, strict=False)
-
-            ckpt = pretrained_generator['model']
-            state_dict = {}
-            for name in ckpt:
-                state_dict[name] = ckpt[name]
-            self.generator.load_state_dict(state_dict, strict=False)
-
-            del pretrained_discriminator
-            del pretrained_generator
-            torch.cuda.empty_cache()
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:

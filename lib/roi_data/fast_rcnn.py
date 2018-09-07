@@ -32,6 +32,7 @@ import utils.boxes as box_utils
 import utils.blob as blob_utils
 import utils.fpn as fpn_utils
 from utils.gan_utils import ModeFlags
+import math
 
 
 def get_fast_rcnn_blob_names(is_training=True):
@@ -236,6 +237,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
             #  for fake samples: keep only samples with area < area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_large_boxes_area(gt_boxes, max_area=area_thres)]
         elif flags.real_mode:
+            # for real samples: keep only samples with area >= area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_small_boxes_area(gt_boxes, min_area=area_thres)]
 
     if flags.train_generator:
@@ -256,7 +258,17 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # with area-threshold, only select indices of boxes, whose corresponding ground-truth-box fulfills criterion
     # i.e. whose corresponding index to gt-box is in gt_keep_inds
     if cfg.GAN.AREA_THRESHOLD > 0:
+        if cfg.GAN.MODEL.DEBUG:
+            fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
+            areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            print("fg-before: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
+
         fg_inds = np.asarray([x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds]).astype(int)
+
+        if cfg.GAN.MODEL.DEBUG:
+            fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
+            areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            print("fg-after: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
 
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs

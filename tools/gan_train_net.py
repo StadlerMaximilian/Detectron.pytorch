@@ -97,9 +97,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        '--load_ckpt_G', help='checkpoint path of Generator to load')
-    parser.add_argument(
-        '--load_ckpt_D', help='checkpoint path of Discriminator to load')
+        '--load_ckpt', help='checkpoint path of GAN to load')
 
     parser.add_argument(
         '--use_tfboard', help='Use tensorflow tensorboard to log training info',
@@ -144,6 +142,33 @@ def parse_args():
     )
 
     return parser.parse_args()
+
+
+def save_ckpt_gan(output_dir, args, step, train_size_gen, train_size_dis, model, optimizer_dis, optimizer_gen):
+    if args.no_save:
+        return
+
+    batch_size_gen = args.batch_size_G
+    batch_size_dis = args.batch_size_D
+
+    ckpt_dir = os.path.join(output_dir, 'ckpt')
+    if not os.path.exists(ckpt_dir):
+        os.makedirs(ckpt_dir)
+    save_name = os.path.join(ckpt_dir, 'model_step{}.pth'.format(step))
+    if isinstance(model, mynn.DataParallel):
+        model = model.module
+    torch.save({
+        'step': step,
+        'train_size_gen': train_size_gen,
+        'train_size_dis': train_size_dis,
+        'batch_size_gen': batch_size_gen,
+        'batch_size_dis': batch_size_dis,
+        'model': model.state_dict(),
+        'optimizer_gen': optimizer_gen.state_dict(),
+        'optimizer_dis': optimizer_dis.state_dict()
+    }, save_name)
+    logger.info('save model: %s', save_name)
+    return save_name
 
 
 def save_ckpt(output_dir, args, step, train_size, model, optimizer, part="none"):
@@ -342,9 +367,6 @@ def main():
     timers = defaultdict(Timer)
 
     num_loaders = 3
-    train_size_D = 0
-    train_size_G = 0
-    train_size = 0
 
     # Datasets #
     timers['roidb_real'].tic()
@@ -356,7 +378,7 @@ def main():
     logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_real'].average_time)
 
     # Effective training sample size for one epoch
-    train_size_D += roidb_size_real // args.batch_size_D * args.batch_size_D
+    train_size_D = roidb_size_real // args.batch_size_D * args.batch_size_D
 
     batchSampler_pre = BatchSampler(
         sampler=MinibatchSampler(ratio_list_real, ratio_index_real, cfg.GAN.TRAIN.IMS_PER_BATCH_PRE),
@@ -407,7 +429,6 @@ def main():
     logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_fake'].average_time)
 
     # Effective training sample size for one epoch
-    train_size_D += roidb_size_fake // args.batch_size_D * args.batch_size_D
     train_size_G = roidb_size_fake // args.batch_size_G * args.batch_size_G
 
     batchSampler_fake_discriminator = BatchSampler(
@@ -452,19 +473,15 @@ def main():
     train_size = max(train_size_D // 2, train_size_G)
 
     # Model
-    generator = Generator(pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
-    resolution = generator.Conv_Body.resolution
-    dim_in = generator.RPN.dim_out
-
     # only load pre-trained discriminator explicitly specified
     if args.init_dis_pretrained:
-        discriminator = Discriminator(dim_in, resolution, pretrained_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+        gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
+                  discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
     else:
-        discriminator = Discriminator(dim_in, resolution)
+        gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
 
     if cfg.CUDA:
-        generator.cuda()
-        discriminator.cuda()
+        gan.cuda()
 
     # Discriminator Parameters
     params_list_D = {
@@ -475,7 +492,7 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in discriminator.named_parameters():
+    for key, value in gan.discriminator.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
                 params_list_D['bias_params'].append(value)
@@ -514,7 +531,7 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in generator.named_parameters():
+    for key, value in gan.generator.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
@@ -535,10 +552,6 @@ def main():
     ]
     # names of parameters for each parameter
     param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
-
-    #logger.info("GAN is trained on following parameters")
-    #logger.info("Generator: {}".format(param_names_G))
-    #logger.info('Discriminator: {}'.format(param_names_D))
 
     ### Optimizers ###
     if cfg.GAN.SOLVER.TYPE_G == "SGD":
@@ -565,49 +578,38 @@ def main():
     optimizer_pre.zero_grad()
 
     ### Load checkpoint
-    if args.load_ckpt_G and args.load_ckpt_D:
-        load_name_G = args.load_ckpt_G
-        load_name_D = args.load_ckpt_D
-        logging.info("loading checkpoint %s", load_name_G)
-        logging.info("loading checkpoint %s", load_name_D)
-        checkpoint_G = torch.load(load_name_G, map_location=lambda storage, loc: storage)
-        checkpoint_D = torch.load(load_name_D, map_location=lambda storage, loc: storage)
-        net_utils.load_ckpt(generator, checkpoint_G['model'])
-        net_utils.load_ckpt(discriminator, checkpoint_D['model'])
+    if args.load_ckpt:
+        load_name = args.load_ckp
+        logging.info("loading checkpoint %s", load_name)
+        checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(gan, checkpoint['model'])
 
         if args.resume:
             # as for every k steps of discriminator, G is updated once
-            optimizer_G.load_state_dict(checkpoint_G['optimizer'])
-            optimizer_D.load_state_dict(checkpoint_D['optimizer'])
-        del checkpoint_G
-        del checkpoint_D
+            optimizer_G.load_state_dict(checkpoint['optimizer_gen'])
+            optimizer_D.load_state_dict(checkpoint['optimizer_dis'])
+        del checkpoint
         torch.cuda.empty_cache()
 
     lr_D = optimizer_D.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
     lr_G = optimizer_G.param_groups[0]['lr']
     lr_pre = optimizer_pre.param_groups[0]['lr']
 
-    generator = mynn.DataParallel(generator, cpu_keywords=['im_info', 'roidb'],
-                                  minibatch=True, batch_outputs=False) # keep batch split onto GPUs for generator
-    discriminator = mynn.DataParallel(discriminator, cpu_keywords=['im_info', 'roidb'],
-                                      minibatch=True)
+    gan = mynn.DataParallel(gan, cpu_keywords=['im_info', 'roidb'],
+                            minibatch=True)
 
     ### Training Setups ###
     args.run_name = misc_utils.get_run_name() + '_step'
     output_dir = misc_utils.get_output_dir(args, args.run_name)
-    output_dir_D = misc_utils.get_output_dir_part(args, args.run_name, 'discriminator')
-    output_dir_G = misc_utils.get_output_dir_part(args, args.run_name, 'generator')
+    output_dir_pre = os.path.join(output_dir, 'pre')
     args.cfg_filename = os.path.basename(args.cfg_file)
 
     if not args.no_save:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        if not os.path.exists(output_dir_D):
-            os.makedirs(output_dir_D)
-        if not os.path.exists(output_dir_G):
-            os.makedirs(output_dir_G)
-        logging.info("Using output_dirs: {}\n\t\t{}\n\t\t{}".format(output_dir, output_dir_G,
-                                                                    output_dir_D))
+        if not os.path.exists(output_dir_pre):
+            os.makedirs(output_dir_pre)
+        logging.info("Using output_dir: {}".format(output_dir))
 
         blob = {'cfg': yaml.dump(cfg), 'args': args}
         with open(os.path.join(output_dir, 'config_and_args.pkl'), 'wb') as f:
@@ -617,11 +619,10 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
-            tblogger_pre = SummaryWriter(os.path.join(output_dir, 'discriminator', 'pre'))
+            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre))
 
     ### Training Loop ###
-    generator.train()
-    discriminator.train()
+    gan.train()
 
     CHECKPOINT_PERIOD = int(cfg.GAN.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
@@ -664,18 +665,6 @@ def main():
         step = args.start_step
 
         # prepare flags and adv_targets for training
-        Tensor = torch.cuda.FloatTensor
-        batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
-        batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
-        batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
-        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
-        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(1.0),
-                                   requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
-        adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                   requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
-        adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
-                                    requires_grad=False).cuda() for _ in range(cfg.NUM_GPUS)]
         fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
         real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
         fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
@@ -725,47 +714,37 @@ def main():
                 )
 
                 input_data_pre.update({"flags": pre_flag})
-                outputs_G_real = generator(**input_data_pre)
-                blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
-                rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
-                input_discriminator = {'blob_conv': blob_conv_pooled,
-                                       'rpn_ret': rpn_ret_real,
-                                       'adv_target': adv_target_pre
-                                       }
-                outputs_D_real = discriminator(**input_discriminator)
+                outputs_pre = gan(**input_data_pre)
                 # only train perceptual branch
                 # remove adv loss
-                training_stats_pre.UpdateIterStats(out_D=outputs_D_real)
+                training_stats_pre.UpdateIterStats(out_D=outputs_pre)
                 # train only on the Perceptual Branch
-                loss_D_real = outputs_D_real['losses']['loss_cls'] + outputs_D_real['losses']['loss_bbox']
-
-                loss_D = loss_D_real
-                loss_D.backward()
+                loss_pre = outputs_pre['losses']['loss_cls'] + outputs_pre['losses']['loss_bbox']
+                loss_pre.backward()
                 optimizer_pre.step()
 
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStats(step, lr_D=lr_D, lr_G=0.0)
 
+                if args.online_cleanup:
+                    del input_data_pre
+                    del outputs_pre
+                    del loss_pre
+
             # clean up
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
+
             del dataiterator_pre
             del dataloader_pre
             del batchSampler_pre
             del dataset_pre
-            del blob_conv_pooled
-            del rpn_ret_real
-            del input_discriminator
-            del outputs_D_real
-            del outputs_G_real
-            del loss_D_real
             del training_stats_pre
-            del adv_target_pre
-            del pre_flag
             torch.cuda.empty_cache()
-            save_ckpt(os.path.join(output_dir_D, 'pre'), args, step, train_size, discriminator, optimizer_pre, "D")
-            save_ckpt(os.path.join(output_dir_G, 'pre'), args, step, train_size, generator, optimizer_G, "G")
 
+            # save model after pre-training
+            save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                          model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
 
         # combined training
         training_stats = TrainingStats(
@@ -836,16 +815,9 @@ def main():
                 )
 
                 input_data_fake.update({"flags": fake_dis_flag})
-                outputs_G_fake = generator(**input_data_fake)
-                blob_fake = [Variable(x['blob_fake'], requires_grad=False) for x in outputs_G_fake]
-                rpn_ret_fake = [x['rpn_ret'] for x in outputs_G_fake]
-                input_discriminator = {'blob_conv': blob_fake,
-                                       'rpn_ret': rpn_ret_fake,
-                                       'adv_target': adv_target_fake
-                                       }
-                outputs_D_fake = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D=outputs_D_fake)
-                loss_D_fake = outputs_D_fake['losses']['loss_adv']  # adversarial loss for discriminator
+                outputs_fake = gan(**input_data_fake)
+                training_stats.UpdateIterStats(out_D=outputs_fake)
+                loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
 
                 # train on real data
                 input_data_real, dataiterator_real_discriminator = create_input_data(
@@ -853,35 +825,19 @@ def main():
                 )
 
                 input_data_real.update({"flags": real_dis_flag})
-                outputs_G_real = generator(**input_data_real)
-                blob_conv_pooled = [Variable(x['blob_conv_pooled'], requires_grad=False) for x in outputs_G_real]
-                rpn_ret_real = [x['rpn_ret'] for x in outputs_G_real]
-                input_discriminator = {'blob_conv': blob_conv_pooled,
-                                       'rpn_ret': rpn_ret_real,
-                                       'adv_target': adv_target_real
-                                       }
-                outputs_D_real = discriminator(**input_discriminator)
-                training_stats.UpdateIterStats(out_D=outputs_D_real)
-                loss_D_real = outputs_D_real['losses']['loss_adv']  # adversarial loss for discriminator
+                outputs_real = gan(**input_data_real)
+                training_stats.UpdateIterStats(out_D=outputs_real)
+                loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
 
-                loss_D = loss_D_real + loss_D_fake
+                loss_D = loss_real + loss_fake
                 loss_D.backward()
                 optimizer_D.step()
 
                 if args.online_cleanup:
                     del input_data_fake
-                    del outputs_G_fake
-                    del blob_fake
-                    del rpn_ret_fake
-                    del input_discriminator
-                    del outputs_D_fake
-                    del loss_D_fake
                     del input_data_real
-                    del outputs_G_real
-                    del blob_conv_pooled
-                    del rpn_ret_real
-                    del outputs_D_real
-                    del loss_D_real
+                    del loss_real
+                    del loss_fake
                     del loss_D
                     torch.cuda.empty_cache()
 
@@ -892,72 +848,33 @@ def main():
             )
 
             input_data_fake_g.update({"flags": fake_gen_flag})
-            outputs_GG = generator(**input_data_fake_g)
-            blob_fake_g = [x['blob_fake'] for x in outputs_GG]
-            rpn_ret_g = [x['rpn_ret'] for x in outputs_GG]
-            # also use smoothed value for GENERATOR training
-            input_discriminator = {'blob_conv': blob_fake_g,
-                                   'rpn_ret': rpn_ret_g,
-                                   'adv_target': adv_target_gen
-                                   }
-            outputs_DG = discriminator(**input_discriminator)
-            training_stats.UpdateIterStats(out_G=outputs_DG)
+            outputs_gen = gan(**input_data_fake_g)
+            training_stats.UpdateIterStats(out_G=outputs_gen)
 
-            loss_G = outputs_DG['total_loss']  # total loss for generator
+            # train generator on Faster R-CNN loss and adversarial loss
+            loss_G = outputs_gen['losses']['loss_cls'] + outputs_gen['losses']['loss_bbox']
+            loss_G = loss_G + outputs_gen['losses']['loss_adv']
             loss_G.backward()
             optimizer_G.step()
 
             if args.online_cleanup:
                 del input_data_fake_g
-                del outputs_GG
-                del blob_fake_g
-                del rpn_ret_g
-                del input_discriminator
-                del outputs_DG
+                del outputs_gen
                 del loss_G
                 torch.cuda.empty_cache()
 
             training_stats.IterToc()
-
             training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
-                save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
-                save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
+                save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                              model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
 
         # ---- Training ends ----
         # Save last checkpoint
-        final_generator = save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
-        final_discriminator = save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
-
-        del generator
-        del discriminator
-        torch.cuda.empty_cache()
-
-        gan = GAN(generator_weights=final_generator, discriminator_weights=final_discriminator)
-        final_model = save_model(output_dir, no_save=False, model=gan)
-
+        final_model = save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                                    model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
         # cleanup
-        del input_data_fake
-        del outputs_G_fake
-        del blob_fake
-        del rpn_ret_fake
-        del input_discriminator
-        del outputs_D_fake
-        del loss_D_fake
-        del input_data_real
-        del outputs_G_real
-        del blob_conv_pooled
-        del rpn_ret_real
-        del outputs_D_real
-        del loss_D_real
-        del loss_D
-        del input_data_fake_g
-        del outputs_GG
-        del blob_fake_g
-        del rpn_ret_g
-        del outputs_DG
-        del loss_G
         del gan
         del dataiterator_real_discriminator
         del dataiterator_fake_discriminator
@@ -973,6 +890,7 @@ def main():
         del dataset_fake_generator
         del optimizer_G
         del optimizer_D
+        del training_stats
         torch.cuda.empty_cache()
 
         logger.info("Closing dataloader and tfboard if used")
@@ -987,8 +905,9 @@ def main():
         del dataiterator_fake_generator
 
         logger.info('Save ckpt on exception ...')
-        save_ckpt(output_dir_G, args, step, train_size, generator, optimizer_G, "G")
-        save_ckpt(output_dir_D, args, step, train_size, discriminator, optimizer_D, "D")
+
+        save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                      model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
         logger.info('Save ckpt done.')
         stack_trace = traceback.format_exc()
         print(stack_trace)

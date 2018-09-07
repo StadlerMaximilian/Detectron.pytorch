@@ -24,14 +24,11 @@ from __future__ import unicode_literals
 
 from collections import defaultdict, OrderedDict
 import datetime
-import numpy as np
 
 from core.config import cfg
 from utils.logging import log_gan_stats
 from utils.logging import SmoothedValue
 from utils.timer import Timer
-import utils.net as nu
-
 
 class ModeFlags(object):
     def __init__(self, mode, train):
