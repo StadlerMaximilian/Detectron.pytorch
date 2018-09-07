@@ -65,7 +65,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stats_dis_fake=None):
+def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stats_dis_fake=None, eta=None):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
@@ -91,13 +91,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
                                                          (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
 
     else:
-        assert stats_dis_real is not None and stats_dis_fake is not None
-
-        t_gen = datetime.strptime(stats_gen['eta'], "%d days,%H:%M:%S")
-        t_dis_fake = datetime.strptime(stats_dis_fake['eta'], "%d days, %H:%M:%S")
-        delta_gen = timedelta(hours=t_gen.hour, minutes=t_gen.minute, seconds=t_gen.second)
-        delta_dis_fake = timedelta(hours=t_dis_fake.hour, minutes=t_dis_fake.minute, seconds=t_dis_fake.second)
-        eta = str(delta_gen + delta_dis_fake)
+        assert stats_dis_real is not None and stats_dis_fake is not None and eta is not None
 
         lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
                  "lr_gen: %.6f, lr_dis: %.6f time_dis: %.6f, time_gen: %.6g, eta: %s\n" % (
@@ -139,11 +133,21 @@ def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, tr
                            training_stats_dis_fake=None):
         if (cur_iter % training_stats_gen.LOG_PERIOD == 0 or
                 cur_iter == training_stats_gen.max_iter - 1):
+
+            eta_seconds_gen = training_stats_gen.iter_timer.average_time * (
+                    training_stats_gen.max_iter - cur_iter
+            )
+            eta_seconds_dis = training_stats_dis_real.iter_timer.average_time * (
+                    training_stats_dis_real.max_iter - cur_iter
+            )
+
+            eta = str(timedelta(seconds=int(eta_seconds_gen + eta_seconds_dis)))
+
             stats_gen = training_stats_gen.GetStats(cur_iter, lr_gen)
             stats_dis_real = training_stats_dis_real.GetStats(cur_iter, lr_dis)
             stats_dis_fake = training_stats_dis_fake.GetStats(cur_iter, lr_dis)
             log_gan_stats(training_stats_gen.misc_args, training_stats_gen.max_iter,
-                          stats_gen, stats_dis_real, stats_dis_fake)
+                          stats_gen, stats_dis_real, stats_dis_fake, eta)
             if training_stats_gen.tblogger:
                 training_stats_gen.tb_log_stats(stats_gen, cur_iter)
             if training_stats_dis_real.tblogger:
