@@ -103,4 +103,4 @@ class GAN(nn.Module):
     def train(self, mode=True):
         super().train(mode)
         self.generator.train(mode)
-        self.discriminator.trai(mode)
+        self.discriminator.train(mode)
