@@ -77,7 +77,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
 
     if stats_gen is None and stats_dis_real is not None:
         lines += "\t\tlossDiscriminatorReal: % .6f , lr_dis: %.6f time: %.6f, eta: %s\n" % (
-                  stats_dis_real['loss'], stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
+                  stats_dis_real['loss'], stats_dis_real['lr'], stats_dis_real['time'], stats_dis_real['eta']
         )
 
         if stats_dis_real['metrics']:
@@ -105,7 +105,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
                   stats_gen['loss'], stats_dis_real['loss'], stats_dis_fake['loss'], stats_gen['lr'],
                   stats_dis_real['lr'], stats_dis_real['time'], stats_gen['time'], eta
                  )
-        
+
         if stats_gen['metrics']:
             lines += "\t\tmetrics_gen:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items()) + "\n"
         if stats_dis_fake['metrics']:
