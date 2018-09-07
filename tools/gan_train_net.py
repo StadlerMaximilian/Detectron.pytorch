@@ -592,10 +592,6 @@ def main():
     else:
         raise ValueError("INVALID Optimizer_pre specified. Must be SGD or Adam!")
 
-    optimizer_D.zero_grad()
-    optimizer_G.zero_grad()
-    optimizer_pre.zero_grad()
-
     ### Load checkpoint
     if args.load_ckpt:
         load_name = args.load_ckp
@@ -694,7 +690,6 @@ def main():
             logger.info('Pre-Training: training perceptual-branch on large objects')
 
             for step in range(0, cfg.GAN.SOLVER.PRE_ITER):
-                optimizer_pre.zero_grad()
 
                 # Warm up
                 # for simplicity: equal for generator and discriminator
@@ -726,6 +721,7 @@ def main():
                     assert lr_pre == lr_new_pre
                     decay_steps_ind_pre += 1
 
+                optimizer_pre.zero_grad()
                 training_stats_pre.IterTic()
 
                 input_data_pre, dataiterator_pre = create_input_data(
