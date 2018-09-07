@@ -81,7 +81,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
         )
 
         if stats_dis_real['metrics']:
-            lines += "\t\tmetrics_real_real " + ", ".join("%s: %.6f" %
+            lines += "\t\tmetrics_real " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
         if stats_dis_real["head_losses"]:
             lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
