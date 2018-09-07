@@ -261,6 +261,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         if cfg.GAN.MODEL.DEBUG:
             fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
             areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            areas_fg = np.sqrt(areas_fg)
             print("fg-before: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
 
         fg_inds = np.asarray([x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds]).astype(int)
@@ -268,6 +269,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         if cfg.GAN.MODEL.DEBUG:
             fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
             areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            areas_fg = np.sqrt(areas_fg)
             print("fg-after: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
 
     # Guard against the case when an image has fewer than fg_rois_per_image

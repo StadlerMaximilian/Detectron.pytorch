@@ -65,6 +65,7 @@ def decay_learning_rate(optimizer, cur_lr, decay_rate):
                     ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
                 _CorrectMomentum(optimizer, param_group['params'], new_lr / cur_lr)
 
+
 def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
     """Update learning rate"""
     if cur_lr != new_lr:
@@ -81,7 +82,7 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
             param_keys += param_group['params']
 
         if cfg.GAN.GAN_MODE_ON:
-            if type=='pre':
+            if type == 'pre':
                 if cfg.GAN.SOLVER.TYPE_PRE in ['SGD'] and cfg.GAN.SOLVER.SCALE_MOMENTUM and \
                         cur_lr > 1e-7 and ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
                     _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
