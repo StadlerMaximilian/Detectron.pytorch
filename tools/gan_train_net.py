@@ -936,8 +936,13 @@ def main():
 
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
-            tblogger.close()
-        del training_stats
+            tblogger_dis_fake.close()
+            tblogger_dis_real.close()
+            tblogger_gen.close()
+
+        del training_stats_dis_fake
+        del training_stats_dis_real
+        del training_stats_gen
 
     except (RuntimeError, KeyboardInterrupt):
 
@@ -954,7 +959,9 @@ def main():
         print(stack_trace)
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
-            tblogger.close()
+            tblogger_gen.close()
+            tblogger_dis_real.close()
+            tblogger_dis_fake.close()
         logger.info('Aborted training.')
         return
 
