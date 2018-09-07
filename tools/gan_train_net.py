@@ -540,6 +540,9 @@ def main():
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_PRE + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_PRE if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_PRE else 0}
     ]
+    param_names_pre = [params_list_pre['nonbias_param_names'], params_list_pre['bias_param_names']]
+
+    print(param_names_pre)
 
     ### Generator Parameters ###
     params_list_G = {
@@ -739,6 +742,8 @@ def main():
                 loss_pre = outputs_pre['losses']['loss_cls'] + outputs_pre['losses']['loss_bbox']
                 loss_pre.backward()
                 optimizer_pre.step()
+
+                print(optimizer_pre.state_dict())
 
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStats(step, lr_D=lr_pre, lr_G=0.0)
