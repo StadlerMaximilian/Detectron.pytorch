@@ -492,8 +492,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.discriminator.named_parameters():
-        if value.requires_grad:
+    for key, value in gan.named_parameters():
+        if key.split('.')[0] == 'discriminator' and value.requires_grad:
             if 'bias' in key:
                 params_list_D['bias_params'].append(value)
                 params_list_D['bias_param_names'].append(key)
@@ -521,8 +521,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.discriminator.named_parameters():
-        if value.requires_grad:
+    for key, value in gan.named_parameters():
+        if key.split('.')[0] == 'discriminator' and value.requires_grad:
             if 'bias' in key:
                 params_list_pre['bias_params'].append(value)
                 params_list_pre['bias_param_names'].append(key)
@@ -550,8 +550,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.generator.named_parameters():
-        if value.requires_grad:
+    for key, value in gan.named_parameters():
+        if key.split('.')[0] == 'generator' and value.requires_grad:
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
                 params_list_G['bias_param_names'].append(key)
@@ -579,12 +579,14 @@ def main():
         optimizer_G = torch.optim.Adam(params_G)
     else:
         raise ValueError("INVALID Optimizer_G specified. Must be SGD or Adam!")
+
     if cfg.GAN.SOLVER.TYPE_D == "SGD":
         optimizer_D = torch.optim.SGD(params_D, momentum=cfg.GAN.SOLVER.MOMENTUM_D)
     elif cfg.GAN.SOLVER.TYPE_D == "Adam":
         optimizer_D = torch.optim.Adam(params_D)
     else:
         raise ValueError("INVALID Optimizer_D specified. Must be SGD or Adam!")
+
     if cfg.GAN.SOLVER.TYPE_PRE == "SGD":
         optimizer_pre = torch.optim.SGD(params_pre, momentum=cfg.GAN.SOLVER.MOMENTUM_PRE)
     elif cfg.GAN.SOLVER.TYPE_PRE == "Adam":
