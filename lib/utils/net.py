@@ -69,18 +69,19 @@ def decay_learning_rate(optimizer, cur_lr, decay_rate):
 def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
     """Update learning rate"""
     if cur_lr != new_lr:
-        print(optimizer.state_dict())
         ratio = _get_lr_change_ratio(cur_lr, new_lr)
         if ratio > cfg.GAN.SOLVER.LOG_LR_CHANGE_THRESHOLD:
             logger.info('Changing learning rate %.6f -> %.6f', cur_lr, new_lr)
         # Update learning rate, note that different parameter may have different learning rate
         param_keys = []
         for ind, param_group in enumerate(optimizer.param_groups):
+            param_keys.extend(param_group['params'])
             if ind == 1 and cfg.SOLVER.BIAS_DOUBLE_LR:  # bias params
                 param_group['lr'] = new_lr * 2
             else:
                 param_group['lr'] = new_lr
-            param_keys.extend(param_group['params'])
+
+        print(param_keys)
 
         if cfg.GAN.GAN_MODE_ON:
             if type == 'pre':
