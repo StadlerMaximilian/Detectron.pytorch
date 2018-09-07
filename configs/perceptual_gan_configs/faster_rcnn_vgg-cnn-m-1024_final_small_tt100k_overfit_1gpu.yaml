@@ -76,9 +76,9 @@ GAN:
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
-    MAX_ITER: 40
-    STEPS: [0, 20]
-    PRE_ITER: 40
-    PRE_WARM_UP_ITERS: 4
-    WARM_UP_ITERS: 4
-    STEPS_PRE: [0, 20, 30]
+    MAX_ITER: 400
+    STEPS: [0, 200]
+    PRE_ITER: 200
+    PRE_WARM_UP_ITERS: 20
+    WARM_UP_ITERS: 20
+    STEPS_PRE: [0, 100, 150]
