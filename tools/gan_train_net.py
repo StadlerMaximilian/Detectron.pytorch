@@ -748,8 +748,8 @@ def main():
                     dataiterator_pre, dataloader_pre
                 )
 
-                input_data_pre.update({"flags": pre_flag},
-                                      {"adv_target": adv_target_pre}
+                input_data_pre.update({"flags": pre_flag,
+                                       "adv_target": adv_target_pre}
                                       )
                 outputs_pre = gan(**input_data_pre)
                 # only train perceptual branch
@@ -864,9 +864,9 @@ def main():
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
-                input_data_fake.update({"flags": fake_dis_flag},
-                                       {"adv_target": adv_target_fake}
-                )
+                input_data_fake.update({"flags": fake_dis_flag,
+                                        "adv_target": adv_target_fake}
+                                       )
                 outputs_fake = gan(**input_data_fake)
                 training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
                 loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
@@ -877,9 +877,9 @@ def main():
                     dataiterator_real_discriminator, dataloader_real_discriminator
                 )
 
-                input_data_real.update({"flags": real_dis_flag},
-                                       {"adv_target": adv_target_real}
-                )
+                input_data_real.update({"flags": real_dis_flag,
+                                       "adv_target": adv_target_real}
+                                       )
                 outputs_real = gan(**input_data_real)
                 training_stats_dis_real.UpdateIterStats(out=outputs_real)
                 loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
@@ -908,8 +908,8 @@ def main():
                 dataiterator_fake_generator, dataloader_fake_generator
             )
 
-            input_data_fake_g.update({"flags": fake_gen_flag},
-                                     {"adv_target": adv_target_gen}
+            input_data_fake_g.update({"flags": fake_gen_flag,
+                                      "adv_target": adv_target_gen}
                                      )
             outputs_gen = gan(**input_data_fake_g)
             training_stats_gen.UpdateIterStats(out=outputs_gen)
