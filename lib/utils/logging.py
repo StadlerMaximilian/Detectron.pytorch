@@ -93,14 +93,11 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis_real=None, stat
     else:
         assert stats_dis_real is not None and stats_dis_fake is not None
 
-        t_gen = int(stats_gen['eta'])
-        t_real = int(stats_dis_real['eta'])
-        eta = str(timedelta(seconds=int(t_gen + t_real)))
-        #t_gen = datetime.strptime(stats_gen['eta'], "%S")
-        #t_dis_fake = datetime.strptime(stats_dis_fake['eta'], "%S")
-        #delta_gen = timedelta(hours=t_gen.hour, minutes=t_gen.minute, seconds=t_gen.second)
-        #delta_dis_fake = timedelta(hours=t_dis_fake.hour, minutes=t_dis_fake.minute, seconds=t_dis_fake.second)
-       # eta = str(delta_gen + delta_dis_fake)
+        t_gen = datetime.strptime(stats_gen['eta'], "%D:%H:%M:%S")
+        t_dis_fake = datetime.strptime(stats_dis_fake['eta'], "%D:%H:%M:%S")
+        delta_gen = timedelta(hours=t_gen.hour, minutes=t_gen.minute, seconds=t_gen.second)
+        delta_dis_fake = timedelta(hours=t_dis_fake.hour, minutes=t_dis_fake.minute, seconds=t_dis_fake.second)
+        eta = str(delta_gen + delta_dis_fake)
 
         lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
                  "lr_gen: %.6f, lr_dis: %.6f time_dis: %.6f, time_gen: %.6g, eta: %s\n" % (
