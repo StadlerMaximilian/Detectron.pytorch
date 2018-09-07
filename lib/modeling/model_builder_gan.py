@@ -37,18 +37,6 @@ class GAN(nn.Module):
             elif flags.fake_mode:
                 blob_conv = outputs_gen['blob_fake']
 
-            adv_target = None
-
-            if flags.train_generator:
-                adv_target = self.adv_target_gen
-            elif flags.train_pre:
-                adv_target = self.adv_target_pre
-            elif flags.train_discriminator:
-                if flags.real_mode:
-                    adv_target = self.adv_target_real
-                elif flags.fake_mode:
-                    adv_target = self.adv_target_fake
-
             rpn_ret = outputs_gen['rpn_ret']
             input_discriminator = {'blob_conv': blob_conv,
                                    'rpn_ret': rpn_ret,
