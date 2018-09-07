@@ -109,6 +109,11 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     compatible in scale with lr * grad.
     """
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
+
+    if cfg.GAN.MODEL.DEBUG:
+        for key, val in optimizer.state.items():
+            print(key)
+
     for p_key in param_keys:
         optimizer.state[p_key]['momentum_buffer'] *= correction
 
