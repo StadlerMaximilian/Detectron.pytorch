@@ -21,7 +21,7 @@ class GAN(nn.Module):
 
     def forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):
-            return self._forward(data, im_info, roidb, flags, **rpn_kwargs)
+            return self._forward(data, im_info, roidb, flags, adv_target, **rpn_kwargs)
 
     def _forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
 
