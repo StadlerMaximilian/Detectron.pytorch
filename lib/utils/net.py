@@ -84,12 +84,12 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
         if cfg.GAN.GAN_MODE_ON:
             if type == 'pre':
                 if cfg.GAN.SOLVER.TYPE_PRE in ['SGD'] and cfg.GAN.SOLVER.SCALE_MOMENTUM and \
-                        cur_lr > 1e-7 and ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
+                        cur_lr > 1e-7 and ratio > cfg.GAN.SOLVER.SCALE_MOMENTUM_THRESHOLD:
                     _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
             else:
                 if cfg.GAN.SOLVER.TYPE_D in ['SGD'] and cfg.GAN.SOLVER.TYPE_G in ['SGD'] and \
                        cfg.GAN.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
-                       ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
+                       ratio > cfg.GAN.SOLVER.SCALE_MOMENTUM_THRESHOLD:
                     _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
         else:
             if cfg.SOLVER.TYPE in ['SGD'] and cfg.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
@@ -109,11 +109,6 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     compatible in scale with lr * grad.
     """
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
-
-    if cfg.GAN.MODEL.DEBUG:
-        print(param_keys)
-        for p_key in param_keys:
-            print(optimizer.state[p_key])
 
     for p_key in param_keys:
         optimizer.state[p_key]['momentum_buffer'] *= correction
