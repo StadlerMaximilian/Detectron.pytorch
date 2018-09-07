@@ -75,7 +75,7 @@ def update_learning_rate(optimizer, cur_lr, new_lr, type='default'):
         # Update learning rate, note that different parameter may have different learning rate
         param_keys = []
         for ind, param_group in enumerate(optimizer.param_groups):
-            param_keys.extend(param_group['params'])
+            param_keys.extend(param_group['params'].keys())
             if ind == 1 and cfg.SOLVER.BIAS_DOUBLE_LR:  # bias params
                 param_group['lr'] = new_lr * 2
             else:
