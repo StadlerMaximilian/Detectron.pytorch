@@ -14,30 +14,16 @@ class GAN(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
 
-        Tensor = torch.cuda.FloatTensor
-        batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
-        batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
-        batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
-
-        self.adv_target_real = Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                        requires_grad=False)
-        self.adv_target_gen = Variable(Tensor(batch_size_gen, 1).fill_(1.0),
-                                       requires_grad=False)
-        self.adv_target_pre = Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
-                                       requires_grad=False)
-        self.adv_target_fake = Variable(Tensor(batch_size, 1).fill_(0.0),
-                                        requires_grad=False)
-
         self.generator = Generator(generator_weights)
         resolution = self.generator.Conv_Body.resolution
         dim_in = self.generator.RPN.dim_out
         self.discriminator = Discriminator(dim_in, resolution, discriminator_weights)
 
-    def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
+    def forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):
             return self._forward(data, im_info, roidb, flags, **rpn_kwargs)
 
-    def _forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
+    def _forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
 
         gen_out = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
 

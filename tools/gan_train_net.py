@@ -692,6 +692,20 @@ def main():
         fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
         pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
+        Tensor = torch.cuda.FloatTensor
+        batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
+        batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G
+        batch_size_pre = cfg.GAN.TRAIN.IMS_PER_BATCH_PRE * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_PRE
+
+        adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(1.0),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
+                                   requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+        adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
+                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+
         # pre-training of perceptual branch
         if not args.init_dis_pretrained:
             logger.info('Pre-Training: training perceptual-branch on large objects')
@@ -734,7 +748,9 @@ def main():
                     dataiterator_pre, dataloader_pre
                 )
 
-                input_data_pre.update({"flags": pre_flag})
+                input_data_pre.update({"flags": pre_flag},
+                                      {"adv_target": adv_target_pre}
+                                      )
                 outputs_pre = gan(**input_data_pre)
                 # only train perceptual branch
                 # remove adv loss
@@ -848,7 +864,9 @@ def main():
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
-                input_data_fake.update({"flags": fake_dis_flag})
+                input_data_fake.update({"flags": fake_dis_flag},
+                                       {"adv_target": adv_target_fake}
+                )
                 outputs_fake = gan(**input_data_fake)
                 training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
                 loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
@@ -859,7 +877,9 @@ def main():
                     dataiterator_real_discriminator, dataloader_real_discriminator
                 )
 
-                input_data_real.update({"flags": real_dis_flag})
+                input_data_real.update({"flags": real_dis_flag},
+                                       {"adv_target": adv_target_real}
+                )
                 outputs_real = gan(**input_data_real)
                 training_stats_dis_real.UpdateIterStats(out=outputs_real)
                 loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
@@ -888,7 +908,9 @@ def main():
                 dataiterator_fake_generator, dataloader_fake_generator
             )
 
-            input_data_fake_g.update({"flags": fake_gen_flag})
+            input_data_fake_g.update({"flags": fake_gen_flag},
+                                     {"adv_target": adv_target_gen}
+                                     )
             outputs_gen = gan(**input_data_fake_g)
             training_stats_gen.UpdateIterStats(out=outputs_gen)
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
