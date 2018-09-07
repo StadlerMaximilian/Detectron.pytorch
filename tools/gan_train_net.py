@@ -511,6 +511,7 @@ def main():
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_D + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
     ]
+    param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
     params_list_pre = {
         'bias_params': [],
@@ -539,6 +540,8 @@ def main():
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_PRE + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_PRE if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_PRE else 0}
     ]
+    param_names_pre = [params_list_pre['nonbias_param_names'], params_list_pre['bias_param_names']]
+    print(param_names_pre)
 
     ### Generator Parameters ###
     params_list_G = {
