@@ -638,10 +638,10 @@ def main():
         if args.use_tfboard:
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
-            tblogger_dis_real= SummaryWriter(output_dir, filename_suffix="discriminator_real")
-            tblogger_dis_fake = SummaryWriter(output_dir, filename_suffix="discriminator_real")
-            tblogger_gen = SummaryWriter(output_dir, filename_suffix="generator")
-            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre), filename_suffix="pre")
+            tblogger_dis_real= SummaryWriter(output_dir, filename_suffix="_discriminator_real")
+            tblogger_dis_fake = SummaryWriter(output_dir, filename_suffix="_discriminator_fake")
+            tblogger_gen = SummaryWriter(output_dir, filename_suffix="_generator")
+            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre), filename_suffix="_pre")
 
     ### Training Loop ###
     gan.train()
@@ -852,6 +852,7 @@ def main():
                 outputs_fake = gan(**input_data_fake)
                 training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
                 loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
+                training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
 
                 # train on real data
                 input_data_real, dataiterator_real_discriminator = create_input_data(
@@ -862,6 +863,7 @@ def main():
                 outputs_real = gan(**input_data_real)
                 training_stats_dis_real.UpdateIterStats(out=outputs_real)
                 loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
+                training_stats_dis_real.tb_log_stats(training_stats_dis_real.GetStats(step, lr_D), step)
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
@@ -889,6 +891,7 @@ def main():
             input_data_fake_g.update({"flags": fake_gen_flag})
             outputs_gen = gan(**input_data_fake_g)
             training_stats_gen.UpdateIterStats(out=outputs_gen)
+            training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
             loss_G = outputs_gen['losses']['loss_cls'] + outputs_gen['losses']['loss_bbox']
