@@ -187,7 +187,7 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
         pred_boxes = pred_boxes[inv_index, :]
 
     return scores, pred_boxes, im_scale, (return_dict['blob_conv_pooled'], return_dict['blob_fake'],
-                                          return_dict['bloc_conv_residual'])
+                                          return_dict['blob_conv_residual'])
 
 
 def im_detect_bbox_aug(model, im, box_proposals=None):

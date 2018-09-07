@@ -34,6 +34,6 @@ class GenerateProposalLabelsOp(nn.Module):
         # Note: crowd_thresh=0 will ignore _filter_crowd_proposals
         json_dataset.add_proposals(roidb, rpn_rois, im_scales, crowd_thresh=0)
         blobs = {k: [] for k in output_blob_names}
-        roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb, flag)
+        roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb, flag, cfg.GAN.GAN_MODE_ON)
 
         return blobs
