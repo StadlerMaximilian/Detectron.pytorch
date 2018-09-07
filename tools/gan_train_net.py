@@ -303,7 +303,7 @@ def main():
         'batch_size: %d, NUM_GPUS: %d' % (args.batch_size_G, cfg.NUM_GPUS)
     cfg.GAN.TRAIN.IMS_PER_BATCH_G = args.batch_size_G // cfg.NUM_GPUS
     effective_batch_size_G = args.iter_size * args.batch_size_G
-    print('effective_batch_size_D = batch_size * iter_size = %d * %d' % (args.batch_size_G, args.iter_size))
+    print('effective_batch_size_G = batch_size * iter_size = %d * %d' % (args.batch_size_G, args.iter_size))
 
     print('Adaptive config changes:')
     print('    effective_batch_size: %d --> %d' % (original_batch_size_G, effective_batch_size_G))
@@ -870,7 +870,7 @@ def main():
                 optimizer_D.step()
 
                 training_stats_dis_fake.IterToc()
-                training_stats_dis_real.IterTic()
+                training_stats_dis_real.IterToc()
 
                 if args.online_cleanup:
                     del input_data_fake
