@@ -101,8 +101,6 @@ class Generator(nn.Module):
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
 
-        device_id = im_data.get_device()
-
         return_dict = {}  # A dict to collect return variables
 
         blob_conv, blob_conv_base = self.Conv_Body(im_data)
@@ -117,8 +115,10 @@ class Generator(nn.Module):
         return_dict['blob_conv_pooled'] = blob_conv_pooled
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
+
         if not self.training:
             return_dict['blob_conv_residual'] = blob_conv_residual
+
         return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
         return return_dict

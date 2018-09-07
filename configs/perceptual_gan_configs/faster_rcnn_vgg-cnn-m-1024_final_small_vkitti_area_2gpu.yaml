@@ -74,8 +74,8 @@ GAN:
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
-    MAX_ITER: 7000 #14000
-    STEPS: [0, 3500] #[0, 7000]
+    MAX_ITER: 10000 #20000
+    STEPS: [0, 5000] #[0, 10000]
     PRE_ITER: 3000 #6000 #10000 reduces as loss stays constant quite long after 6000 iterations
     PRE_WARM_UP_ITERS: 500
     WARM_UP_ITERS: 500
