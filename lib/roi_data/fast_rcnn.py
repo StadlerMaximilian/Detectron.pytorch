@@ -22,6 +22,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
 import numpy as np
 import numpy.random as npr
 
@@ -34,6 +35,7 @@ import utils.fpn as fpn_utils
 from utils.gan_utils import ModeFlags
 import math
 
+logger = logging.getLogger(__name__)
 
 def get_fast_rcnn_blob_names(is_training=True):
     """Fast R-CNN blob names."""
@@ -223,7 +225,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_boxes = roidb['boxes'][gt_inds, :]
 
     if cfg.GAN.MODEL.DEBUG:
-        print("sample from {} gt boxes".format(len(gt_boxes)))
+        logger.info("sample from {} gt boxes".format(len(gt_boxes)))
 
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:

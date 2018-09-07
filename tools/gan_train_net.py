@@ -909,7 +909,6 @@ def main():
         del dataset_fake_generator
         del optimizer_G
         del optimizer_D
-        del training_stats
         torch.cuda.empty_cache()
 
         logger.info("Closing dataloader and tfboard if used")
