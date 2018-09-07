@@ -111,8 +111,9 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
 
     if cfg.GAN.MODEL.DEBUG:
-        for key, val in optimizer.state.items():
-            print(key)
+        print(param_keys)
+        for p_key in param_keys:
+            print(optimizer.state[p_key])
 
     for p_key in param_keys:
         optimizer.state[p_key]['momentum_buffer'] *= correction
