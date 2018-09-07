@@ -743,8 +743,6 @@ def main():
                 loss_pre.backward()
                 optimizer_pre.step()
 
-                print(optimizer_pre.state_dict())
-
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStats(step, lr_D=lr_pre, lr_G=0.0)
 
