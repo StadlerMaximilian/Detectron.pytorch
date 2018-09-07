@@ -64,7 +64,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(stats, misc_args, max_iter):
+def log_gan_stats(stats_gen, stats_dis_real, stats_dis_fake, misc_args, max_iter):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
@@ -72,24 +72,58 @@ def log_gan_stats(stats, misc_args, max_iter):
             misc_args.epoch, misc_args.step, misc_args.iters_per_epoch)
     else:
         lines = "[%s][%s][Step %d / %d]\n" % (
-            misc_args.run_name, misc_args.cfg_filename, stats['iter'], max_iter)
+            misc_args.run_name, misc_args.cfg_filename, stats_gen['iter'], max_iter)
 
-    lines += "\t\tlossGenerator: %.6f, lossDiscriminator: % .6f ,lr_D: %.6f, lr_G: %.6f time: %.6f, eta: %s\n" % (
-        stats['loss_generator'], stats['loss_discriminator'], stats['lr_D'], stats['lr_G'], stats['time'], stats['eta']
-    )
-    if stats['metrics']:
-        lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['metrics'].items()) + "\n"
-    if stats['head_losses_G']:
-        lines += "\t\tGenerator: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_G'].items()) + "\n"
-    if stats['head_losses_D']:
-        lines += "\t\tDiscriminator: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses_D'].items()) + "\n"
-    if stats['adv_loss_G']:
-        lines += "\t\tGenerator: " + ", ".join(
-            "%s: %.6f" % (k, v) for k, v in stats['adv_loss_G'].items()) + "\n"
-    if stats['adv_loss_D']:
-        lines += "\t\tDiscriminator: " + ", ".join(
-            "%s: %.6f" % (k, v) for k, v in stats['adv_loss_D'].items()) + "\n"
+    lines += "\t\tlossGenerator: %.6f, lossDiscriminatorReal: % .6f , lossDiscriminatorFake: % .6f, " \
+             "lr_gen: %.6f, lr_dis: %.6f time: %.6f, eta: %s\n" % (
+              stats_gen['loss'], stats_dis_real['loss'], stats_dis_fake['loss'], stats_gen['lr'],
+              stats_dis_real['lr'], stats_gen['time'], stats_gen['eta']
+             )
+    if stats_gen['metrics']:
+        lines += "\t\tmetrics_gen:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items()) + "\n"
+    if stats_dis_fake['metrics']:
+        lines += "metrics_dis_fake: " + ", ".join("%s: %.6f" %
+                                                  (k, v) for k, v in stats_dis_fake['metrics'].items()) +  "\n"
+    if stats_dis_real['metrics']:
+        lines += "metrics_real_real " + ", ".join("%s: %.6f" %
+                                                  (k, v) for k, v in stats_dis_real['metrics'].items()) +  "\n"
+    if stats_gen['head_losses']:
+        lines += "\t\tGenerator_head: " + ", ".join("%s: %.6f" %
+                                                    (k, v) for k, v in stats_gen['head_losses'].items()) + "\n"
+    if stats_dis_fake["head_losses"]:
+        lines += "\t\tDiscriminator_fake_head: " + ", ".join("%s: %.6f" %
+                                                             (k, v) for k, v in stats_dis_fake['head_losses'].items())
+    if stats_dis_real["head_losses"]:
+        lines += "\t\tDiscriminator_real_head: " + ", ".join("%s: %.6f" %
+                                                             (k, v) for k, v in stats_dis_real['head_losses'].items())
+    if stats_gen['adv_loss']:
+        lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
+                                                   (k, v) for k, v in stats_gen['adv_loss'].items()) + "\n"
+    if stats_dis_fake['adv_loss']:
+        lines += "\t\tDiscriminator_fake_adv: " + ", ".join("%s: %.6f" %
+                                                        (k, v) for k, v in stats_dis_fake['adv_loss'].items()) + "\n"
+    if stats_dis_real['adv_loss']:
+        lines += "\t\tDiscriminator_real_adv: " + ", ".join("%s: %.6f" %
+                                                        (k, v) for k, v in stats_dis_real['adv_loss'].items()) + "\n"
+
     print(lines[:-1])  # remove last new line
+
+
+def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, training_stats_dis_real=None,
+                           training_stats_dis_fake=None):
+        if (cur_iter % training_stats_gen.LOG_PERIOD == 0 or
+                cur_iter == training_stats_gen.max_iter - 1):
+            stats_gen = training_stats_gen.GetStats(cur_iter, lr_gen)
+            stats_dis_real = training_stats_dis_real.GetStats(cur_iter, lr_dis)
+            stats_dis_fake = training_stats_dis_fake.GetStats(cur_iter, lr_dis)
+            log_gan_stats(stats_gen, stats_dis_real, stats_dis_fake, training_stats_gen.misc_args,
+                          training_stats_gen.max_iter)
+            if training_stats_gen.tblogger:
+                training_stats_gen.tb_log_stats(stats_gen, cur_iter)
+            if training_stats_dis_real.tblogger:
+                training_stats_dis_real.tb_log_stats(stats_dis_real, cur_iter)
+            if training_stats_dis_fake.tblogger:
+                training_stats_dis_fake.tb_log_stats(stats_dis_fake, cur_iter)
 
 
 class SmoothedValue(object):

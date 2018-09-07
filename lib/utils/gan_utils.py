@@ -83,8 +83,6 @@ class TrainingStats(object):
         self.LOG_PERIOD = log_period
         self.tblogger = tensorboard_logger
         self.tb_ignored_keys = ['iter', 'eta']
-        self.D_losses = ['head_losses_D', 'adv_loss_D']
-        self.G_losses = ['head_losses_G', 'adv_loss_G']
 
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
@@ -93,12 +91,9 @@ class TrainingStats(object):
         def create_smoothed_value():
             return SmoothedValue(self.WIN_SZ)
 
-        self.smoothed_losses_G = defaultdict(create_smoothed_value)
-        self.smoothed_total_loss_G = SmoothedValue(self.WIN_SZ)
-        self.smoothed_losses_D = defaultdict(create_smoothed_value)
-        self.smoothed_metrics_D = defaultdict(create_smoothed_value)
-        self.smoothed_metrics_G = defaultdict(create_smoothed_value)
-        self.smoothed_total_loss_D = SmoothedValue(self.WIN_SZ)
+        self.smoothed_losses = defaultdict(create_smoothed_value)
+        self.smoothed_total_loss = SmoothedValue(self.WIN_SZ)
+        self.smoothed_metrics = defaultdict(create_smoothed_value)
 
     def IterTic(self):
         self.iter_timer.tic()
@@ -109,70 +104,46 @@ class TrainingStats(object):
     def ResetIterTimer(self):
         self.iter_timer.reset()
 
-    def UpdateIterStats(self, out_D=None, out_G=None):
+    def UpdateIterStats(self, out=None):
         """Update tracked iteration statistics."""
-        if out_D is not None:  # first trained on either real/fake images (then set flag)
+        if out is not None:  # first trained on either real/fake images (then set flag)
             total_loss = 0
 
-            for k, loss in out_D['losses'].items():
+            for k, loss in out['losses'].items():
                 assert loss.shape[0] == cfg.NUM_GPUS
                 loss = loss.mean(dim=0, keepdim=True)
                 total_loss += loss
                 loss_data = loss.data[0]
-                out_D['losses'][k] = loss
-                self.smoothed_losses_D[k].AddValue(loss_data)
+                out['losses'][k] = loss
+                self.smoothed_losses[k].AddValue(loss_data)
 
-            out_D['total_loss'] = total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss_D.AddValue(total_loss.data[0])
+            out['total_loss'] = total_loss  # Add the total loss for back propagation
+            self.smoothed_total_loss.AddValue(total_loss.data[0])
 
-            for k, metric in out_D['metrics'].items():
+            for k, metric in out['metrics'].items():
                 metric = metric.mean(dim=0, keepdim=True)
-                self.smoothed_metrics_D[k].AddValue(metric.data[0])
+                self.smoothed_metrics[k].AddValue(metric.data[0])
 
-        elif out_G is not None:
-            total_loss = 0
-
-            for k, loss in out_G['losses'].items():
-                assert loss.shape[0] == cfg.NUM_GPUS
-                loss = loss.mean(dim=0, keepdim=True)
-                total_loss += loss
-                loss_data = loss.data[0]
-                out_G['losses'][k] = loss
-                self.smoothed_losses_G[k].AddValue(loss_data)
-
-            out_G['total_loss'] = total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss_G.AddValue(total_loss.data[0])
-
-            for k, metric in out_G['metrics'].items():
-                metric = metric.mean(dim=0, keepdim=True)
-                self.smoothed_metrics_G[k].AddValue(metric.data[0])
-
-    def LogIterStats(self, cur_iter, lr_D, lr_G):
+    def LogIterStats(self, cur_iter, lr):
         """Log the tracked statistics."""
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == self.max_iter - 1):
-            stats = self.GetStats(cur_iter, lr_D, lr_G)
+            stats = self.GetStats(cur_iter, lr)
             log_gan_stats(stats, self.misc_args, self.max_iter)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
-    def tb_log_stats(self, stats, cur_iter, tag=''):
+    def tb_log_stats(self, stats, cur_iter):
         """Log the tracked statistics to tensorboard"""
         for k in stats:
             if k not in self.tb_ignored_keys:
-                new_tag = tag
-                if k in self.D_losses:
-                    new_tag = '_discriminator'
-                elif k in self.G_losses:
-                    new_tag = '_generator'
-
                 v = stats[k]
                 if isinstance(v, dict):
-                    self.tb_log_stats(v, cur_iter, new_tag)
+                    self.tb_log_stats(v, cur_iter)
                 else:
-                    self.tblogger.add_scalar(k + new_tag, v, cur_iter)
+                    self.tblogger.add_scalar(k, v, cur_iter)
 
-    def GetStats(self, cur_iter, lr_D, lr_G):
+    def GetStats(self, cur_iter, lr):
         eta_seconds = self.iter_timer.average_time * (
             self.max_iter - cur_iter
         )
@@ -181,41 +152,26 @@ class TrainingStats(object):
             iter=cur_iter + 1,  # 1-indexed
             time=self.iter_timer.average_time,
             eta=eta,
-            loss_discriminator=self.smoothed_total_loss_D.GetMedianValue(),
-            loss_generator=self.smoothed_total_loss_G.GetMedianValue(),
-            lr_D=lr_D,
-            lr_G=lr_G
+            loss=self.smoothed_total_loss.GetMedianValue(),
+            lr=lr,
         )
         stats['metrics'] = OrderedDict()
-        for k in sorted(self.smoothed_metrics_D):
-            stats['metrics'][k] = self.smoothed_metrics_D[k].GetMedianValue()
+        for k in sorted(self.smoothed_metrics):
+            stats['metrics'][k] = self.smoothed_metrics[k].GetMedianValue()
 
-        head_losses_D = []
-        head_losses_G = []
-        adv_loss_D = []
-        adv_loss_G = []
+        head_losses = []
+        adv_loss = []
 
-        for k, v in self.smoothed_losses_D.items():
+        for k, v in self.smoothed_losses.items():
             toks = k.split('_')
             if len(toks) == 2 and toks[1] == 'adv':
-                adv_loss_D.append((k, v.GetMedianValue()))
+                adv_loss.append((k, v.GetMedianValue()))
             elif len(toks) == 2:
-                head_losses_D.append((k, v.GetMedianValue()))
+                head_losses.append((k, v.GetMedianValue()))
             else:
                 raise ValueError("Unexpected loss key: %s" % k)
 
-        for k, v in self.smoothed_losses_G.items():
-            toks = k.split('_')
-            if len(toks) == 2 and toks[1] == 'adv':
-                adv_loss_G.append((k, v.GetMedianValue()))
-            elif len(toks) == 2:
-                head_losses_G.append((k, v.GetMedianValue()))
-            else:
-                raise ValueError("Unexpected loss key: %s" % k)
-
-        stats['head_losses_D'] = OrderedDict(head_losses_D)
-        stats['head_losses_G'] = OrderedDict(head_losses_G)
-        stats['adv_loss_D'] = OrderedDict(adv_loss_D)
-        stats['adv_loss_G'] = OrderedDict(adv_loss_G)
+        stats['head_losses'] = OrderedDict(head_losses)
+        stats['adv_loss'] = OrderedDict(adv_loss)
 
         return stats

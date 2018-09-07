@@ -27,7 +27,7 @@ from roi_data.loader import RoiDataLoader, MinibatchSampler, BatchSampler, \
 from modeling.generator import Generator
 from modeling.discriminator import Discriminator
 from modeling.model_builder_gan import GAN
-from utils.logging import setup_logging
+from utils.logging import setup_logging, log_gan_stats_combined
 from utils.timer import Timer
 from utils.gan_utils import TrainingStats, ModeFlags
 from gan_test_net import test_net_routine
@@ -638,8 +638,10 @@ def main():
         if args.use_tfboard:
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
-            tblogger = SummaryWriter(output_dir)
-            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre))
+            tblogger_dis_real= SummaryWriter(output_dir, filename_suffix="discriminator_real")
+            tblogger_dis_fake = SummaryWriter(output_dir, filename_suffix="discriminator_real")
+            tblogger_gen = SummaryWriter(output_dir, filename_suffix="generator")
+            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre), filename_suffix="pre")
 
     ### Training Loop ###
     gan.train()
@@ -736,14 +738,14 @@ def main():
                 outputs_pre = gan(**input_data_pre)
                 # only train perceptual branch
                 # remove adv loss
-                training_stats_pre.UpdateIterStats(out_D=outputs_pre)
+                training_stats_pre.UpdateIterStats(outputs_pre)
                 # train only on the Perceptual Branch
                 loss_pre = outputs_pre['losses']['loss_cls'] + outputs_pre['losses']['loss_bbox']
                 loss_pre.backward()
                 optimizer_pre.step()
 
                 training_stats_pre.IterToc()
-                training_stats_pre.LogIterStats(step, lr_D=lr_pre, lr_G=0.0)
+                training_stats_pre.LogIterStats(step, lr=lr_pre)
 
                 if args.online_cleanup:
                     del input_data_pre
@@ -766,11 +768,23 @@ def main():
                           model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
         # combined training
-        training_stats = TrainingStats(
+        training_stats_dis_real = TrainingStats(
             args,
             args.disp_interval,
             max_iter,
-            tblogger if args.use_tfboard and not args.no_save else None)
+            tblogger_dis_real if args.use_tfboard and not args.no_save else None)
+
+        training_stats_dis_fake = TrainingStats(
+            args,
+            args.disp_interval,
+            max_iter,
+            tblogger_dis_fake if args.use_tfboard and not args.no_save else None)
+
+        training_stats_gen = TrainingStats(
+            args,
+            args.disp_interval,
+            max_iter,
+            tblogger_gen if args.use_tfboard and not args.no_save else None)
 
         logger.info('Combined GAN-training starts now!')
         for step in range(args.start_step, max_iter):
@@ -821,21 +835,22 @@ def main():
                 assert lr_G == lr_new_G
                 decay_steps_ind_G += 1
 
-            training_stats.IterTic()
-
             # train discriminator only on adversarial branch
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
+                training_stats_dis_fake.IterTic()
+                training_stats_dis_real.IterTic()
 
                 # train on fake data
+
                 input_data_fake, dataiterator_fake_discriminator = create_input_data(
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
                 input_data_fake.update({"flags": fake_dis_flag})
                 outputs_fake = gan(**input_data_fake)
-                training_stats.UpdateIterStats(out_D=outputs_fake)
+                training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
                 loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
 
                 # train on real data
@@ -845,12 +860,15 @@ def main():
 
                 input_data_real.update({"flags": real_dis_flag})
                 outputs_real = gan(**input_data_real)
-                training_stats.UpdateIterStats(out_D=outputs_real)
+                training_stats_dis_real.UpdateIterStats(out=outputs_real)
                 loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
                 optimizer_D.step()
+
+                training_stats_dis_fake.IterToc()
+                training_stats_dis_real.IterTic()
 
                 if args.online_cleanup:
                     del input_data_fake
@@ -861,6 +879,8 @@ def main():
                     torch.cuda.empty_cache()
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
+            training_stats_gen.IterToc()
+
             optimizer_G.zero_grad()
             input_data_fake_g, dataiterator_fake_generator = create_input_data(
                 dataiterator_fake_generator, dataloader_fake_generator
@@ -868,13 +888,14 @@ def main():
 
             input_data_fake_g.update({"flags": fake_gen_flag})
             outputs_gen = gan(**input_data_fake_g)
-            training_stats.UpdateIterStats(out_G=outputs_gen)
+            training_stats_gen.UpdateIterStats(out=outputs_gen)
 
             # train generator on Faster R-CNN loss and adversarial loss
             loss_G = outputs_gen['losses']['loss_cls'] + outputs_gen['losses']['loss_bbox']
             loss_G = loss_G + outputs_gen['losses']['loss_adv']
             loss_G.backward()
             optimizer_G.step()
+            training_stats_gen.IterToc()
 
             if args.online_cleanup:
                 del input_data_fake_g
@@ -882,8 +903,10 @@ def main():
                 del loss_G
                 torch.cuda.empty_cache()
 
-            training_stats.IterToc()
-            training_stats.LogIterStats(step, lr_D=lr_D, lr_G=lr_G)
+            log_gan_stats_combined(step, lr_gen=lr_G, lr_dis=lr_D,
+                                   training_stats_dis_real=training_stats_dis_real,
+                                   training_stats_gen=training_stats_gen,
+                                   training_stats_dis_fake=training_stats_dis_fake)
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
