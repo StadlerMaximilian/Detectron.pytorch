@@ -111,6 +111,7 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
 
     for p_key in param_keys:
+        print(p_key)
         optimizer.state[p_key]['momentum_buffer'] *= correction
 
 
