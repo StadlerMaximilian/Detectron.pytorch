@@ -16,6 +16,7 @@ import cv2
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+from collections import defaultdict
 
 import _init_paths
 import nn as mynn
@@ -145,7 +146,7 @@ def vis_features():
 
         output = gan(**inputs)
 
-        output_np = {}
+        output_np = defaultdict()
 
         for key in ['blob_real', 'blob_fake', 'blob_residual', 'rpn_ret']:
             output_np[key] = output[key].data.cpu().numpy()
