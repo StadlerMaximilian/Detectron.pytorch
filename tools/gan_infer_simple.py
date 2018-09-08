@@ -25,7 +25,7 @@ from torch.autograd import Variable
 import _init_paths
 import nn as mynn
 from core.config import cfg, cfg_from_file, cfg_from_list, assert_and_infer_cfg
-from core.test import im_detect_all
+from core.gan_test import im_detect_all
 from modeling.model_builder_gan import GAN
 import datasets.dummy_datasets as datasets
 import utils.misc as misc_utils

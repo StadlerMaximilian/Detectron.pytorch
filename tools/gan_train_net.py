@@ -366,12 +366,10 @@ def main():
 
     timers = defaultdict(Timer)
 
-    num_loaders = 3
-
     # Datasets #
     timers['roidb_real'].tic()
     roidb_real, ratio_list_real, ratio_index_real = combined_roidb_for_training(
-        cfg.GAN.TRAIN.DATASETS_REAL, cfg.TRAIN.PROPOSAL_FILES)
+        cfg.GAN.TRAIN.DATASETS_REAL, cfg.GAN.TRAIN.PROPOSAL_FILES_REAL)
     timers['roidb_real'].toc()
     roidb_size_real = len(roidb_real)
     logger.info('{:d} roidb entries'.format(roidb_size_real))
@@ -414,7 +412,7 @@ def main():
     dataloader_real_discriminator = torch.utils.data.DataLoader(
         dataset_real_discriminator,
         batch_sampler=batchSampler_real_discriminator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
+        num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
@@ -422,7 +420,7 @@ def main():
 
     timers['roidb_fake'].tic()
     roidb_fake, ratio_list_fake, ratio_index_fake = combined_roidb_for_training(
-        cfg.GAN.TRAIN.DATASETS_FAKE, cfg.TRAIN.PROPOSAL_FILES)
+        cfg.GAN.TRAIN.DATASETS_FAKE, cfg.GAN.TRAIN.PROPOSAL_FILES_FAKE)
     timers['roidb_fake'].toc()
     roidb_size_fake = len(roidb_fake)
     logger.info('{:d} roidb entries'.format(roidb_size_fake))
@@ -445,7 +443,7 @@ def main():
     dataloader_fake_discriminator = torch.utils.data.DataLoader(
         dataset_fake_discriminator,
         batch_sampler=batchSampler_fake_discriminator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
+        num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch_discriminator,
         pin_memory=False)
 
@@ -465,7 +463,7 @@ def main():
     dataloader_fake_generator = torch.utils.data.DataLoader(
         dataset_fake_generator,
         batch_sampler=batchSampler_fake_generator,
-        num_workers=int(cfg.DATA_LOADER.NUM_THREADS / num_loaders),
+        num_workers=cfg.DATA_LOADER.NUM_THREADS,
         collate_fn=collate_minibatch_generator,
         pin_memory=False)
 
@@ -699,7 +697,7 @@ def main():
 
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                     requires_grad=False) for _ in range(cfg.NUM_GPUS)]
-        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(1.0),
+        adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
         adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]

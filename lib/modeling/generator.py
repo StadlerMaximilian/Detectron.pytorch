@@ -98,10 +98,10 @@ class Generator(nn.Module):
 
     def _forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         im_data = data
+        return_dict = {}  # A dict to collect return variables
+
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
-
-        return_dict = {}  # A dict to collect return variables
 
         blob_conv, blob_conv_base = self.Conv_Body(im_data)
 

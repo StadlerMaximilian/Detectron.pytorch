@@ -52,9 +52,9 @@ class GAN(nn.Module):
         dis_out = self.discriminator(**input_discriminator)
 
         if not self.training: # if eval only
-            copy_blobs = ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual']
+            copy_blobs = ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual', 'rpn_ret']
             for key in copy_blobs:
-               dis_out[key] = gen_out[key]
+                dis_out[key] = gen_out[key]
 
         return dis_out
 

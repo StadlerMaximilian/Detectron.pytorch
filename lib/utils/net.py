@@ -236,13 +236,17 @@ class roiPoolingLayer(nn.Module):
         self.spatial_scale = spatial_scale
         self.resolution = resolution
 
-    def forward(self, x, rpn_ret):
+    def forward(self, x, rpn_ret, resolution=None, spatial_scale=None):
+        if resolution is None:
+            resolution = self.resolution
+        if spatial_scale is None:
+            spatial_scale = self.spatial_scale
         x = self.roi_xform(
             x, rpn_ret,
             blob_rois='rois',
             method=cfg.FAST_RCNN.ROI_XFORM_METHOD,
-            resolution=self.resolution,
-            spatial_scale=self.spatial_scale,
+            resolution=resolution,
+            spatial_scale=spatial_scale,
             sampling_ratio=cfg.FAST_RCNN.ROI_XFORM_SAMPLING_RATIO
         )
         return x
