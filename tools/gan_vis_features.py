@@ -161,7 +161,7 @@ def vis_features():
         )]
 
         show_heat_maps(output_np['blob_conv_pooled'], output_np['blob_fake'], output_np['blob_conv_residual'],
-                       args.output_dir, "image_{}".format(i), blob_image=None, ext="jpg")
+                       args.output_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg")
 
 
 if __name__ == '__main__':
