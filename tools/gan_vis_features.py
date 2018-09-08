@@ -152,3 +152,7 @@ def vis_features():
         show_heat_maps(output['blob_real'], output['blob_fake'], output['blob_residual'],
                        args.output_dir, "image_{}".format(i), blob_image=None, ext="jpg")
 
+
+if __name__ == '__main__':
+    vis_features()
+
