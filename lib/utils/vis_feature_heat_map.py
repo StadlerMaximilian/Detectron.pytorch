@@ -19,8 +19,11 @@ def create_heat_maps(blob_real, blob_fake, blob_residual):
     map_fake = np.maximum(np.average(blob_fake, axis=0), 0)
     map_residual = np.maximum(np.average(blob_residual, axis=0), 0)
 
-    min = np.min(np.min(map_real), np.min(map_fake), np.min(map_residual))
-    max = np.max(np.max(map_real), np.max(map_fake), np.max(map_residual))
+    min = np.min(map_real, map_fake)
+    min = np.min(min, map_residual)
+
+    max = np.max(map_real, map_fake)
+    max = np.max(max, map_residual)
 
     map_real = (map_real - min) / (max - min)  # Normalize between 0-1
     map_fake = (map_fake - min) / (max - min)
@@ -29,7 +32,7 @@ def create_heat_maps(blob_real, blob_fake, blob_residual):
     map_real = np.uint8(map_real * 255)
     map_fake = np.uint8(map_fake * 255)
     map_residual = np.uint8(map_residual * 255)
-    
+
     return map_real, map_fake, map_residual
 
 
