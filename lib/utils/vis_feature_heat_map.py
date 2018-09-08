@@ -29,8 +29,11 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
 
         if blob_image is not None:
             plt.subplot(1, 4, 1)
-            plt.imshow(blob_image[batch])
-            plt.show()
+            try:
+                plt.imshow(blob_image[batch])
+                plt.show()
+            except ValueError:
+                pass
             plt.title('RoI from Image')
 
             plt.subplot(1, 4, 2)
