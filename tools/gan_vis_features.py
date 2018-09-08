@@ -144,11 +144,17 @@ def vis_features():
             inputs['im_info'] = [torch.from_numpy(inputs['im_info'])]
 
         output = gan(**inputs)
+
+        output_np = {}
+
+        for key in ['blob_real', 'blob_fake', 'blob_residual', 'rpn_ret']:
+            output_np[key] = output[key].data.cpu().numpy()
+
         print(output['rpn_ret'])
 
         #crop_img = img[y:y + h, x:x + w]
 
-        show_heat_maps(output['blob_real'], output['blob_fake'], output['blob_residual'],
+        show_heat_maps(output_np['blob_real'], output_np['blob_fake'], output_np['blob_residual'],
                        args.output_dir, "image_{}".format(i), blob_image=None, ext="jpg")
 
 

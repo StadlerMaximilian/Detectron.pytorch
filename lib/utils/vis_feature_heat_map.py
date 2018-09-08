@@ -14,9 +14,8 @@ def create_heat_map(blob):
     :param blob:
     :return:
     """
-    print(blob.size())
-    map = F.relu(torch.sum(blob, axis=0) / blob.size()[0])
-    map = map.numpy()
+    print(blob.shape)
+    map = np.maximum(np.sum(blob, axis=0) / blob.shape[0], 0)
     map = (map - np.min(map)) / (np.max(map) - np.min(map))  # Normalize between 0-1
     map = np.uint8(map * 255)
     return map

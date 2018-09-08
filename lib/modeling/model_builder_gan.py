@@ -73,8 +73,3 @@ class GAN(nn.Module):
             self.orphans_in_detectron = d_orphan
 
         return self.mapping_to_detectron, self.orphans_in_detectron
-
-    def train(self, mode=True):
-        super().train(mode)
-        self.generator.train(mode)
-        self.discriminator.train(mode)
