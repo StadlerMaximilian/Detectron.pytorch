@@ -6,6 +6,7 @@ import matplotlib.image as mpimg
 import os
 
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
 
 
 def create_heat_map(blob):
@@ -14,7 +15,7 @@ def create_heat_map(blob):
     :param blob:
     :return:
     """
-    map = np.maximum(np.sum(blob, axis=0) / blob.shape[0], 0)
+    map = np.maximum(np.average(blob, axis=0), 0)
     map = (map - np.min(map)) / (np.max(map) - np.min(map))  # Normalize between 0-1
     map = np.uint8(map * 255)
     return map
