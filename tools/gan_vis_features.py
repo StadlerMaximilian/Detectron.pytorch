@@ -93,9 +93,7 @@ def initialize_model_from_cfg(args, gpu_id=0):
     """
     model = GAN()
     model.eval()
-
-    if args.cuda:
-        model.cuda()
+    model.cuda()
 
     if args.load_ckpt:
         load_name = args.load_ckpt
