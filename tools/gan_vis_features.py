@@ -58,7 +58,10 @@ def parse_args():
         help='directory to save demo results',
         default="infer_outputs")
 
-    parser.add_argument('--range', default=1, help='range of images to process', type=int)
+    parser.add_argument(
+        '--range',
+        help='start (inclusive) and end (exclusive) indices',
+        type=int, nargs=2)
 
     args = parser.parse_args()
 
