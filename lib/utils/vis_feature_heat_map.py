@@ -44,7 +44,7 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
             plt.title('Fake RoI')
 
             plt.subplot(1, 4, 4)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jett', interpolation='bilinear')
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Residual RoI')
 
