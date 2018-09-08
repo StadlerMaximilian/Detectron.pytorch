@@ -112,8 +112,6 @@ def vis_features():
     print('Called with args:')
     print(args)
 
-    assert args.image_dir or args.images
-    assert bool(args.image_dir) ^ bool(args.images)
     assert args.load_ckpt
 
     print('load cfg from file: {}'.format(args.cfg_file))
