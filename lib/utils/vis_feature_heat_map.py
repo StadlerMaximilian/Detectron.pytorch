@@ -34,33 +34,33 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
             plt.title('RoI from Image')
 
             plt.subplot(1, 4, 2)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='jet')
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 4, 3)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='jet')
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 4, 4)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jett')
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jett', interpolation='bilinear')
             plt.show()
             plt.title('Residual RoI')
 
         else:
             plt.subplot(1, 3, 1)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='jet')
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 3, 2)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='jet')
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 3, 3)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jet')
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='jet', interpolation='bilinear')
             plt.show()
             plt.title('Residual RoI')
 
