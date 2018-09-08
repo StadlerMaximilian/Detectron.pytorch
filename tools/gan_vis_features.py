@@ -148,8 +148,9 @@ def vis_features():
 
         output_np = defaultdict()
 
-        for key in ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual', 'rpn_ret']:
+        for key in ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual']:
             output_np[key] = output[key].data.cpu().numpy()
+        output_np['rpn_ret'] = output['rpn_ret']
 
         print(output['rpn_ret'])
 
