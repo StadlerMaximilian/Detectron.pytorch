@@ -27,7 +27,7 @@ import utils.misc as misc_utils
 import utils.net as net_utils
 from datasets.json_dataset import JsonDataset
 from core.gan_test import _get_blobs
-from utils.vis_feature_heat_map.py import show_heat_maps
+from utils.vis_feature_heat_map import show_heat_maps
 from modeling.model_builder_gan import GAN
 import utils.vis as vis_utils
 from utils.timer import Timer
