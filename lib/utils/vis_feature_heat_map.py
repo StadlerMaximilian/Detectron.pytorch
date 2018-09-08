@@ -14,7 +14,6 @@ def create_heat_map(blob):
     :param blob:
     :return:
     """
-    print(blob.shape)
     map = np.maximum(np.sum(blob, axis=0) / blob.shape[0], 0)
     map = (map - np.min(map)) / (np.max(map) - np.min(map))  # Normalize between 0-1
     map = np.uint8(map * 255)
@@ -34,33 +33,33 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
             plt.title('RoI from Image')
 
             plt.subplot(1, 4, 4*batch + 2)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 4, 4*batch + 3)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 4, 4*batch + 4)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Residual RoI')
 
         else:
             plt.subplot(1, 3, 3 * batch + 1)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 3, 3 * batch + 2)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 3, 3 * batch + 3)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='heat')
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='hot')
             plt.show()
             plt.title('Residual RoI')
 
