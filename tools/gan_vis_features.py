@@ -151,7 +151,7 @@ def vis_features():
         for key in ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual']:
             output_np[key] = output[key].data.cpu().numpy()
         output_np['rois'] = output['rpn_ret']['rois'].data.cpu().numpy()
-        output_np['rois'] = np.round(output_np['rois'])
+        output_np['rois'] = output_np['rois'].astype(int)
 
         crop_img = im[output_np['rois'][:, 2]:output_np['rois'][:, 4], output_np['rois'][:, 1]:output_np['rois'][:, 3]]
 
