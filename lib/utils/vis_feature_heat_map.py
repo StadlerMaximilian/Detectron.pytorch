@@ -22,7 +22,7 @@ def create_heat_map(blob):
 
 
 def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blob_image=None, ext="jpg"):
-    batch_size = blob_real.size()[0]
+    batch_size = blob_real.shape[0]
 
     for batch in range(batch_size):
         fig = plt.figure(frameon=False)
