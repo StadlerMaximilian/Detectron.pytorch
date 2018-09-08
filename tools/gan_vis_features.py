@@ -133,6 +133,8 @@ def vis_features():
         os.makedirs(args.output_dir)
 
     for i, entry in enumerate(roidb):
+        print("\t Image {} from {} ...".format(i, len(roidb)))
+        
         im = cv2.imread(entry['image'])
 
         inputs, im_scale = _get_blobs(im, None, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
