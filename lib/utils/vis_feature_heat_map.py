@@ -34,33 +34,33 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
             plt.title('RoI from Image')
 
             plt.subplot(1, 4, 4*batch + 2)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 4, 4*batch + 3)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 4, 4*batch + 4)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Residual RoI')
 
         else:
             plt.subplot(1, 3, 3 * batch + 1)
-            plt.imshow(create_heat_map(blob_real[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_real[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Real RoI')
 
             plt.subplot(1, 3, 3 * batch + 2)
-            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_fake[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Fake RoI')
 
             plt.subplot(1, 3, 3 * batch + 3)
-            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]))
+            plt.imshow(create_heat_map(blob_residual[batch, :, :, :]), cmap='heat')
             plt.show()
             plt.title('Residual RoI')
 
