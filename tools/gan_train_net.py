@@ -490,8 +490,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.named_parameters():
-        if key.split('.')[0] == 'discriminator' and value.requires_grad:
+    for key, value in gan.discriminator.named_parameters():
+        if value.requires_grad:
             if 'bias' in key:
                 params_list_D['bias_params'].append(value)
                 params_list_D['bias_param_names'].append(key)
@@ -511,6 +511,7 @@ def main():
     ]
     param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
+    # pre-training: pre-train perceptual branch and generator network
     params_list_pre = {
         'bias_params': [],
         'bias_param_names': [],
@@ -519,8 +520,19 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.named_parameters():
-        if key.split('.')[0] == 'discriminator' and value.requires_grad:
+    for key, value in gan.discriminator.named_parameters():
+        if value.requires_grad:
+            if 'bias' in key:
+                params_list_pre['bias_params'].append(value)
+                params_list_pre['bias_param_names'].append(key)
+            else:
+                params_list_pre['nonbias_params'].append(value)
+                params_list_pre['nonbias_param_names'].append(key)
+        else:
+            params_list_pre['nograd_param_names'].append(key)
+
+    for key, value in gan.generator.named_parameters():
+        if value.requires_grad:
             if 'bias' in key:
                 params_list_pre['bias_params'].append(value)
                 params_list_pre['bias_param_names'].append(key)
@@ -540,7 +552,8 @@ def main():
     ]
     param_names_pre = [params_list_pre['nonbias_param_names'], params_list_pre['bias_param_names']]
 
-    print(param_names_pre)
+    logger.info("Parameters during pre-training")
+    logger.info(param_names_pre)
 
     ### Generator Parameters ###
     params_list_G = {
@@ -551,8 +564,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.named_parameters():
-        if key.split('.')[0] == 'generator' and value.requires_grad:
+    for key, value in gan.generator.named_parameters():
+        if value.requires_grad:
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
                 params_list_G['bias_param_names'].append(key)

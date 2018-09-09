@@ -234,8 +234,9 @@ class ResidualBlock(nn.Module):
         self._init_weights()
 
     def forward(self, x):
+        old = x.copy()
         y = self.block(x)
-        return y + x
+        return y + old
 
     def detectron_weight_mapping(self):
         """ mapping only for being able to load models correctly, original detectron not supported"""
