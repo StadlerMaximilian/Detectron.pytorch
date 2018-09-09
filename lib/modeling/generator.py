@@ -237,7 +237,7 @@ class ResidualBlock(nn.Module):
         self._init_weights()
 
     def forward(self, x):
-        old = x.copy()
+        old = x.clone()
         y = self.block(x)
         return y + old
 
