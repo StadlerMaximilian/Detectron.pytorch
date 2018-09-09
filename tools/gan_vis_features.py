@@ -64,6 +64,12 @@ def parse_args():
         help='start (inclusive) and end (exclusive) indices',
         type=int, nargs=2)
 
+    parser.add_argument(
+        '--pos',
+        help='Flag for visualizing rectified activations.',
+        action='store_true'
+    )
+
     args = parser.parse_args()
 
     return args
@@ -162,7 +168,7 @@ def vis_features():
             output_np['rois'].shape[0]
         )]
         show_heat_maps(output_np['blob_conv_pooled'], output_np['blob_fake'], output_np['blob_conv_residual'],
-                       args.output_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg")
+                       args.output_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg", pos=args.pos)
 
 
 if __name__ == '__main__':
