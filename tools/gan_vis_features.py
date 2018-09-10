@@ -163,6 +163,8 @@ def vis_features():
         output_np['rois'] = output_np['rois'][:, 1:5] / im_scale
         output_np['rois'] = output_np['rois'].astype(int)
 
+        print(output_np['rois'].shape)
+
         crop_img = [im[output_np['rois'][batch, 2]:output_np['rois'][batch, 4],
                     output_np['rois'][batch, 1]:output_np['rois'][batch, 3]] for batch in range(
             output_np['rois'].shape[0]

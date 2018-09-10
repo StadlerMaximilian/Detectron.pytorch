@@ -490,7 +490,7 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.discriminator.named_parameters():
+    for key, value in gan.discriminator.adversarial.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
                 params_list_D['bias_params'].append(value)
@@ -520,18 +520,9 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.discriminator.named_parameters():
-        if value.requires_grad:
-            if 'bias' in key:
-                params_list_pre['bias_params'].append(value)
-                params_list_pre['bias_param_names'].append(key)
-            else:
-                params_list_pre['nonbias_params'].append(value)
-                params_list_pre['nonbias_param_names'].append(key)
-        else:
-            params_list_pre['nograd_param_names'].append(key)
-
-    for key, value in gan.generator.named_parameters():
+    for key, value in {**gan.discriminator.Box_Head.named_parameters(),
+                       **gan.discriminator.Box_Outs.named_parameters(),
+                       **gan.generator.named_parameters()}:
         if value.requires_grad:
             if 'bias' in key:
                 params_list_pre['bias_params'].append(value)
@@ -649,10 +640,14 @@ def main():
         if args.use_tfboard:
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
-            tblogger_dis_real= SummaryWriter(output_dir, filename_suffix="_discriminator_real")
-            tblogger_dis_fake = SummaryWriter(output_dir, filename_suffix="_discriminator_fake")
-            tblogger_gen = SummaryWriter(output_dir, filename_suffix="_generator")
-            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre), filename_suffix="_pre")
+            tblogger_dis_real= SummaryWriter(os.path.join(output_dir, 'log', 'real'),
+                                             filename_suffix="_discriminator_real")
+            tblogger_dis_fake = SummaryWriter(os.path.join(output_dir, 'log', 'fake'),
+                                              filename_suffix="_discriminator_fake")
+            tblogger_gen = SummaryWriter(os.path.join(output_dir, 'log', 'gen'),
+                                         filename_suffix="_generator")
+            tblogger_pre = SummaryWriter(os.path.join(output_dir_pre, 'log', 'pre'),
+                                         filename_suffix="_pre")
 
     ### Training Loop ###
     gan.train()
