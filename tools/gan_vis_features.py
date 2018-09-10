@@ -165,9 +165,15 @@ def vis_features():
 
         print(output_np['rois'].shape)
 
-        crop_img = [im[output_np['rois'][batch, 2]:output_np['rois'][batch, 4],
-                    output_np['rois'][batch, 1]:output_np['rois'][batch, 3]] for batch in range(
-            output_np['rois'].shape[0]
+        if output_np['rois'].shape[1] == 5:
+            crop_img = [im[output_np['rois'][batch, 2]:output_np['rois'][batch, 4],
+                        output_np['rois'][batch, 1]:output_np['rois'][batch, 3]] for batch in range(
+                output_np['rois'].shape[0]
+            )]
+        else:
+            crop_img = [im[output_np['rois'][batch, 1]:output_np['rois'][batch, 3],
+                        output_np['rois'][batch, 0]:output_np['rois'][batch, 2]] for batch in range(
+                output_np['rois'].shape[0]
         )]
         show_heat_maps(output_np['blob_conv_pooled'], output_np['blob_fake'], output_np['blob_conv_residual'],
                        args.output_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg", pos=args.pos)
