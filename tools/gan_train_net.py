@@ -524,6 +524,12 @@ def main():
 
     # pre-train either on perceptual branch and/or Generator_block for Faster R-CNN
     # or pre-train on perceptual branch and conv_body for fast r-cnn
+
+    print(gan.discriminator.Box_Head.named_parameters())
+    print(gan.discriminator.Box_Outs.named_parameters())
+    print(gan.generator.Generator_Block.named_parameters())
+    print(gan.generator.Conv_Body.named_parameters())
+
     if cfg.MODEL.FASTER_RCNN:
         if cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
             pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
