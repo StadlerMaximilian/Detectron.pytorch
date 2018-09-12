@@ -198,7 +198,7 @@ class Generalized_RCNN(nn.Module):
         else:
             # TODO: complete the returns for RPN only situation
             return_dict['rpn_rois'] = rpn_ret['rpn_rois']
-            return_dict['rpn_roi_probs'] = rpn_ret['rpn_rois_probs']
+            return_dict['rpn_roi_probs'] = rpn_ret['rpn_roi_probs']
 
         if self.training:
             return_dict['losses'] = {}
