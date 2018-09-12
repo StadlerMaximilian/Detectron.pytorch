@@ -197,7 +197,8 @@ class Generalized_RCNN(nn.Module):
             cls_score, bbox_pred = self.Box_Outs(box_feat)
         else:
             # TODO: complete the returns for RPN only situation
-            pass
+            return_dict['rpn_rois'] = rpn_ret['rpn_rois']
+            return_dict['rpn_roi_probs'] = rpn_ret['rpn_rois_prob']
 
         if self.training:
             return_dict['losses'] = {}
