@@ -13,27 +13,27 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         self.orphans_in_detectron = None
 
         self.conv1 = nn.Sequential(nn.Conv2d(3, 96, 7, padding=0, stride=2),
-                                   nn.ReLU(inplace=True),
+                                   nn.ReLU(),
                                    nn.LocalResponseNorm(size=5, alpha=0.0005, beta=0.75, k=2.),
                                    nn.MaxPool2d(kernel_size=3, padding=0, stride=2)
                                    )
 
         self.conv2 = nn.Sequential(nn.Conv2d(96, 256, 5, padding=0, stride=2),
-                                   nn.ReLU(inplace=True),
+                                   nn.ReLU(),
                                    nn.LocalResponseNorm(size=5, alpha=0.0005, beta=0.75, k=2.),
                                    nn.MaxPool2d(kernel_size=3, padding=0, stride=2)
                                   )
 
         self.conv3 = nn.Sequential(nn.Conv2d(256, 512, 3, padding=1, stride=1),
-                                   nn.ReLU(inplace=True)
+                                   nn.ReLU()
                                    )
 
         self.conv4 = nn.Sequential(nn.Conv2d(512, 512, 3, padding=1, stride=1),
-                                   nn.ReLU(inplace=True),
+                                   nn.ReLU(),
                                    )
 
         self.conv5 = nn.Sequential(nn.Conv2d(512, 512, 3, padding=1, stride=1),
-                                   nn.ReLU(inplace=True),
+                                   nn.ReLU(),
                                    )
 
         self.spatial_scale = 1. / 16.
@@ -63,7 +63,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         x = self.conv1(x)
 
         if cfg.GAN.GAN_MODE_ON:
-            x_base = x.clone()
+            x_base = x
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)

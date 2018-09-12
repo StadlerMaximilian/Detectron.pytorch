@@ -231,16 +231,16 @@ class ResidualBlock(nn.Module):
 
         self.block = nn.Sequential(nn.Conv2d(in_channels, num, kernel, stride=stride, padding=1),
                                    nn.BatchNorm2d(num),
-                                   nn.ReLU(inplace=True),
+                                   nn.ReLU(),
                                    nn.Conv2d(num, num, kernel, stride=stride, padding=1),
                                    nn.BatchNorm2d(num)
                                    )
         self._init_weights()
 
     def forward(self, x):
-        old = x.clone()
+        residual = x
         y = self.block(x)
-        return y + old
+        return y + residual
 
     def detectron_weight_mapping(self):
         """ mapping only for being able to load models correctly, original detectron not supported"""
@@ -281,9 +281,9 @@ class GeneratorBlock(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
         self.gen_base = nn.Sequential(nn.Conv2d(dim_out_base, 256, 3, padding=1, stride=2),
-                                      nn.ReLU(inplace=True),
+                                      nn.ReLU(),
                                       nn.Conv2d(256, dim_out, 1, padding=0, stride=1),
-                                      nn.ReLU(inplace=True)
+                                      nn.ReLU()
                                       )
         self._init_weights()
 
