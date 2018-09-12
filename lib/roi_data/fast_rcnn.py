@@ -224,13 +224,13 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
-    if cfg.GAN.MODEL.DEBUG:
+    if cfg.DEBUG:
         logger.info("sample from {} gt boxes".format(len(gt_boxes)))
 
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
         area_thres = 1.0 * cfg.GAN.AREA_THRESHOLD * cfg.GAN.AREA_THRESHOLD  # no scaling, as rois are scaled latter
-        #if cfg.GAN.MODEL.DEBUG:
+        #if cfg.DEBUG:
         #    areas, _ = box_utils.boxes_area(gt_boxes)
         #    areas = np.sqrt(areas)
         #    print("area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas))
@@ -260,7 +260,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # i.e. whose corresponding index to gt-box is in gt_keep_inds
 
     if cfg.GAN.AREA_THRESHOLD > 0:
-        #if cfg.GAN.MODEL.DEBUG:
+        #if cfg.DEBUG:
         #    fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
         #    areas_fg, _ = box_utils.boxes_area(fg_boxes)
         #    areas_fg = np.sqrt(areas_fg)
@@ -268,7 +268,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
         fg_inds = np.asarray([x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds]).astype(int)
 
-    #    if cfg.GAN.MODEL.DEBUG:
+    #    if cfg.DEBUG:
     #        fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
     #        areas_fg, _ = box_utils.boxes_area(fg_boxes)
     #        areas_fg = np.sqrt(areas_fg)

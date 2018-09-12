@@ -1,0 +1,85 @@
+MODEL:
+  TYPE: generalized_rcnn
+  CONV_BODY: VGG_CNN_M_1024.VGG_CNN_M_1024_conv5_body
+  NUM_CLASSES: 46
+  FASTER_RCNN: False # for FAST R-CNN
+  BACKBONE_TYPE: 'CNN_M_1024'
+  PRETRAINED_BACKBONE_WEIGHTS: ''
+  PRETRAINED_DETECTRON_WEIGHTS: ''
+NUM_GPUS: 1
+SOLVER:
+  WEIGHT_DECAY: 0.0005 # originally 0.0001 for COCO
+  LR_POLICY: steps_with_decay
+  BASE_LR: 0.00125
+  GAMMA: 0.1
+  MAX_ITER: 2200
+  WARM_UP_ITERS: 100
+  STEPS: [0, 1320, 1760]
+RPN:
+  RPN_ON: False # for FAST R-CNN
+  SIZES: (16, 32, 64, 128, 256)
+FAST_RCNN:
+  ROI_BOX_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_roi_fc_head
+  ROI_XFORM_METHOD: RoIAlign
+TRAIN:
+  DATASETS: ('tt100k_trainval_ignore_complete_overfit',)
+  SCALES: (1600,)
+  MAX_SIZE: 1600
+  IMS_PER_BATCH: 1
+  BATCH_SIZE_PER_IM: 128
+  SNAPSHOT_ITERS: 300
+  USE_FLIPPED: False
+TEST:
+  DATASETS: ('tt100k_trainval_ignore_complete_overfit',)
+  SCALE: 1600
+  MAX_SIZE: 1600
+  NMS: 0.5
+  RPN_PRE_NMS_TOP_N: 6000
+  RPN_POST_NMS_TOP_N: 1000
+OUTPUT_DIR: . # insert path in run command
+CUSTOM_DATA:
+  FORCE_TEST: True
+  FORCE_JSON_DATASET_EVAL: True
+# options specifically for Perceptual GAN version
+GAN:
+  GAN_MODE_ON: True
+  AREA_THRESHOLD: 55
+  MODEL:
+    CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
+    LABEL_SMOOTHING: 0.9
+    DEBUG: False
+  TRAIN:
+    DATASETS_REAL: ('tt100k_trainval_ignore_complete_overfit_large',)
+    DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit_small',)
+    IMS_PER_BATCH_PRE: 1
+    BATCH_SIZE_PER_IM_PRE: 128
+    FG_FRACTION_PRE: 0.25
+    IMS_PER_BATCH_D: 2
+    BATCH_SIZE_PER_IM_D: 8
+    FG_FRACTION_D: 1.0
+    IMS_PER_BATCH_G: 1
+    BATCH_SIZE_PER_IM_G: 128
+    FG_FRACTION_G: 0.25
+    SNAPSHOT_ITERS: 5000
+  SOLVER:
+    TYPE_G: 'SGD'
+    TYPE_D: 'SGD'
+    TYPE_PRE: 'SGD'
+    WEIGHT_DECAY_D: 0.0005
+    WEIGHT_DECAY_G: 0.0005
+    WEIGHT_DECAY_PRE: 0.0005
+    LR_POLICY_G: steps_with_decay
+    LR_POLICY_D: steps_with_decay
+    LR_POLICY_PRE: steps_with_decay
+    BASE_LR_D: 0.0001
+    BASE_LR_G: 0.0001
+    BASE_LR_PRE: 0.00125
+    GAMMA_D: 0.1
+    GAMMA_G: 0.1
+    GAMMA_PRE: 0.1
+    MAX_ITER: 400
+    STEPS: [0, 200]
+    PRE_ITER: 450
+    PRE_WARM_UP_ITERS: 20
+    WARM_UP_ITERS: 20
+    STEPS_PRE: [0, 220, 330]

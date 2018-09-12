@@ -90,6 +90,7 @@ class Generator(nn.Module):
         # finaly freeze Conv_Body and RPN
         if cfg.GAN.TRAIN.FREEZE_CONV_BODY:
             freeze_params(self.Conv_Body)
+        if cfg.MODEL.FASTER_RCNN and cfg.GAN.TRAIN.FREEZE_RPN:
             freeze_params(self.RPN)
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
@@ -116,7 +117,7 @@ class Generator(nn.Module):
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
 
-        if cfg.GAN.MODEL.DEBUG:
+        if cfg.DEBUG:
             print("\t\t ResidualShape: {}".format(blob_conv_residual.size()))
 
         if not self.training:
@@ -264,9 +265,9 @@ class ResidualBlock(nn.Module):
 
     def _init_weights(self):
         init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.block[0].bias, 0)
+        init.constant_(self.block[0].bias, 0)
         init.kaiming_uniform_(self.block[3].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.block[3].bias, 0)
+        init.constant_(self.block[3].bias, 0)
 
 ########################################################################################################################
 
@@ -295,9 +296,9 @@ class GeneratorBlock(nn.Module):
 
     def _init_weights(self):
         init.kaiming_uniform_(self.gen_base[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.gen_base[0].bias, 0)
+        init.constant_(self.gen_base[0].bias, 0)
         init.kaiming_uniform_(self.gen_base[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.gen_base[2].bias, 0)
+        init.constant_(self.gen_base[2].bias, 0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)

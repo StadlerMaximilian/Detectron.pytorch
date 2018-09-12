@@ -166,8 +166,17 @@ class Generalized_RCNN(nn.Module):
         else:
             blob_conv = self.Conv_Body(im_data)
 
-        rpn_ret = self.RPN(blob_conv, im_info, roidb)
+        if cfg.RPN.RPN_ON:
+            rpn_ret = self.RPN(blob_conv, im_info, roidb)
+        else:
+            rpn_ret = {}
+            # rois blob: holds R regions of interest, each is a 5-tuple
+            # (batch_idx, x1, y1, x2, y2) specifying an image batch index and a
+            # rectangle (x1, y1, x2, y2)
+            # TODO!!!
 
+        if not self.training:
+            return_dict['rpn_ret'] = rpn_ret
         # if self.training:
         #     # can be used to infer fg/bg ratio
         #     return_dict['rois_label'] = rpn_ret['labels_int32']

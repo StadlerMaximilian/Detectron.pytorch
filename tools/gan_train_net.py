@@ -472,16 +472,18 @@ def main():
 
     # Model
     # only load pre-trained discriminator explicitly specified
-    if args.init_dis_pretrained:
-        gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
-                  discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
-    else:
-        gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+    if cfg.MODEL.FASTER_RCNN:
+        if args.init_dis_pretrained:
+            gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
+                      discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+        else:
+            gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+    else: # if Fast R-CNN, start with new model
+        gan = GAN()
 
     if cfg.CUDA:
         gan.cuda()
 
-    # Discriminator Parameters
     params_list_D = {
         'bias_params': [],
         'bias_param_names': [],
@@ -490,6 +492,7 @@ def main():
         'nograd_param_names': []
     }
 
+    # train discriminator only on adversarial branch
     for key, value in gan.discriminator.adversarial.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
@@ -511,7 +514,6 @@ def main():
     ]
     param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
-    # pre-training: pre-train perceptual branch and generator network
     params_list_pre = {
         'bias_params': [],
         'bias_param_names': [],
@@ -520,9 +522,22 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in {**gan.discriminator.Box_Head.named_parameters(),
-                       **gan.discriminator.Box_Outs.named_parameters(),
-                       **gan.generator.named_parameters()}:
+    # pre-train either on perceptual branch and/or Generator_block for Faster R-CNN
+    # or pre-train on perceptual branch and conv_body for fast r-cnn
+    if cfg.MODEL.FASTER_RCNN:
+        if cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
+            pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
+                                **gan.discriminator.Box_Outs.named_parameters(),
+                                **gan.generator.Generator_Block.named_parameters()}
+        else:
+            pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
+                                **gan.discriminator.Box_Outs.named_parameters()}
+    else:
+        pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
+                            **gan.discriminator.Box_Outs.named_parameters(),
+                            **gan.generator.Conv_Body.named_parameters()}
+
+    for key, value in pre_named_params:
         if value.requires_grad:
             if 'bias' in key:
                 params_list_pre['bias_params'].append(value)
@@ -546,7 +561,6 @@ def main():
     logger.info("Parameters during pre-training")
     logger.info(param_names_pre)
 
-    ### Generator Parameters ###
     params_list_G = {
         'bias_params': [],
         'bias_param_names': [],
@@ -555,7 +569,8 @@ def main():
         'nograd_param_names': []
     }
 
-    for key, value in gan.generator.named_parameters():
+    # train generator only on generator network (generator block)
+    for key, value in gan.generator.Generator_Block.named_parameters():
         if value.requires_grad:
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
@@ -574,10 +589,10 @@ def main():
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_G + 1),
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0}
     ]
-    # names of parameters for each parameter
+
     param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
 
-    ### Optimizers ###
+    # Optimizers
     if cfg.GAN.SOLVER.TYPE_G == "SGD":
         optimizer_G = torch.optim.SGD(params_G, momentum=cfg.GAN.SOLVER.MOMENTUM_G)
     elif cfg.GAN.SOLVER.TYPE_G == "Adam":
@@ -599,8 +614,10 @@ def main():
     else:
         raise ValueError("INVALID Optimizer_pre specified. Must be SGD or Adam!")
 
-    ### Load checkpoint
+    # Load checkpoint
+    # loading checkpoint is only possible for combined gan training
     if args.load_ckpt:
+        args.init_dis_pretrained = True
         load_name = args.load_ckp
         logging.info("loading checkpoint %s", load_name)
         checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
@@ -620,7 +637,7 @@ def main():
     gan = mynn.DataParallel(gan, cpu_keywords=['im_info', 'roidb'],
                             minibatch=True)
 
-    ### Training Setups ###
+    # Training Setups
     args.run_name = misc_utils.get_run_name() + '_step'
     output_dir = misc_utils.get_output_dir(args, args.run_name)
     output_dir_pre = os.path.join(output_dir, 'pre')
@@ -866,29 +883,29 @@ def main():
 
                 # train on fake data
 
-                input_data_fake, dataiterator_fake_discriminator = create_input_data(
+                input_data, dataiterator_fake_discriminator = create_input_data(
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
-                input_data_fake.update({"flags": fake_dis_flag,
+                input_data.update({"flags": fake_dis_flag,
                                         "adv_target": adv_target_fake}
                                        )
-                outputs_fake = gan(**input_data_fake)
-                training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
-                loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
+                outputs = gan(**input_data)
+                training_stats_dis_fake.UpdateIterStats(out=outputs)
+                loss_fake = outputs['losses']['loss_adv']  # adversarial loss for discriminator
                 training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
 
                 # train on real data
-                input_data_real, dataiterator_real_discriminator = create_input_data(
+                input_data, dataiterator_real_discriminator = create_input_data(
                     dataiterator_real_discriminator, dataloader_real_discriminator
                 )
 
-                input_data_real.update({"flags": real_dis_flag,
+                input_data.update({"flags": real_dis_flag,
                                        "adv_target": adv_target_real}
                                        )
-                outputs_real = gan(**input_data_real)
-                training_stats_dis_real.UpdateIterStats(out=outputs_real)
-                loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
+                outputs = gan(**input_data)
+                training_stats_dis_real.UpdateIterStats(out=outputs)
+                loss_real = outputs['losses']['loss_adv']  # adversarial loss for discriminator
                 training_stats_dis_real.tb_log_stats(training_stats_dis_real.GetStats(step, lr_D), step)
 
                 loss_D = loss_real + loss_fake
@@ -899,8 +916,8 @@ def main():
                 training_stats_dis_real.IterToc()
 
                 if args.online_cleanup:
-                    del input_data_fake
-                    del input_data_real
+                    del input_data
+                    del outputs
                     del loss_real
                     del loss_fake
                     del loss_D
@@ -910,27 +927,27 @@ def main():
             training_stats_gen.IterTic()
 
             optimizer_G.zero_grad()
-            input_data_fake_g, dataiterator_fake_generator = create_input_data(
+            input_data, dataiterator_fake_generator = create_input_data(
                 dataiterator_fake_generator, dataloader_fake_generator
             )
 
-            input_data_fake_g.update({"flags": fake_gen_flag,
+            input_data.update({"flags": fake_gen_flag,
                                       "adv_target": adv_target_gen}
                                      )
-            outputs_gen = gan(**input_data_fake_g)
-            training_stats_gen.UpdateIterStats(out=outputs_gen)
+            outputs = gan(**input_data)
+            training_stats_gen.UpdateIterStats(out=outputs)
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
-            loss_G = outputs_gen['losses']['loss_cls'] + outputs_gen['losses']['loss_bbox']
-            loss_G = loss_G + outputs_gen['losses']['loss_adv']
+            loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox']
+            loss_G = loss_G + outputs['losses']['loss_adv']
             loss_G.backward()
             optimizer_G.step()
             training_stats_gen.IterToc()
 
             if args.online_cleanup:
-                del input_data_fake_g
-                del outputs_gen
+                del input_data
+                del outputs
                 del loss_G
                 torch.cuda.empty_cache()
 

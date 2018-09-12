@@ -31,8 +31,8 @@ import yaml
 import torch
 
 from core.config import cfg
-# from core.rpn_generator import generate_rpn_on_dataset  #TODO: for rpn only case
-# from core.rpn_generator import generate_rpn_on_range
+from core.rpn_generator import generate_rpn_on_dataset
+from core.rpn_generator import generate_rpn_on_range
 from core.test import im_detect_all
 from datasets import task_evaluation
 from datasets.json_dataset import JsonDataset
@@ -52,9 +52,8 @@ logger = logging.getLogger(__name__)
 def get_eval_functions():
     # Determine which parent or child function should handle inference
     if cfg.MODEL.RPN_ONLY:
-        raise NotImplementedError
-        # child_func = generate_rpn_on_range
-        # parent_func = generate_rpn_on_dataset
+        child_func = generate_rpn_on_range
+        parent_func = generate_rpn_on_dataset
     else:
         # Generic case that handles all network types other than RPN-only nets
         # and RetinaNet

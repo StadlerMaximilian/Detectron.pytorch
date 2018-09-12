@@ -45,7 +45,7 @@ class Discriminator(nn.Module):
         return_dict = {}
 
         batch_size = blob_conv.size(0)
-        if self.training and cfg.GAN.MODEL.DEBUG:
+        if self.training and cfg.DEBUG:
             # debug: batch_size and fg-fraction
             fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
             print("batch-size in discriminator: {} (fg: {}%)".format(batch_size,
@@ -63,6 +63,10 @@ class Discriminator(nn.Module):
             return_dict['metrics'] = {}
 
             loss_adv = self.adversarial_loss(adv_score, adv_target)
+
+            # do not consider background rois in adversarial loss
+            mask = (rpn_ret['labels_int32'] == 0)
+            loss_adv = loss_adv[mask]
 
             return_dict['losses']['loss_adv'] = loss_adv
 
@@ -129,9 +133,9 @@ class Discriminator(nn.Module):
         initialize layers before ReLU activation with kaiming initialization
         """
         init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.adversarial[0].bias, 0)
+        init.constant_(self.adversarial[0].bias, 0)
         init.kaiming_uniform_(self.adversarial[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.adversarial[2].bias, 0)
+        init.constant_(self.adversarial[2].bias, 0)
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:
