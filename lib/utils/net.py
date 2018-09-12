@@ -198,14 +198,22 @@ def load_ckpt(model, ckpt):
             except KeyError:
                 name_parts = name.split('.')
                 i = 0
-                for name in name_parts:
+                for name_m in name_parts:
                     i += 1
-                    if name == "Box_Head":
+                    if name_m == "Box_Head":
                         break
                 name_parts.insert(i, "fc_head")
                 name_modified = '.'.join(name_parts)
-                if mapping[name_modified]:
-                    state_dict[name_modified] = ckpt[name]
+                try:
+                    if mapping[name_modified]:
+                        state_dict[name_modified] = ckpt[name]
+                except KeyError as e:
+                    if cfg.MODEL.RPN_ONLY and ("Box_Head" in name or "Box_Outs" in name):
+                        pass
+                    else:
+                        raise e
+
+
 
     model.load_state_dict(state_dict, strict=False)
 
