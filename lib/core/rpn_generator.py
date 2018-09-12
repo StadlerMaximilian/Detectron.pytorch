@@ -45,6 +45,8 @@ from utils.io import save_object
 from utils.timer import Timer
 from modeling.model_builder import Generalized_RCNN
 import utils.net as net_utils
+import nn as mynn
+from utils.detectron_weight_helper import load_caffe2_detectron_weights
 import utils.blob as blob_utils
 import utils.env as envu
 import utils.subprocess as subprocess_utils
@@ -53,13 +55,12 @@ logger = logging.getLogger(__name__)
 
 
 def generate_rpn_on_dataset(
-    weights_file,
-    dataset_name,
-    _proposal_file_ignored,
-    output_dir,
-    multi_gpu=False,
-    gpu_id=0
-):
+        args,
+        dataset_name,
+        proposal_file,
+        output_dir,
+        multi_gpu=False,
+        gpu_id=0):
     """Run inference on a dataset."""
     dataset = JsonDataset(dataset_name)
     test_timer = Timer()
@@ -67,17 +68,12 @@ def generate_rpn_on_dataset(
     if multi_gpu:
         num_images = len(dataset.get_roidb())
         _boxes, _scores, _ids, rpn_file = multi_gpu_generate_rpn_on_dataset(
-            weights_file, dataset_name, _proposal_file_ignored, num_images,
-            output_dir
+            args, dataset_name, proposal_file, output_dir
         )
     else:
         # Processes entire dataset range by default
         _boxes, _scores, _ids, rpn_file = generate_rpn_on_range(
-            weights_file,
-            dataset_name,
-            _proposal_file_ignored,
-            output_dir,
-            gpu_id=gpu_id
+            args, dataset_name, proposal_file, output_dir, gpu_id=gpu_id
         )
     test_timer.toc()
     logger.info('Total inference time: {:.3f}s'.format(test_timer.average_time))
@@ -85,7 +81,7 @@ def generate_rpn_on_dataset(
 
 
 def multi_gpu_generate_rpn_on_dataset(
-    weights_file, dataset_name, _proposal_file_ignored, num_images, output_dir
+    args, dataset_name, proposal_file, num_images, output_dir
 ):
     """Multi-gpu inference on a dataset."""
     # Retrieve the test_net binary path
@@ -95,10 +91,14 @@ def multi_gpu_generate_rpn_on_dataset(
     binary = os.path.join(binary_dir, 'tools/test_net' + binary_ext)
     assert os.path.exists(binary), 'Binary \'{}\' not found'.format(binary)
 
+    # Pass the target dataset and proposal file (if any) via the command line
+    opts = ['TEST.DATASETS', '("{}",)'.format(dataset_name)]
+    if proposal_file:
+        opts += ['TEST.PROPOSAL_FILES', '("{}",)'.format(proposal_file)]
+
     # Run inference in parallel in subprocesses
-    # opts is not set
     outputs = subprocess_utils.process_in_parallel(
-        'rpn_proposals', num_images, binary, output_dir, weights_file, None
+        'rpn_proposals', num_images, binary, output_dir, args.load_ckpt, args.load_detectron, opts
     )
 
     # Collate the results from each subprocess
@@ -117,13 +117,12 @@ def multi_gpu_generate_rpn_on_dataset(
 
 
 def generate_rpn_on_range(
-    weights_file,
-    dataset_name,
-    _proposal_file_ignored,
-    output_dir,
-    ind_range=None,
-    gpu_id=0
-):
+        args,
+        dataset_name,
+        proposal_file,
+        output_dir,
+        ind_range=None,
+        gpu_id=0):
     """Run inference on all images in a dataset or over an index range of images
     in a dataset using a single GPU.
     """
@@ -136,19 +135,10 @@ def generate_rpn_on_range(
         'Output will be saved to: {:s}'.format(os.path.abspath(output_dir))
     )
 
-    maskRCNN = Generalized_RCNN()
-    if cfg.CUDA:
-        maskRCNN.cuda(device=gpu_id)
-
-    load_name = weights_file
-    logging.info("loading checkpoint %s", load_name)
-    checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
-    net_utils.load_ckpt(maskRCNN, checkpoint['model'])
-    del checkpoint
-    torch.cuda.empty_cache()
+    model = initialize_model_from_cfg(args, gpu_id=gpu_id)
 
     boxes, scores, ids = generate_proposals_on_roidb(
-        maskRCNN,
+        model,
         roidb,
         start_ind=start_ind,
         end_ind=end_ind,
@@ -170,8 +160,7 @@ def generate_rpn_on_range(
 
 
 def generate_proposals_on_roidb(
-    model, roidb, start_ind=None, end_ind=None, total_num_images=None,
-    gpu_id=0,
+    model, roidb, start_ind=None, end_ind=None, total_num_images=None
 ):
     """Generate RPN proposals on all images in an imdb."""
     _t = Timer()
@@ -257,3 +246,28 @@ def evaluate_proposal_file(dataset, proposal_file, output_dir):
     recall_file = os.path.join(output_dir, 'rpn_proposal_recall.pkl')
     save_object(results, recall_file)
     return results
+
+
+def initialize_model_from_cfg(args, gpu_id=0):
+    """Initialize a model from the global cfg. Loads test-time weights and
+    set to evaluation mode.
+    """
+    model = model_builder.Generalized_RCNN()
+    model.eval()
+
+    if args.cuda:
+        model.cuda()
+
+    if args.load_ckpt:
+        load_name = args.load_ckpt
+        logger.info("loading checkpoint %s", load_name)
+        checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(model, checkpoint['model'])
+
+    if args.load_detectron:
+        logger.info("loading detectron weights %s", args.load_detectron)
+        load_caffe2_detectron_weights(model, args.load_detectron)
+
+    model = mynn.DataParallel(model, cpu_keywords=['im_info', 'roidb'], minibatch=True)
+
+    return model
