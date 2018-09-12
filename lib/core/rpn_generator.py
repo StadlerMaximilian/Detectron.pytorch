@@ -68,12 +68,16 @@ def generate_rpn_on_dataset(
     if multi_gpu:
         num_images = len(dataset.get_roidb())
         _boxes, _scores, _ids, rpn_file = multi_gpu_generate_rpn_on_dataset(
-            args, dataset_name, proposal_file, output_dir
+            args, dataset_name, proposal_file, num_images, output_dir
         )
     else:
         # Processes entire dataset range by default
         _boxes, _scores, _ids, rpn_file = generate_rpn_on_range(
-            args, dataset_name, proposal_file, output_dir, gpu_id=gpu_id
+            args,
+            dataset_name,
+            proposal_file,
+            output_dir,
+            gpu_id=gpu_id
         )
     test_timer.toc()
     logger.info('Total inference time: {:.3f}s'.format(test_timer.average_time))
@@ -81,24 +85,21 @@ def generate_rpn_on_dataset(
 
 
 def multi_gpu_generate_rpn_on_dataset(
-    args, dataset_name, proposal_file, num_images, output_dir
-):
+        args, dataset_name, proposal_file, num_images, output_dir):
     """Multi-gpu inference on a dataset."""
     # Retrieve the test_net binary path
     binary_dir = envu.get_runtime_dir()
     binary_ext = envu.get_py_bin_ext()
-    #TODO: note that code can only be run from root dir of detectron_pytorch!!
-    binary = os.path.join(binary_dir, 'tools/test_net' + binary_ext)
+    binary = os.path.join(binary_dir, 'test_net' + binary_ext)
     assert os.path.exists(binary), 'Binary \'{}\' not found'.format(binary)
 
-    # Pass the target dataset and proposal file (if any) via the command line
+    # Pass the target dataset via the command line
     opts = ['TEST.DATASETS', '("{}",)'.format(dataset_name)]
-    if proposal_file:
-        opts += ['TEST.PROPOSAL_FILES', '("{}",)'.format(proposal_file)]
 
     # Run inference in parallel in subprocesses
     outputs = subprocess_utils.process_in_parallel(
-        'rpn_proposals', num_images, binary, output_dir, args.load_ckpt, args.load_detectron, opts
+        'rpn_proposals', num_images, binary, output_dir,
+         args.load_ckpt, args.load_detectron, opts
     )
 
     # Collate the results from each subprocess
@@ -142,8 +143,7 @@ def generate_rpn_on_range(
         roidb,
         start_ind=start_ind,
         end_ind=end_ind,
-        total_num_images=total_num_images,
-        gpu_id=gpu_id,
+        total_num_images=total_num_images
     )
 
     cfg_yaml = yaml.dump(cfg)
