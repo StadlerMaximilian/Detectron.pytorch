@@ -217,15 +217,13 @@ def im_proposals(model, im):
         boxes = blobs['rpn_rois'].float()
         scores = blobs['rpn_roi_probs'].float()
 
-    print(boxes)
-    print(scores)
     # Column 0 is the batch index in the (batch ind, x1, y1, x2, y2) encoding,
     # so we remove it since we just want to return boxes
     # Scale proposals back to the original input image scale
     if boxes.size()[1] == 4:
-        boxes = [box[:] / im_scale for box in boxes]
+        boxes = boxes[:, :] / im_scale[0]
     else:
-        boxes = [box[1:] / im_scale for box in boxes]
+        boxes = boxes[:, 1:] / im_scale[0]
     return boxes, scores
 
 
