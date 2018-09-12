@@ -36,6 +36,8 @@ import scipy.sparse
 import utils.env as envu
 envu.set_up_matplotlib()
 # COCO API
+import torch
+
 from pycocotools import mask as COCOmask
 from pycocotools.coco import COCO
 
@@ -339,6 +341,8 @@ class JsonDataset(object):
             if i % 2500 == 0:
                 logger.info(' {:d}/{:d}'.format(i + 1, len(roidb)))
             boxes = proposals['boxes'][i]
+            if isinstance(boxes, torch.Tensor):
+                boxes = boxes.numpy()
             # Sanity check that these boxes are for the correct image id
             assert entry['id'] == proposals[id_field][i]
             # Remove duplicate boxes and very small boxes and then take top k
