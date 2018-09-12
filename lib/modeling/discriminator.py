@@ -3,6 +3,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch
+import numpy as np
 
 from core.config import cfg
 from modeling.model_builder import get_func, compare_state_dict, check_inference, Generalized_RCNN
@@ -64,7 +65,7 @@ class Discriminator(nn.Module):
             # as scalar loss is returned from loss function
             # workaround: set adv_scores to target value
             # use index 0, as adv_target is expected to include only instances with same value
-            mask = (rpn_ret['labels_int32'] == 0)
+            mask = np.where(rpn_ret['labels_int32'] == 0)
             adv_score[mask] = adv_target[0]
 
             return_dict['losses'] = {}
