@@ -44,7 +44,7 @@ from modeling import model_builder
 from utils.io import save_object
 from utils.timer import Timer
 from modeling.model_builder import Generalized_RCNN
-import utils.net_utils as net_utils
+import utils.net as net_utils
 import utils.blob as blob_utils
 import utils.c2 as c2_utils
 import utils.env as envu
