@@ -36,6 +36,7 @@ import os
 import yaml
 
 import torch
+from torch.autograd import Variable
 
 from core.config import cfg
 from datasets import task_evaluation
@@ -198,9 +199,15 @@ def generate_proposals_on_roidb(
 
 def im_proposals(model, im):
     """Generate RPN proposals on a single image."""
-    inputs = {}
-    inputs['data'], im_scale, inputs['im_info'] = \
-        blob_utils.get_image_blob(im, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
+
+    inputs, im_scale = _get_blobs(im, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
+
+    if cfg.PYTORCH_VERSION_LESS_THAN_040:
+        inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
+        inputs['im_info'] = [Variable(torch.from_numpy(inputs['im_info']), volatile=True)]
+    else:
+        inputs['data'] = [torch.from_numpy(inputs['data'])]
+        inputs['im_info'] = [torch.from_numpy(inputs['im_info'])]
 
     blobs = model(**inputs)
 
@@ -272,3 +279,11 @@ def initialize_model_from_cfg(args, gpu_id=0):
     model = mynn.DataParallel(model, cpu_keywords=['im_info', 'roidb'], minibatch=True)
 
     return model
+
+
+def _get_blobs(im, target_scale, target_max_size):
+    """Convert an image and RoIs within that image into network inputs."""
+    blobs = {}
+    blobs['data'], im_scale, blobs['im_info'] = \
+        blob_utils.get_image_blob(im, target_scale, target_max_size)
+    return blobs, im_scale
