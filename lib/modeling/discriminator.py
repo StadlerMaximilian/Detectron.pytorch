@@ -172,4 +172,4 @@ class Discriminator(nn.Module):
         return_dict['losses'][key] = value
 
     def adversarial_loss(self, blob, target):
-        return F.binary_cross_entropy(blob, target, reduction='none')
+        return F.binary_cross_entropy(blob, target, reduce=False)
