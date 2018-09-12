@@ -43,6 +43,13 @@ def save_object(obj, file_name):
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
+def save_object_simple(obj, file_name):
+    """Save a Python object by pickling it."""
+    file_name = os.path.abspath(file_name)
+    with open(file_name, 'w') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+
 def cache_url(url_or_file, cache_dir):
     """Download the file specified by the URL to the cache_dir and return the
     path to the cached file. If the argument is not a URL, simply return it as

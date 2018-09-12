@@ -42,7 +42,7 @@ from core.config import cfg
 from datasets import task_evaluation
 from datasets.json_dataset import JsonDataset
 from modeling import model_builder
-from utils.io import save_object
+from utils.io import save_object_simple
 from utils.timer import Timer
 from modeling.model_builder import Generalized_RCNN
 import utils.net as net_utils
@@ -112,7 +112,7 @@ def multi_gpu_generate_rpn_on_dataset(
         ids += rpn_data['ids']
     rpn_file = os.path.join(output_dir, 'rpn_proposals.pkl')
     cfg_yaml = yaml.dump(cfg)
-    save_object(
+    save_object_simple(
         dict(boxes=boxes, scores=scores, ids=ids, cfg=cfg_yaml), rpn_file
     )
     logger.info('Wrote RPN proposals to {}'.format(os.path.abspath(rpn_file)))
@@ -154,7 +154,7 @@ def generate_rpn_on_range(
     else:
         rpn_name = 'rpn_proposals.pkl'
     rpn_file = os.path.join(output_dir, rpn_name)
-    save_object(
+    save_object_simple(
         dict(boxes=boxes, scores=scores, ids=ids, cfg=cfg_yaml), rpn_file
     )
     logger.info('Wrote RPN proposals to {}'.format(os.path.abspath(rpn_file)))
@@ -252,7 +252,7 @@ def evaluate_proposal_file(dataset, proposal_file, output_dir):
     results = task_evaluation.evaluate_box_proposals(dataset, roidb)
     task_evaluation.log_box_proposal_results(results)
     recall_file = os.path.join(output_dir, 'rpn_proposal_recall.pkl')
-    save_object(results, recall_file)
+    save_object_simple(results, recall_file)
     return results
 
 
