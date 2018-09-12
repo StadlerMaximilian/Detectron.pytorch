@@ -66,11 +66,9 @@ class Discriminator(nn.Module):
 
             # do not consider background rois in adversarial loss
             # as scalar loss is returned from loss function
-            # workaround: set adv_scores to target value
-            # use index 0, as adv_target is expected to include only instances with same value
             loss_adv = self.adversarial_loss(adv_score, adv_target)
             mask = np.where( rpn_ret['labels_int32'] == 0)
-            loss_adv[mask] = adv_target.data[0]
+            loss_adv[mask] = 0
             loss_adv = loss_adv.mean()
 
             return_dict['losses']['loss_adv'] = loss_adv
