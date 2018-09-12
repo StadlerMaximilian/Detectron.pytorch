@@ -515,6 +515,9 @@ def main():
     ]
     param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
 
+    logger.info("Parameters discriminator is trained on")
+    logger.info(param_names_D)
+
     params_list_pre = {
         'bias_params': [],
         'bias_param_names': [],
@@ -593,6 +596,8 @@ def main():
     ]
 
     param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
+    logger.info("Parameters generator is trained on")
+    logger.info(param_names_G)
 
     # Optimizers
     if cfg.GAN.SOLVER.TYPE_G == "SGD":

@@ -32,9 +32,9 @@ class GAN(nn.Module):
 
             outputs_gen = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
 
-            if flags.real_mode and not flags.train_pre:
+            if flags.real_mode:
                 blob_conv = outputs_gen['blob_conv_pooled']
-            elif flags.fake_mode or flags.train_pre:
+            elif flags.fake_mode:
                 blob_conv = outputs_gen['blob_fake']
 
             rpn_ret = outputs_gen['rpn_ret']
