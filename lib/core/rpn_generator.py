@@ -97,11 +97,10 @@ def multi_gpu_generate_rpn_on_dataset(
 
     # Pass the target dataset via the command line
     opts = ['TEST.DATASETS', '("{}",)'.format(dataset_name)]
-    opts += ['TEST.WEIGHTS', weights_file]
 
     # Run inference in parallel in subprocesses
     outputs = subprocess_utils.process_in_parallel(
-        'rpn_proposals', num_images, binary, output_dir, opts
+        'rpn_proposals', num_images, binary, output_dir, weights_file, None, opts
     )
 
     # Collate the results from each subprocess
