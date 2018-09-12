@@ -46,9 +46,7 @@ from utils.timer import Timer
 from modeling.model_builder import Generalized_RCNN
 import utils.net as net_utils
 import utils.blob as blob_utils
-import utils.c2 as c2_utils
 import utils.env as envu
-import utils.net as nu
 import utils.subprocess as subprocess_utils
 
 logger = logging.getLogger(__name__)
@@ -190,10 +188,9 @@ def generate_proposals_on_roidb(
     for i in range(num_images):
         roidb_ids[i] = roidb[i]['id']
         im = cv2.imread(roidb[i]['image'])
-        with c2_utils.NamedCudaScope(gpu_id):
-            _t.tic()
-            roidb_boxes[i], roidb_scores[i] = im_proposals(model, im)
-            _t.toc()
+        _t.tic()
+        roidb_boxes[i], roidb_scores[i] = im_proposals(model, im)
+        _t.toc()
         if i % 10 == 0:
             ave_time = _t.average_time
             eta_seconds = ave_time * (num_images - i - 1)
