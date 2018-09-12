@@ -59,14 +59,18 @@ class Discriminator(nn.Module):
         if self.training:
             if adv_target is None:
                 raise ValueError("adv_target must not be None during training!!")
+
+            # do not consider background rois in adversarial loss
+            # as scalar loss is returned from loss function
+            # workaround: set adv_scores to target value
+            # use index 0, as adv_target is expected to include only instances with same value
+            mask = (rpn_ret['labels_int32'] == 0)
+            adv_score[mask] = adv_target[0]
+
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
             loss_adv = self.adversarial_loss(adv_score, adv_target)
-
-            # do not consider background rois in adversarial loss
-            mask = (rpn_ret['labels_int32'] == 0)
-            loss_adv = loss_adv[mask]
 
             return_dict['losses']['loss_adv'] = loss_adv
 
