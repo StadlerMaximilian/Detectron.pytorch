@@ -9,6 +9,7 @@ import traceback
 import logging
 import time
 from collections import defaultdict
+from itertools import chain
 
 import yaml
 import torch
@@ -525,23 +526,18 @@ def main():
     # pre-train either on perceptual branch and/or Generator_block for Faster R-CNN
     # or pre-train on perceptual branch and conv_body for fast r-cnn
 
-    print(gan.discriminator.Box_Head.named_parameters())
-    print(gan.discriminator.Box_Outs.named_parameters())
-    print(gan.generator.Generator_Block.named_parameters())
-    print(gan.generator.Conv_Body.named_parameters())
-
     if cfg.MODEL.FASTER_RCNN:
         if cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
-            pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
-                                **gan.discriminator.Box_Outs.named_parameters(),
-                                **gan.generator.Generator_Block.named_parameters()}
+            pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
+                                     gan.discriminator.Box_Outs.named_parameters(),
+                                     gan.generator.Generator_Block.named_parameters())
         else:
-            pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
-                                **gan.discriminator.Box_Outs.named_parameters()}
+            pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
+                                     gan.discriminator.Box_Outs.named_parameters())
     else:
-        pre_named_params = {**gan.discriminator.Box_Head.named_parameters(),
-                            **gan.discriminator.Box_Outs.named_parameters(),
-                            **gan.generator.Conv_Body.named_parameters()}
+        pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
+                                 gan.discriminator.Box_Outs.named_parameters(),
+                                 gan.generator.Conv_Body.named_parameters())
 
     for key, value in pre_named_params:
         if value.requires_grad:
