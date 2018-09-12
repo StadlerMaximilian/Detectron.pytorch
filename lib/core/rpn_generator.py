@@ -95,12 +95,10 @@ def multi_gpu_generate_rpn_on_dataset(
     binary = os.path.join(binary_dir, 'tools/test_net' + binary_ext)
     assert os.path.exists(binary), 'Binary \'{}\' not found'.format(binary)
 
-    # Pass the target dataset via the command line
-    opts = ['TEST.DATASETS', '("{}",)'.format(dataset_name)]
-
     # Run inference in parallel in subprocesses
+    # opts is not set
     outputs = subprocess_utils.process_in_parallel(
-        'rpn_proposals', num_images, binary, output_dir, weights_file, None, opts
+        'rpn_proposals', num_images, binary, output_dir, weights_file, None
     )
 
     # Collate the results from each subprocess
