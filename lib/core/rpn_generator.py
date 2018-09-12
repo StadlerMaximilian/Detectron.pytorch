@@ -214,8 +214,8 @@ def im_proposals(model, im):
     if cfg.FPN.FPN_ON and cfg.FPN.MULTILEVEL_RPN:
         raise NotImplementedError
     else:
-        boxes = blobs['rpn_rois']
-        scores = blobs['rpn_roi_probs']
+        boxes = blobs['rpn_rois'].float()
+        scores = blobs['rpn_roi_probs'].float()
 
     # Column 0 is the batch index in the (batch ind, x1, y1, x2, y2) encoding,
     # so we remove it since we just want to return boxes
