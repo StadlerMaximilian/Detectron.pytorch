@@ -189,8 +189,14 @@ def load_ckpt(model, ckpt):
                 name_parts = name.split('.')
                 name_parts = [x for x in name_parts if x != "fc_head"]
                 name_modified = '.'.join(name_parts)
-                if mapping[name_modified]:
-                    state_dict[name_modified] = ckpt[name]
+                try:
+                    if mapping[name_modified]:
+                        state_dict[name_modified] = ckpt[name]
+                except KeyError as e:
+                    if cfg.MODEL.RPN_ONLY and ("Box_Head" in name or "Box_Outs" in name):
+                        pass
+                    else:
+                        raise e
         else:
             try:
                 if mapping[name]:
