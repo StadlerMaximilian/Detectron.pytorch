@@ -136,9 +136,10 @@ def generate_rpn_on_range(
     """
     assert cfg.MODEL.RPN_ONLY or cfg.MODEL.FASTER_RCNN
 
-    output_dir = os.path.join(output_dir, dataset_name)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not args.multi_gpu_testing:
+        output_dir = os.path.join(output_dir, dataset_name)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
     roidb, start_ind, end_ind, total_num_images = get_roidb(
         dataset_name, ind_range
