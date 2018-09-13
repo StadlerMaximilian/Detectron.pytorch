@@ -98,7 +98,12 @@ def run_inference(
             all_results = {}
             for i in range(len(cfg.TEST.DATASETS)):
                 dataset_name, proposal_file = get_inference_dataset(i)
-                output_dir = args.output_dir
+
+                # save each output for each dataset in subdir
+                output_dir = os.path.join(args.output_dir, dataset_name)
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
                 results = parent_func(
                     args,
                     dataset_name,
@@ -114,7 +119,12 @@ def run_inference(
             # In this case test_net was called via subprocess.Popen to execute on a
             # range of inputs on a single dataset
             dataset_name, proposal_file = get_inference_dataset(0, is_parent=False)
-            output_dir = args.output_dir
+
+            # save each output for each dataset in subdir
+            output_dir = os.path.join(args.output_dir, dataset_name)
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
             return child_func(
                 args,
                 dataset_name,

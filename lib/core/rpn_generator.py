@@ -64,10 +64,6 @@ def generate_rpn_on_dataset(
         gpu_id=0):
     """Run inference on a dataset."""
 
-    output_dir = os.path.join(output_dir, dataset_name)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
     dataset = JsonDataset(dataset_name)
     test_timer = Timer()
     test_timer.tic()
@@ -130,16 +126,12 @@ def generate_rpn_on_range(
         proposal_file,
         output_dir,
         ind_range=None,
-        gpu_id=0):
+        gpu_id=0
+):
     """Run inference on all images in a dataset or over an index range of images
     in a dataset using a single GPU.
     """
     assert cfg.MODEL.RPN_ONLY or cfg.MODEL.FASTER_RCNN
-
-    if not args.multi_gpu_testing:
-        output_dir = os.path.join(output_dir, dataset_name)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
 
     roidb, start_ind, end_ind, total_num_images = get_roidb(
         dataset_name, ind_range
