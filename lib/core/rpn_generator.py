@@ -63,6 +63,11 @@ def generate_rpn_on_dataset(
         multi_gpu=False,
         gpu_id=0):
     """Run inference on a dataset."""
+
+    output_dir = os.path.join(output_dir, dataset_name)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     dataset = JsonDataset(dataset_name)
     test_timer = Timer()
     test_timer.tic()
@@ -110,7 +115,7 @@ def multi_gpu_generate_rpn_on_dataset(
         boxes += rpn_data['boxes']
         scores += rpn_data['scores']
         ids += rpn_data['ids']
-    rpn_file = os.path.join(output_dir, 'rpn_proposals_{}.pkl'.format(dataset_name))
+    rpn_file = os.path.join(output_dir, 'rpn_proposals.pkl')
     cfg_yaml = yaml.dump(cfg)
     save_object(
         dict(boxes=boxes, scores=scores, ids=ids, cfg=cfg_yaml), rpn_file
@@ -131,6 +136,10 @@ def generate_rpn_on_range(
     """
     assert cfg.MODEL.RPN_ONLY or cfg.MODEL.FASTER_RCNN
 
+    output_dir = os.path.join(output_dir, dataset_name)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     roidb, start_ind, end_ind, total_num_images = get_roidb(
         dataset_name, ind_range
     )
@@ -150,7 +159,7 @@ def generate_rpn_on_range(
 
     cfg_yaml = yaml.dump(cfg)
     if ind_range is not None:
-        rpn_name = 'rpn_proposals_{}_range_{}_{}.pkl'.format(dataset_name, ind_range[0], ind_range[1])
+        rpn_name = 'rpn_proposals_range_{}_{}.pkl'.format(ind_range[0], ind_range[1])
     else:
         rpn_name = 'rpn_proposals.pkl'
     rpn_file = os.path.join(output_dir, rpn_name)
