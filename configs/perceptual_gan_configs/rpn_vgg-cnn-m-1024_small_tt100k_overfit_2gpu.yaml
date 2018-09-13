@@ -30,8 +30,7 @@ TRAIN:
   SNAPSHOT_ITERS: 300
   USE_FLIPPED: False
 TEST:
-  DATASETS: {'tt100k_test_ignore_complete_overfit', 'tt100k_trainval_ignore_complete_overfit',
-              'tt100k_trainval_ignore_complete_overfit_small', 'tt1100k_trainval_ignore_complete_overfit_large'}
+  DATASETS: ('tt100k_test_ignore_complete_overfit', 'tt100k_trainval_ignore_complete_overfit', 'tt100k_trainval_ignore_complete_overfit_small', 'tt1100k_trainval_ignore_complete_overfit_large')
   SCALE: 1600
   MAX_SIZE: 1600
   NMS: 0.5
