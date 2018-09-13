@@ -110,7 +110,7 @@ def multi_gpu_generate_rpn_on_dataset(
         boxes += rpn_data['boxes']
         scores += rpn_data['scores']
         ids += rpn_data['ids']
-    rpn_file = os.path.join(output_dir, 'rpn_proposals.pkl')
+    rpn_file = os.path.join(output_dir, 'rpn_proposals_{}.pkl'.format(dataset_name))
     cfg_yaml = yaml.dump(cfg)
     save_object(
         dict(boxes=boxes, scores=scores, ids=ids, cfg=cfg_yaml), rpn_file
@@ -150,7 +150,7 @@ def generate_rpn_on_range(
 
     cfg_yaml = yaml.dump(cfg)
     if ind_range is not None:
-        rpn_name = 'rpn_proposals_range_%s_%s.pkl' % tuple(ind_range)
+        rpn_name = 'rpn_proposals_{}_range_{}_{}.pkl'.format(dataset_name, ind_range[0], ind_range[1])
     else:
         rpn_name = 'rpn_proposals.pkl'
     rpn_file = os.path.join(output_dir, rpn_name)
@@ -251,7 +251,7 @@ def evaluate_proposal_file(dataset, proposal_file, output_dir):
     roidb = dataset.get_roidb(gt=True, proposal_file=proposal_file)
     results = task_evaluation.evaluate_box_proposals(dataset, roidb)
     task_evaluation.log_box_proposal_results(results)
-    recall_file = os.path.join(output_dir, 'rpn_proposal_recall.pkl')
+    recall_file = os.path.join(output_dir, 'rpn_proposal_{}_recall.pkl'.format(dataset.name))
     save_object(results, recall_file)
     return results
 
