@@ -120,7 +120,7 @@ def run_inference(
             # range of inputs on a single dataset
             dataset_name, proposal_file = get_inference_dataset(0, is_parent=False)
             output_dir = args.output_dir
-            
+
             return child_func(
                 args,
                 dataset_name,
