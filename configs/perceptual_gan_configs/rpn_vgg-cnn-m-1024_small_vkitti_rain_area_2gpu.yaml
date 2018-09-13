@@ -29,8 +29,7 @@ TRAIN:
   SNAPSHOT_ITERS: 3300
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('vkitti_rain_test', 'vkitti_rain_trainval', 'vkitti_rain_trainval_small',
-             'vkitti_rain_trainval_large')
+  DATASETS: ('vkitti_rain_test', 'vkitti_rain_trainval', 'vkitti_rain_trainval_small', 'vkitti_rain_trainval_large')
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3

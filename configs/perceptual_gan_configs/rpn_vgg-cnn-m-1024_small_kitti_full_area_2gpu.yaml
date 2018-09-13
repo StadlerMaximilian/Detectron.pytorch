@@ -29,8 +29,7 @@ TRAIN:
   SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('kitti_test_ignore_complete', 'kitti_trainval_ignore_complete',
-             'kitti_trainval_ignore_complete_small', 'kitti_trainval_ignore_complete_large')
+  DATASETS: ('kitti_test_ignore_complete', 'kitti_trainval_ignore_complete', 'kitti_trainval_ignore_complete_small', 'kitti_trainval_ignore_complete_large')
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3
