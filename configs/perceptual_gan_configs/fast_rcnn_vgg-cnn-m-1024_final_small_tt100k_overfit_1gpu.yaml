@@ -23,7 +23,7 @@ FAST_RCNN:
   ROI_XFORM_METHOD: RoIAlign
 TRAIN:
   DATASETS: ('tt100k_trainval_ignore_complete_overfit',)
-  PROPOSAL_FILES: (/home/max/Detectron_pytorch_output/tt100k_overfit/faster_rcnn_vgg-cnn-m-1024_final_small_tt100k_overfit_2gpu/Sep02-13-17-19_deepBrain_step/testing/rpn_proposals.pkl,)
+  PROPOSAL_FILES: ('/home/max/Detectron_pytorch_output/tt100k_overfit/faster_rcnn_vgg-cnn-m-1024_final_small_tt100k_overfit_2gpu/Sep02-13-17-19_deepBrain_step/testing/rpn_proposals.pkl', )
   SCALES: (1600,)
   MAX_SIZE: 1600
   IMS_PER_BATCH: 1
