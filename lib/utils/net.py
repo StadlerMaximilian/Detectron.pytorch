@@ -178,8 +178,7 @@ def load_ckpt(model, ckpt):
     if cfg.GAN.GAN_MODE_ON:
         mapping, _ = model.detectron_weight_mapping()
     else:
-        print(model)
-        mapping, _ = model.detectron_weight_mapping()  #originally without ()
+        mapping, _ = model.detectron_weight_mapping
     state_dict = {}
     for name in ckpt:
         if "fc_head" in name:
