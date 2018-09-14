@@ -12,6 +12,7 @@ from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
 import modeling.rpn_heads as rpn_heads
 import utils.net as net_utils
 import utils.blob as blob_utils
+import detectron_weight_helper as weight_utils
 
 
 def get_func(func_name):
@@ -72,6 +73,8 @@ class Generator(nn.Module):
         also freezes weights of Conv_Body and RPN
         """
         if pretrained_weights is None:
+            if cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS:
+                weight_utils.load_caffe2_pretrained_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
             return
 
         pretrained_detectron = torch.load(pretrained_weights)

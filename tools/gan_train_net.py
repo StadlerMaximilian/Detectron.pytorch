@@ -94,7 +94,6 @@ def parse_args():
 
     parser.add_argument(
         '--load_pretrained', help='path to pretrained detectron model .pth',
-        required=True
     )
 
     parser.add_argument(
@@ -251,6 +250,8 @@ def main():
             raise ValueError("Specified pretrained detectron model does not exists")
         else:
             cfg.GAN.TRAIN.PRETRAINED_WEIGHTS = args.load_pretrained
+
+    assert args.load_pretrained ^ cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS
 
     cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
