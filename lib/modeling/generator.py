@@ -125,7 +125,8 @@ class Generator(nn.Module):
             rois = rpn_kwargs['rois']
 
             if isinstance(rois, torch.Tensor):
-                #rois = torch.cat(tuple([rois[i] for i in range(rois.shape[0])]), 0)
+                print("rois: {}".format(rois.size()))
+                rois = torch.cat(tuple([rois[i] for i in range(rois.size[0])]), 0)
                 rpn_ret['rois'] = rois.cpu().numpy()
 
             else:
@@ -142,7 +143,7 @@ class Generator(nn.Module):
                 #rpn_ret['bbox_inside_weights'] = np.concatenate(tuple([inside[i] for i in range(inside.shape[0])]), axis=0)
                 #rpn_ret['bbox_outside_weights'] = np.concatenate(tuple([outside[i] for i in range(outside.shape[0])]), axis=0)
 
-            print("rois: {}, labels: {}".format(rois, rpn_ret['labels_int32']))
+            print("rois: {}, labels: {}".format(rois.shape, rpn_ret['labels_int32'].shape))
 
         return_dict['rpn_ret'] = rpn_ret
 
