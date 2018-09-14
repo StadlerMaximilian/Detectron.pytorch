@@ -119,9 +119,15 @@ class Generator(nn.Module):
 
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
+            for key, value in rpn_ret.items():
+                if isinstance(value, torch.Tensor):
+                    print("{}: {}".format(key, value.size()))
+                else:
+                    print("{}: {}".format(key, value.shape))
         else:
             rpn_ret = {}
             rois = rpn_kwargs['rois']
+
 
             if isinstance(rois, torch.Tensor):
                 if rois.size()[0] == 1:
