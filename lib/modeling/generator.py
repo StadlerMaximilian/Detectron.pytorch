@@ -132,15 +132,15 @@ class Generator(nn.Module):
                 rpn_ret['rois'] = rois
 
             if self.training:
-                labels = rpn_kwargs['labels_int32']
-                targets = rpn_kwargs['bbox_targets']
-                inside = rpn_kwargs['bbox_inside_weights']
-                outside = rpn_kwargs['bbox_outside_weights']
+                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
+                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets']
+                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
+                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
 
-                rpn_ret['labels_int32'] = np.concatenate(tuple([labels[i] for i in range(labels.shape[0])]), axis=0)
-                rpn_ret['bbox_targets'] = np.concatenate(tuple([targets[i] for i in range(targets.shape[0])]), axis=0)
-                rpn_ret['bbox_inside_weights'] = np.concatenate(tuple([inside[i] for i in range(inside.shape[0])]), axis=0)
-                rpn_ret['bbox_outside_weights'] = np.concatenate(tuple([outside[i] for i in range(outside.shape[0])]), axis=0)
+                #rpn_ret['labels_int32'] = np.concatenate(tuple([labels[i] for i in range(labels.shape[0])]), axis=0)
+                #rpn_ret['bbox_targets'] = np.concatenate(tuple([targets[i] for i in range(targets.shape[0])]), axis=0)
+                #rpn_ret['bbox_inside_weights'] = np.concatenate(tuple([inside[i] for i in range(inside.shape[0])]), axis=0)
+                #rpn_ret['bbox_outside_weights'] = np.concatenate(tuple([outside[i] for i in range(outside.shape[0])]), axis=0)
 
         return_dict['rpn_ret'] = rpn_ret
 
