@@ -173,6 +173,9 @@ class Generalized_RCNN(nn.Module):
             rpn_ret['rois']  = rpn_kwargs['rois'].cpu().numpy()
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].cpu().numpy()
+                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets']
+                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
+                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
