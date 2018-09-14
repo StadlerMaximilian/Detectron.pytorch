@@ -335,7 +335,7 @@ class JsonDataset(object):
         with open(proposal_file, 'rb') as f:
             proposals = pickle.load(f)
 
-        for key, value in proposals:
+        for key, value in proposals.items():
             if isinstance(value, torch.Tensor):
                 proposals[key] = value.numpy()
 
