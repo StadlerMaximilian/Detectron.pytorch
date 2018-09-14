@@ -170,7 +170,12 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
             rpn_ret = {}
-            rpn_ret['rois'] = rpn_kwargs['rois'].cpu().numpy().squeeze(axis=0)
+            rois = rpn_kwargs['rois']
+            if isinstance(rois, torch.Tensor):
+                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
+            else:
+                rpn_ret['rois'] = rois.squeeze(axis=0)
+
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
                 rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
