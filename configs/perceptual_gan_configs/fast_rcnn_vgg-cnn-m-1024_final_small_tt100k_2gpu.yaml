@@ -22,6 +22,7 @@ FAST_RCNN:
   ROI_XFORM_METHOD: RoIAlign
 TRAIN:
   DATASETS: ('tt100k_trainval_ignore_complete',)
+  PROPOSAL_FILES: ('data/proposals/tt100k_trainval_ignore_complete/rpn_proposals.pkl',)
   SCALES: (1600,)
   MAX_SIZE: 1600
   IMS_PER_BATCH: 1
@@ -30,6 +31,7 @@ TRAIN:
   USE_FLIPPED: False
 TEST:
   DATASETS: ('tt100k_test_ignore_complete',)
+  PROPOSAL_FILES: ('data/proposals/tt100k_test_ignore_complete/rpn_proposals.pkl',)
   SCALE: 1600
   MAX_SIZE: 1600
   NMS: 0.5
@@ -47,7 +49,9 @@ GAN:
     LABEL_SMOOTHING: 0.9
   TRAIN:
     DATASETS_REAL: ('tt100k_trainval_ignore_complete_large',)
+    PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_large/rpn_proposals.pkl',)
     DATASETS_FAKE: ('tt100k_trainval_ignore_complete_small',)
+    PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_small/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25

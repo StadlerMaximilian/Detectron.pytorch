@@ -22,14 +22,16 @@ FAST_RCNN:
   ROI_XFORM_METHOD: RoIAlign
 TRAIN:
   DATASETS: ('vkitti_clone_trainval',)
+  PROPOSAL_FILES: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
   SCALES: (370,)
   MAX_SIZE: 1242
   IMS_PER_BATCH: 1
   BATCH_SIZE_PER_IM: 128
-  SNAPSHOT_ITERS: 3300
+  SNAPSHOT_ITERS: 6600
   USE_FLIPPED: False
 TEST:
   DATASETS: ('vkitti_clone_test',)
+  PROPOSAL_FILES: ('data/proposals/vkitti_clone_test/rpn_proposals.pkl',)
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3
@@ -48,7 +50,9 @@ GAN:
     LABEL_SMOOTHING: 0.9
   TRAIN:
     DATASETS_REAL: ('vkitti_clone_trainval_large',)
+    PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval_large/rpn_proposals.pkl',)
     DATASETS_FAKE: ('vkitti_clone_trainval_small',)
+    PROPOSAL_FILES_FAKE: ('data/proposals/vkitti_clone_trainval_small/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25

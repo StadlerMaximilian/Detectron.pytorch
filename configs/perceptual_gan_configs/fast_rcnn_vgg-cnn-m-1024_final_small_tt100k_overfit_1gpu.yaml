@@ -32,7 +32,7 @@ TRAIN:
   USE_FLIPPED: False
 TEST:
   DATASETS: ('tt100k_trainval_ignore_complete_overfit',)
-  PROPOSAL_FILES: ("data/proposals/tt100k_test_ignore_complete_overfit/rpn_proposals.pkl", )
+  PROPOSAL_FILES: ("data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl", )
   SCALE: 1600
   MAX_SIZE: 1600
   NMS: 0.5
@@ -52,7 +52,9 @@ GAN:
     DEBUG: False
   TRAIN:
     DATASETS_REAL: ('tt100k_trainval_ignore_complete_overfit_large',)
+    PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_overfit_large/rpn_proposals.pkl',)
     DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit_small',)
+    PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_overfit_small/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
