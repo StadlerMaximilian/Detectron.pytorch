@@ -124,12 +124,8 @@ class Generator(nn.Module):
             rois = rpn_kwargs['rois']
 
             if isinstance(rois, torch.Tensor):
-                if cfg.DEBUG:
-                    print(rois.size())
-                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
+                rpn_ret['rois'] = rois.cpu().numpy()
             else:
-                if cfg.DEBUG:
-                    print(rois.shape)
                 rpn_ret['rois'] = rois
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
