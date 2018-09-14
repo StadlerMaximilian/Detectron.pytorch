@@ -16,7 +16,12 @@ class GAN(nn.Module):
 
         self.generator = Generator(generator_weights)
         resolution = self.generator.Conv_Body.resolution
-        dim_in = self.generator.RPN.dim_out
+
+        if cfg.RPN.RPN_ON:
+            dim_in = self.generator.RPN.dim_out
+        else:
+            dim_in = self.generator.Conv_Body.dim_out
+
         self.discriminator = Discriminator(dim_in, resolution, discriminator_weights)
 
     def forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):

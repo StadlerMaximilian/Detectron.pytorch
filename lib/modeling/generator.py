@@ -96,7 +96,7 @@ class Generator(nn.Module):
         torch.cuda.empty_cache()
 
         # finaly freeze Conv_Body and RPN
-        if cfg.GAN.TRAIN.FREEZE_CONV_BODY:
+        if cfg.RPN.RPN_ON and cfg.GAN.TRAIN.FREEZE_CONV_BODY:
             freeze_params(self.Conv_Body)
         if cfg.MODEL.FASTER_RCNN and cfg.GAN.TRAIN.FREEZE_RPN:
             freeze_params(self.RPN)
