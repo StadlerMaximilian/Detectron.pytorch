@@ -120,33 +120,27 @@ class Generator(nn.Module):
 
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
-            for key, value in rpn_ret.items():
-                if isinstance(value, torch.Tensor):
-                    print("{}: {}".format(key, value.size()))
-                elif isinstance(value, list):
-                    print("{}_list: {}".format(key, len(value)))
-                elif isinstance(value, np.ndarray):
-                    print("{}: {}".format(key, value.shape))
-                else:
-                    print("{}".format(key))
         else:
             rpn_ret = {}
             rois = rpn_kwargs['rois']
 
-
             if isinstance(rois, torch.Tensor):
-                if rois.size()[0] == 1:
-                    rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
-                else:
-                    rpn_ret['rois'] = rois.cpu().numpy()
+                rois = torch.cat(tuple([rois[i] for i in range(rois.shape[0])]), axis=0)
+                rpn_ret['rois'] = rois.cpu().numpy()
 
             else:
                 rpn_ret['rois'] = rois
+
             if self.training:
-                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
-                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
-                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].squeeze(dim=0)
-                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].squeeze(dim=0)
+                labels = rpn_kwargs['labels_int32']
+                targets = rpn_kwargs['bbox_targets']
+                inside = rpn_kwargs['bbox_inside_weights']
+                outside = rpn_kwargs['bbox_outide_weights']
+
+                rpn_ret['labels_int32'] = np.concatenate(tuple([labels[i] for i in range(labels.shape[0])]), axis=0)
+                rpn_ret['bbox_targets'] = np.concatenate(tuple([targets[i] for i in range(targets.shape[0])]), axis=0)
+                rpn_ret['bbox_inside_weights'] = np.concatenate(tuple([inside[i] for i in range(inside.shape[0])]), axis=0)
+                rpn_ret['bbox_outside_weights'] = np.concatenate(tuple([outside[i] for i in range(outside.shape[0])]), axis=0)
 
         return_dict['rpn_ret'] = rpn_ret
 
