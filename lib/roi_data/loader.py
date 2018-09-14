@@ -35,8 +35,6 @@ class RoiDataLoader(data.Dataset):
                 if (blobs[key].shape[0]) == 1:
                     blobs[key] = blobs[key].squeeze(axis=0)
 
-        print(blobs)
-
         if self._roidb[index]['need_crop']:
             self.crop_data(blobs, ratio)
             # Check bounding box
