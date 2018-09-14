@@ -129,7 +129,7 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
 
     inputs, im_scale = _get_blobs(im, boxes, target_scale, target_max_size)
 
-    print(inputs)
+    print(inputs['rois'])
 
     if cfg.DEDUP_BOXES > 0 and not cfg.MODEL.FASTER_RCNN:
         v = np.array([1, 1e3, 1e6, 1e9, 1e12])
@@ -139,6 +139,8 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
         )
         inputs['rois'] = inputs['rois'][index, :]
         boxes = boxes[index, :]
+
+    print(inputs['rois'])
 
     # Add multi-level rois for FPN
     if cfg.FPN.MULTILEVEL_ROIS and not cfg.MODEL.FASTER_RCNN:
