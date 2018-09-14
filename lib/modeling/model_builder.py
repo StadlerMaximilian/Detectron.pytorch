@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+import numpy as np
 
 from core.config import cfg
 from model.roi_pooling.functions.roi_pool import RoIPoolFunction
@@ -175,9 +176,9 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
             else:
                 # during testing, no batch-idx is used
-                rpn_ret['rois'] = rois[1:4]
+                rpn_ret['rois'] = np.expand_dims(rois, axis=0)
 
-            print(rpn_ret['rois'])
+            print(rpn_ret['rois'].shape)
 
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
