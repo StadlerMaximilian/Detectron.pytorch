@@ -135,7 +135,7 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
         _, index, inv_index = np.unique(
             hashes, return_index=True, return_inverse=True
         )
-        inputs['rois'] = inputs['rois'][index, :]
+        inputs['rois'] = np.array(inputs['rois'][index, :])
         boxes = boxes[index, :]
 
     # Add multi-level rois for FPN
