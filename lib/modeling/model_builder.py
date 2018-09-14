@@ -170,12 +170,12 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
             rpn_ret = {}
-            rpn_ret['rois'] = rpn_kwargs['rois'].cpu().numpy()
+            rpn_ret['rois'] = rpn_kwargs['rois'].cpu().numpy().squeeze(axis=0)
             if self.training:
-                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
-                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets']
-                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
-                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
+                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
+                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
+                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].squeeze(dim=0)
+                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].squeeze(dim=0)
 
                 print("rois: {}".format(rpn_ret['rois'].shape))
                 for key in ['labels_int32', 'bbox_targets']:
@@ -202,8 +202,8 @@ class Generalized_RCNN(nn.Module):
                 box_feat = self.Box_Head(blob_conv, rpn_ret)
             cls_score, bbox_pred = self.Box_Outs(box_feat)
 
-            print("cls_score: {}".format(cls_score))
-            print("bbox_pred: {}".format(bbox_pred))
+            print("cls_score: {}".format(cls_score.size()))
+            print("bbox_pred: {}".format(bbox_pred).size())
 
         else:
             # TODO: complete the returns for RPN only situation
