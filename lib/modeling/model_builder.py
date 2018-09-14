@@ -177,10 +177,6 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].squeeze(dim=0)
                 rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].squeeze(dim=0)
 
-                print("rois: {}".format(rpn_ret['rois'].shape))
-                for key in ['labels_int32', 'bbox_targets']:
-                    print("{}: {}".format(key, rpn_ret[key].size()))
-
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
         # if self.training:
