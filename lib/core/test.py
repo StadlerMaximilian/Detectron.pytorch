@@ -135,6 +135,7 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
         _, index, inv_index = np.unique(
             hashes, return_index=True, return_inverse=True
         )
+        print(index)
         inputs['rois'] = inputs['rois'][index, :]
         boxes = boxes[index, :]
 
