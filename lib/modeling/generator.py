@@ -125,7 +125,7 @@ class Generator(nn.Module):
             rois = rpn_kwargs['rois']
 
             if isinstance(rois, torch.Tensor):
-                rois = torch.cat(tuple([rois[i] for i in range(rois.shape[0])]), axis=0)
+                rois = torch.cat(tuple([rois[i] for i in range(rois.shape[0])]), 0)
                 rpn_ret['rois'] = rois.cpu().numpy()
 
             else:
