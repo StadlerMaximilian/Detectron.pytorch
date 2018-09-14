@@ -122,11 +122,15 @@ class Generator(nn.Module):
         else:
             rpn_ret = {}
             rois = rpn_kwargs['rois']
+
             if isinstance(rois, torch.Tensor):
+                if cfg.DEBUG:
+                    print(rois.size())
                 rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
             else:
-                # during testing, no batch-idx is used
-                rpn_ret['rois'] = rois  # rois.squeeze(axis=0)
+                if cfg.DEBUG:
+                    print(rois.shape)
+                rpn_ret['rois'] = rois
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
                 rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
