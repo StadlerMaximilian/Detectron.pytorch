@@ -175,7 +175,7 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
             else:
                 # during testing, no batch-idx is used
-                rpn_ret['rois'] = rois
+                rpn_ret['rois'] = rois[1:4]
                 print(rois)
 
             if self.training:
