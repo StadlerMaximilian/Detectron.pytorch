@@ -202,9 +202,6 @@ class Generalized_RCNN(nn.Module):
                 box_feat = self.Box_Head(blob_conv, rpn_ret)
             cls_score, bbox_pred = self.Box_Outs(box_feat)
 
-            print("cls_score: {}".format(cls_score.size()))
-            print("bbox_pred: {}".format(bbox_pred.size()))
-
         else:
             # TODO: complete the returns for RPN only situation
             return_dict['rpn_rois'] = rpn_ret['rpn_rois']

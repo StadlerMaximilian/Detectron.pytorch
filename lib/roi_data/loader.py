@@ -32,7 +32,6 @@ class RoiDataLoader(data.Dataset):
         for key in blobs:
             if key != 'roidb':
                 # only squeeze if necessary
-                print("{}: {}".format(key, blobs[key].shape))
                 try:
                     blobs[key] = blobs[key].squeeze(axis=0)
                 except ValueError:

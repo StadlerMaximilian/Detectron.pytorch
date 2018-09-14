@@ -59,8 +59,6 @@ def fast_rcnn_losses(cls_score, bbox_pred, label_int32, bbox_targets,
     else:
         rois_label = Variable(torch.from_numpy(label_int32.astype('int64'))).cuda(device_id)
 
-    print("cls_score: {}\nrois_label:{}".format(cls_score, rois_label))
-
     loss_cls = F.cross_entropy(cls_score, rois_label)
 
     if isinstance(bbox_targets, torch.Tensor):
