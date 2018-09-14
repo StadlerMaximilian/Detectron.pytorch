@@ -178,7 +178,7 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
 
                 print("rois: {}".format(rpn_ret['rois'].shape))
-                for key in ['labels_int32', 'bbox_target']:
+                for key in ['labels_int32', 'bbox_targets']:
                     print("{}: {}".format(key, rpn_ret[key].size()))
 
         if not self.training:

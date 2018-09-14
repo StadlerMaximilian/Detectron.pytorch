@@ -32,10 +32,8 @@ class RoiDataLoader(data.Dataset):
         for key in blobs:
             if key != 'roidb':
                 # only squeeze if necessary
-                try:
-                    blobs[key] = blobs[key].squeeze(axis=0)
-                except ValueError:
-                    pass
+                print("{}: {}".format(key, blobs[key]))
+                blobs[key] = blobs[key].squeeze(axis=0)
 
         if self._roidb[index]['need_crop']:
             self.crop_data(blobs, ratio)
