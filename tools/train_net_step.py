@@ -333,7 +333,6 @@ def main():
         logging.info("loading Detectron weights %s", args.load_detectron)
         load_caffe2_detectron_weights(maskRCNN, args.load_detectron)
 
-
     lr = optimizer.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
 
     maskRCNN = mynn.DataParallel(maskRCNN, cpu_keywords=['im_info', 'roidb'],

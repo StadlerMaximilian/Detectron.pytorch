@@ -43,6 +43,10 @@ def get_fast_rcnn_blob_names(is_training=True):
     # (batch_idx, x1, y1, x2, y2) specifying an image batch index and a
     # rectangle (x1, y1, x2, y2)
     blob_names = ['rois']
+    blob_names += ['im_info']
+    if is_training:
+        # gt boxes: (batch_idx, x1, y1, x2, y2, cls)
+        blob_names += ['roidb']
     if is_training:
         # labels_int32 blob: R categorical labels in [0, ..., K] for K
         # foreground classes plus background

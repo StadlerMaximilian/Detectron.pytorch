@@ -41,6 +41,40 @@ def get_minibatch(roidb):
     else:
         # Fast R-CNN like models trained on precomputed proposals
         valid = roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb)
+
+        for im_i, entry in enumerate(roidb):
+            scale = im_scales[im_i]
+            im_height = np.round(entry['height'] * scale)
+            im_width = np.round(entry['width'] * scale)
+            gt_inds = np.where(
+                (entry['gt_classes'] > 0) & (entry['is_crowd'] == 0)
+            )[0]
+            gt_rois = entry['boxes'][gt_inds, :] * scale
+            # TODO(rbg): gt_boxes is poorly named;
+            # should be something like 'gt_rois_info'
+            gt_boxes = blob_utils.zeros((len(gt_inds), 6))
+            gt_boxes[:, 0] = im_i  # batch inds
+            gt_boxes[:, 1:5] = gt_rois
+            gt_boxes[:, 5] = entry['gt_classes'][gt_inds]
+            im_info = np.array([[im_height, im_width, scale]], dtype=np.float32)
+            blobs['im_info'].append(im_info)
+
+        for k, v in blobs.items():
+            if isinstance(v, list) and len(v) > 0:
+                blobs[k] = np.concatenate(v)
+
+        valid_keys = [
+            'has_visible_keypoints', 'boxes', 'segms', 'seg_areas', 'gt_classes',
+            'gt_overlaps', 'is_crowd', 'box_to_gt_ind_map', 'gt_keypoints'
+        ]
+        minimal_roidb = [{} for _ in range(len(roidb))]
+        for i, e in enumerate(roidb):
+            for k in valid_keys:
+                if k in e:
+                    minimal_roidb[i][k] = e[k]
+        # blobs['roidb'] = blob_utils.serialize(minimal_roidb)
+        blobs['roidb'] = minimal_roidb
+
     return blobs, valid
 
 

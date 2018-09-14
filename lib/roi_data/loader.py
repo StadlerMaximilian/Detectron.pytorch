@@ -51,20 +51,7 @@ class RoiDataLoader(data.Dataset):
                         entry[key] = entry[key][valid_inds]
                 entry['segms'] = [entry['segms'][ind] for ind in valid_inds]
 
-        if cfg.MODEL.FASTER_RCNN:
-            blobs['roidb'] = blob_utils.serialize(blobs['roidb'])  # CHECK: maybe we can serialize in collate_fn
-        else:
-            valid_keys = [
-                'has_visible_keypoints', 'boxes', 'segms', 'seg_areas', 'gt_classes',
-                'gt_overlaps', 'is_crowd', 'box_to_gt_ind_map', 'gt_keypoints'
-            ]
-            minimal_roidb = [{} for _ in range(len(self._roidb))]
-            for i, e in enumerate(self._roidb):
-                for k in valid_keys:
-                    if k in e:
-                        minimal_roidb[i][k] = e[k]
-            # blobs['roidb'] = blob_utils.serialize(minimal_roidb)
-            blobs['roidb'] = minimal_roidb
+        blobs['roidb'] = blob_utils.serialize(blobs['roidb'])  # CHECK: maybe we can serialize in collate_fn
 
         return blobs
 
