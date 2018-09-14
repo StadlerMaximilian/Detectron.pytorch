@@ -66,7 +66,7 @@ class Discriminator(nn.Module):
 
             # do not consider background rois in adversarial loss
             loss_adv = self.adversarial_loss(adv_score, adv_target)
-            mask = np.where( rpn_ret['labels_int32'] == 0)
+            mask = np.where(rpn_ret['labels_int32'] == 0)
             loss_adv[mask] = 0.0
             loss_adv = loss_adv.mean()
 
