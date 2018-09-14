@@ -184,6 +184,9 @@ def bbox_transform(boxes, deltas, weights=(1.0, 1.0, 1.0, 1.0)):
     boxes using bounding-box regression deltas. See bbox_transform_inv for a
     description of the weights argument.
     """
+
+    print("boxes: {}, deltas: {}".format(boxes, deltas))
+
     if boxes.shape[0] == 0:
         return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
 
