@@ -334,6 +334,9 @@ class JsonDataset(object):
         logger.info('Loading proposals from: {}'.format(proposal_file))
         with open(proposal_file, 'rb') as f:
             proposals = pickle.load(f)
+
+            print(proposals)
+
         id_field = 'indexes' if 'indexes' in proposals else 'ids'  # compat fix
         _sort_proposals(proposals, id_field)
         box_list = []
