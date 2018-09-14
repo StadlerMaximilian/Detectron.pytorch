@@ -335,7 +335,9 @@ class JsonDataset(object):
         with open(proposal_file, 'rb') as f:
             proposals = pickle.load(f)
 
-            print(proposals)
+        for key, value in proposals:
+            if isinstance(value, torch.Tensor):
+                proposals[key] = value.numpy()
 
         id_field = 'indexes' if 'indexes' in proposals else 'ids'  # compat fix
         _sort_proposals(proposals, id_field)
