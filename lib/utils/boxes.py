@@ -185,7 +185,7 @@ def bbox_transform(boxes, deltas, weights=(1.0, 1.0, 1.0, 1.0)):
     description of the weights argument.
     """
 
-    print("boxes: {}, deltas: {}, weights: {}".format(boxes.shape, deltas.shape, weights.shape))
+    print("boxes: {}, deltas: {}, weights: {}".format(boxes.shape, deltas.shape, len(weights)))
 
     if boxes.shape[0] == 0:
         return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
