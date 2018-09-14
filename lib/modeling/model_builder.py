@@ -176,9 +176,9 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
             else:
                 # during testing, no batch-idx is used
-                rpn_ret['rois'] = np.expand_dims(rois, axis=0)
+                rpn_ret['rois'] = rois # rois.squeeze(axis=0)
 
-            print(rpn_ret['rois'].shape)
+            print(rpn_ret['rois'])
 
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
