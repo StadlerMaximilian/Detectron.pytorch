@@ -170,8 +170,8 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
             rpn_ret = {}
-            rpn_ret['rois']  = rpn_kwargs['rois']
-            rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
+            rpn_ret['rois']  = rpn_kwargs['rois'].numpy()
+            rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].numpy()
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
