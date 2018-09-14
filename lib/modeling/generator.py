@@ -12,7 +12,7 @@ from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
 import modeling.rpn_heads as rpn_heads
 import utils.net as net_utils
 import utils.blob as blob_utils
-import detectron_weight_helper as weight_utils
+import utils.detectron_weight_helper as weight_utils
 
 
 def get_func(func_name):

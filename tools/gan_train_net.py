@@ -251,8 +251,11 @@ def main():
         else:
             cfg.GAN.TRAIN.PRETRAINED_WEIGHTS = args.load_pretrained
 
-    assert args.load_pretrained ^ cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS
-
+    if cfg.RPN.RPN_ON:
+        assert args.load_pretrained | args.load_ckpt
+    else:
+        assert args.load_pretrained | cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS | args.load_ckpt
+        
     cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
