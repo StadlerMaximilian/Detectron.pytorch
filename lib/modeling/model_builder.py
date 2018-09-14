@@ -170,10 +170,8 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
             rpn_ret = {}
-            # rois blob: holds R regions of interest, each is a 5-tuple
-            # (batch_idx, x1, y1, x2, y2) specifying an image batch index and a
-            # rectangle (x1, y1, x2, y2)
-            # TODO!!!
+            rpn_ret['rois']  = rpn_kwargs['rois']
+            rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
