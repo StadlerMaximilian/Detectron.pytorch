@@ -75,7 +75,12 @@ class Generator(nn.Module):
             return
 
         pretrained_detectron = torch.load(pretrained_weights)
-        load_layers = ['Conv_Body', 'RPN']
+
+        if cfg.RPN.RPN_ON:
+            load_layers = ['Conv_Body', 'RPN']
+        else:
+            load_layers = ['Conv_Body']
+
         mapping, _ = self.detectron_weight_mapping()
         state_dict = {}
         ckpt = pretrained_detectron['model']
@@ -109,7 +114,22 @@ class Generator(nn.Module):
         if not self.training:
             return_dict['blob_conv'] = blob_conv
 
-        rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
+        if cfg.RPN.RPN_ON:
+            rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
+        else:
+            rpn_ret = {}
+            rois = rpn_kwargs['rois']
+            if isinstance(rois, torch.Tensor):
+                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
+            else:
+                # during testing, no batch-idx is used
+                rpn_ret['rois'] = rois  # rois.squeeze(axis=0)
+            if self.training:
+                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
+                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
+                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].squeeze(dim=0)
+                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].squeeze(dim=0)
+
         return_dict['rpn_ret'] = rpn_ret
 
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
