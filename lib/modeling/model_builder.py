@@ -177,6 +177,8 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
                 rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
 
+            print(rpn_ret)
+
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
         # if self.training:
