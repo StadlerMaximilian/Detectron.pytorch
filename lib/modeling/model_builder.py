@@ -177,7 +177,9 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
                 rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
 
-            print(rpn_ret)
+                print("rois: {}".format(rpn_ret['rois'].shape))
+                for key in ['labels_int32', 'bbox_target']:
+                    print("{}: {}".format(key, rpn_ret[key].size()))
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
@@ -199,6 +201,10 @@ class Generalized_RCNN(nn.Module):
             else:
                 box_feat = self.Box_Head(blob_conv, rpn_ret)
             cls_score, bbox_pred = self.Box_Outs(box_feat)
+
+            print("cls_score: {}".format(cls_score))
+            print("bbox_pred: {}".format(bbox_pred))
+
         else:
             # TODO: complete the returns for RPN only situation
             return_dict['rpn_rois'] = rpn_ret['rpn_rois']
