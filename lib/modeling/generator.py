@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
+import numpy as np
 import importlib
 
 from core.config import cfg
@@ -122,8 +123,12 @@ class Generator(nn.Module):
             for key, value in rpn_ret.items():
                 if isinstance(value, torch.Tensor):
                     print("{}: {}".format(key, value.size()))
-                else:
+                elif isinstance(value, list):
+                    print("{}_list: {}".format(key, len(value)))
+                elif isinstance(value, np.ndarray):
                     print("{}: {}".format(key, value.shape))
+                else:
+                    print("{}".format(key))
         else:
             rpn_ret = {}
             rois = rpn_kwargs['rois']

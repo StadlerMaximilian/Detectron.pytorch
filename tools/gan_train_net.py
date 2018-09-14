@@ -896,8 +896,6 @@ def main():
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
 
-                print(input_data)
-
                 input_data.update({"flags": fake_dis_flag,
                                         "adv_target": adv_target_fake}
                                        )
