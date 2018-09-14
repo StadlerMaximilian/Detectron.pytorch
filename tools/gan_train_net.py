@@ -244,10 +244,10 @@ def main():
         raise ValueError("Need Cuda device to run !")
 
     if cfg.RPN.RPN_ON:
-        assert args.load_pretrained is not None | args.load_ckpt is not None
+        assert (args.load_pretrained is not None) | (args.load_ckpt is not None)
     else:
-        assert args.load_pretrained is not None | cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS is not "" | \
-                                              args.load_ckpt is not None
+        assert (args.load_pretrained is not None) | (cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS is not "") | \
+               (args.load_ckpt is not None)
 
     if args.load_pretrained is not None and not os.path.exists(args.load_pretrained):
         raise ValueError("Specified pretrained detectron model does not exists")
