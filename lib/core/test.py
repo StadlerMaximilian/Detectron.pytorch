@@ -149,8 +149,6 @@ def im_detect_bbox(model, im, target_scale, target_max_size, boxes=None):
         inputs['data'] = [torch.from_numpy(inputs['data'])]
         inputs['im_info'] = [torch.from_numpy(inputs['im_info'])]
 
-    print(inputs['rois'])
-
     return_dict = model(**inputs)
 
     if cfg.MODEL.FASTER_RCNN:
