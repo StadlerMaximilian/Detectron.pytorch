@@ -64,11 +64,12 @@ class Discriminator(nn.Module):
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            # do not consider background rois in adversarial loss
             loss_adv = self.adversarial_loss(adv_score, adv_target)
-            mask = np.where(rpn_ret['labels_int32'] == 0)
-            loss_adv[mask] = 0.0
-            loss_adv = loss_adv.mean()
+
+            # do not consider background rois in adversarial loss
+            # mask = np.where(rpn_ret['labels_int32'] == 0)
+            # loss_adv[mask] = 0.0
+            # loss_adv = loss_adv.mean()
 
             return_dict['losses']['loss_adv'] = loss_adv
 
@@ -168,5 +169,5 @@ class Discriminator(nn.Module):
         """Add loss tensor to returned dictionary"""
         return_dict['losses'][key] = value
 
-    def adversarial_loss(self, blob, target):
-        return F.binary_cross_entropy(blob, target, reduce=False)
+    def adversarial_loss(self, blob, target, reduce=True):
+        return F.binary_cross_entropy(blob, target, reduce=reduce)

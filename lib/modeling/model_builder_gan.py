@@ -62,6 +62,8 @@ class GAN(nn.Module):
             for key in copy_blobs:
                 dis_out[key] = gen_out[key]
 
+        print("\t memory_allocated: {}".format(torch.cuda.memory_allocated))
+
         return dis_out
 
     def detectron_weight_mapping(self):
