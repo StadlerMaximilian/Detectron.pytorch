@@ -897,8 +897,8 @@ def main():
                 )
 
                 input_data.update({"flags": fake_dis_flag,
-                                        "adv_target": adv_target_fake}
-                                       )
+                                   "adv_target": adv_target_fake}
+                                  )
                 outputs = gan(**input_data)
                 training_stats_dis_fake.UpdateIterStats(out=outputs)
                 loss_fake = outputs['losses']['loss_adv']  # adversarial loss for discriminator
@@ -910,8 +910,8 @@ def main():
                 )
 
                 input_data.update({"flags": real_dis_flag,
-                                       "adv_target": adv_target_real}
-                                       )
+                                   "adv_target": adv_target_real}
+                                  )
                 outputs = gan(**input_data)
                 training_stats_dis_real.UpdateIterStats(out=outputs)
                 loss_real = outputs['losses']['loss_adv']  # adversarial loss for discriminator

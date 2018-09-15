@@ -138,8 +138,10 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
     if cfg.GAN.GAN_MODE_ON and flags is not None:
+        print("\t sample_rois_gan")
         return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
     else:
+        print("\t sample_rois_normal")
         return _sample_rois_normal(roidb, im_scale, batch_idx)
 
 
@@ -147,7 +149,6 @@ def _sample_rois_normal(roidb, im_scale, batch_idx):
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
-
     rois_per_image = int(cfg.TRAIN.BATCH_SIZE_PER_IM)
     fg_rois_per_image = int(np.round(cfg.TRAIN.FG_FRACTION * rois_per_image))
     max_overlaps = roidb['max_overlaps']
