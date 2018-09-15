@@ -143,7 +143,8 @@ class TrainingStats(object):
                 if isinstance(v, dict):
                     self.tb_log_stats(v, cur_iter)
                 else:
-                    self.tblogger.add_scalar(k, v, cur_iter)
+                    if self.tblogger:
+                        self.tblogger.add_scalar(k, v, cur_iter)
 
     def GetStats(self, cur_iter, lr):
         eta_seconds = self.iter_timer.average_time * (

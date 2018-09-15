@@ -131,9 +131,6 @@ class Generator(nn.Module):
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
 
-        if cfg.DEBUG:
-            print("\t\tResidualShape: {}".format(blob_conv_residual.size()))
-
         if not self.training:
             return_dict['blob_conv_residual'] = blob_conv_residual
 

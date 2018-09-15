@@ -353,7 +353,7 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         bbox_targets = np.expand_dims(bbox_targets, axis=0)
         bbox_outside_weights = np.expand_dims(bbox_outside_weights, axis=0)
         bbox_inside_weights = np.expand_dims(bbox_inside_weights, axis=0)
-        
+
     # Base Fast R-CNN blobs
     blob_dict = dict(
         labels_int32=sampled_labels.astype(np.int32, copy=False),
