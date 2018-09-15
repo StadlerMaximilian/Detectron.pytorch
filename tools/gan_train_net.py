@@ -685,10 +685,8 @@ def main():
         if args.use_tfboard:
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
-            tblogger_dis_real= SummaryWriter(os.path.join(output_dir, 'log', 'real'),
-                                             filename_suffix="_discriminator_real")
-            tblogger_dis_fake = SummaryWriter(os.path.join(output_dir, 'log', 'fake'),
-                                              filename_suffix="_discriminator_fake")
+            tblogger_dis = SummaryWriter(os.path.join(output_dir, 'log', 'dis'),
+                                             filename_suffix="_discriminator")
             tblogger_gen = SummaryWriter(os.path.join(output_dir, 'log', 'gen'),
                                          filename_suffix="_generator")
             tblogger_pre = SummaryWriter(os.path.join(output_dir_pre, 'log', 'pre'),
@@ -813,6 +811,10 @@ def main():
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
 
+            # save model after pre-training
+            save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                          model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
+
             del dataiterator_pre
             del dataloader_pre
             del batchSampler_pre
@@ -823,22 +825,12 @@ def main():
             del outputs_pre
             torch.cuda.empty_cache()
 
-            # save model after pre-training
-            save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
-                          model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
-
         # combined training
-        training_stats_dis_real = TrainingStats(
+        training_stats_dis = TrainingStats(
             args,
             args.disp_interval,
             max_iter,
-            tblogger_dis_real if args.use_tfboard and not args.no_save else None)
-
-        training_stats_dis_fake = TrainingStats(
-            args,
-            args.disp_interval,
-            max_iter,
-            tblogger_dis_fake if args.use_tfboard and not args.no_save else None)
+            tblogger_dis if args.use_tfboard and not args.no_save else None)
 
         training_stats_gen = TrainingStats(
             args,
@@ -899,8 +891,7 @@ def main():
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
-                training_stats_dis_fake.IterTic()
-                training_stats_dis_real.IterTic()
+                training_stats_dis.IterTic()
 
                 # train on fake data
 
@@ -911,10 +902,7 @@ def main():
                 input_data.update({"flags": fake_dis_flag,
                                    "adv_target": adv_target_fake}
                                   )
-                outputs = gan(**input_data)
-                training_stats_dis_fake.UpdateIterStats(out=outputs)
-                loss_fake = outputs['losses']['loss_adv']  # adversarial loss for discriminator
-                training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
+                outputs_fake = gan(**input_data)
 
                 # train on real data
                 input_data, dataiterator_real_discriminator = create_input_data(
@@ -924,23 +912,26 @@ def main():
                 input_data.update({"flags": real_dis_flag,
                                    "adv_target": adv_target_real}
                                   )
-                outputs = gan(**input_data)
-                training_stats_dis_real.UpdateIterStats(out=outputs)
-                loss_real = outputs['losses']['loss_adv']  # adversarial loss for discriminator
-                training_stats_dis_real.tb_log_stats(training_stats_dis_real.GetStats(step, lr_D), step)
+                outputs_real = gan(**input_data)
+
+                training_stats_dis.UpdateIterStats(out=outputs_real, out_add=outputs_fake)
+                training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
+
+                loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
+                loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
                 optimizer_D.step()
 
-                training_stats_dis_fake.IterToc()
-                training_stats_dis_real.IterToc()
+                training_stats_dis.IterToc()
 
                 # clean-up to save memory
                 del loss_D
                 del loss_real
                 del loss_fake
-                del outputs
+                del outputs_fake
+                del outputs_real
                 del input_data
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
@@ -966,9 +957,8 @@ def main():
             training_stats_gen.IterToc()
 
             log_gan_stats_combined(step, lr_gen=lr_G, lr_dis=lr_D,
-                                   training_stats_dis_real=training_stats_dis_real,
-                                   training_stats_gen=training_stats_gen,
-                                   training_stats_dis_fake=training_stats_dis_fake)
+                                   training_stats_dis=training_stats_dis,
+                                   training_stats_gen=training_stats_gen)
 
             # clean-up to save memory
             del loss_G
@@ -1003,12 +993,10 @@ def main():
 
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
-            tblogger_dis_fake.close()
-            tblogger_dis_real.close()
+            tblogger_dis.close()
             tblogger_gen.close()
 
-        del training_stats_dis_fake
-        del training_stats_dis_real
+        del training_stats_dis
         del training_stats_gen
 
     except (RuntimeError, KeyboardInterrupt):
@@ -1027,8 +1015,7 @@ def main():
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger_gen.close()
-            tblogger_dis_real.close()
-            tblogger_dis_fake.close()
+            tblogger_dis.close()
         logger.info('Aborted training.')
         return
 

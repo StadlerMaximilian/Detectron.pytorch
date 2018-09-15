@@ -106,32 +106,68 @@ class TrainingStats(object):
     def ResetIterTimer(self):
         self.iter_timer.reset()
 
-    def UpdateIterStats(self, out=None):
+    def UpdateIterStats(self, out=None, out_add=None):
         """Update tracked iteration statistics."""
         if out is not None:  # first trained on either real/fake images (then set flag)
-            total_loss = 0
+            if out_add is None:
+                total_loss = 0
 
-            for k, loss in out['losses'].items():
-                assert loss.shape[0] == cfg.NUM_GPUS
-                loss = loss.mean(dim=0, keepdim=True)
-                total_loss += loss
-                loss_data = loss.data[0]
-                out['losses'][k] = loss
-                self.smoothed_losses[k].AddValue(loss_data)
+                for k, loss in out['losses'].items():
+                    assert loss.shape[0] == cfg.NUM_GPUS
+                    loss = loss.mean(dim=0, keepdim=True)
+                    total_loss += loss
+                    loss_data = loss.data[0]
+                    out['losses'][k] = loss
+                    self.smoothed_losses[k].AddValue(loss_data)
 
-            out['total_loss'] = total_loss  # Add the total loss for back propagation
-            self.smoothed_total_loss.AddValue(total_loss.data[0])
+                out['total_loss'] = total_loss  # Add the total loss for back propagation
+                self.smoothed_total_loss.AddValue(total_loss.data[0])
 
-            for k, metric in out['metrics'].items():
-                metric = metric.mean(dim=0, keepdim=True)
-                self.smoothed_metrics[k].AddValue(metric.data[0])
+                for k, metric in out['metrics'].items():
+                    metric = metric.mean(dim=0, keepdim=True)
+                    self.smoothed_metrics[k].AddValue(metric.data[0])
+
+            else:
+                total_loss = 0
+
+                for loss_key in out['losses']:
+                    loss = out['losses'][loss_key]
+                    loss_add = out['losses'][loss_key]
+
+                    assert loss.shape[0] == cfg.NUM_GPUS
+                    assert loss_add.shape[0] == cfg.NUM_GPUS
+
+                    loss = loss.mean(dim=0, keepdim=True)
+                    loss_add = loss_add.mean(dim=0, keepdim=True)
+
+                    total_loss += loss
+                    total_loss += loss_add
+
+                    loss_data = loss.data[0]
+                    loss_data_add = loss_add.data[0]
+
+                    out['losses'][loss_key] = loss
+                    out_add['losses'][loss_key] = loss_add
+
+                    self.smoothed_losses[loss_key].AddValue(loss_data + loss_data_add)
+
+                out['total_loss'] = total_loss  # Add the total loss for back propagation
+                out_add['total_loss'] = total_loss
+
+                self.smoothed_total_loss.AddValue(total_loss.data[0])
+
+                for metric_key in out['metrics']:
+                    metric = out['metrics'][metric_key].mean(dim=0, keepdim=True)
+                    metric_add = out_add['metrics'][metric_key].mean(dim=0, keepdim=True)
+
+                    self.smoothed_metrics[metric_key].AddValue(0.5*(metric.data[0] + metric_add.data[0] ) )
 
     def LogIterStatsReal(self, cur_iter, lr):
         """Log the tracked statistics."""
         if (cur_iter % self.LOG_PERIOD == 0 or
                 cur_iter == self.max_iter - 1):
             stats = self.GetStats(cur_iter, lr)
-            log_gan_stats(self.misc_args, self.max_iter, stats_dis_real=stats)
+            log_gan_stats(self.misc_args, self.max_iter, stats_dis=stats)
             if self.tblogger:
                 self.tb_log_stats(stats, cur_iter)
 
