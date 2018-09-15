@@ -132,7 +132,7 @@ class TrainingStats(object):
 
                 for loss_key in out['losses']:
                     loss = out['losses'][loss_key]
-                    loss_add = out['losses'][loss_key]
+                    loss_add = out_add['losses'][loss_key]
 
                     assert loss.shape[0] == cfg.NUM_GPUS
                     assert loss_add.shape[0] == cfg.NUM_GPUS
