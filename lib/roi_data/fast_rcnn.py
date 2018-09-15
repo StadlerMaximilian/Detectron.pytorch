@@ -446,18 +446,15 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
     if training:
         assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
 
-    for batch in range(rois.shape[0]):
-        roi_list.append(rois[batch, :, :])
-        if training:
+        for batch in range(rois.shape[0]):
+            roi_list.append(rois[batch, :, :])
             labels_list.append(labels[batch, :])
             targets_list.append(targets[batch, :, :])
             inside_list.append(inside[batch, :, :])
             outside_list.append(outside[batch, :, :])
 
-    rois = np.vstack(tuple(roi_list))
-    rpn_ret['rois'] = rois
+        rois = np.vstack(tuple(roi_list))
 
-    if training:
         labels = np.hstack(tuple(labels_list))
         targets = np.vstack(tuple(targets_list))
         inside = np.vstack(tuple(inside_list))
@@ -467,5 +464,7 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
         rpn_ret['bbox_targets'] = targets
         rpn_ret['bbox_inside_weights'] = inside
         rpn_ret['bbox_outside_weights'] = outside
+
+    rpn_ret['rois'] = rois
 
     return rpn_ret
