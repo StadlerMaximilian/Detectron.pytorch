@@ -31,6 +31,8 @@ class RoiDataLoader(data.Dataset):
         # Squeeze batch dim
         for key in blobs:
             if key != 'roidb':
+                if cfg.DEBUG:
+                    print(key)
                 blobs[key] = blobs[key].squeeze(axis=0)
 
         if self._roidb[index]['need_crop']:
@@ -251,6 +253,7 @@ def _collate_minibatch(list_of_blobs, train_imgs_per_batch):
     Hence, we need to stack smaples from each minibatch seperately.
     """
     Batch = {key: [] for key in list_of_blobs[0]}
+
     # Because roidb consists of entries of variable length, it can't be batch into a tensor.
     # So we keep roidb in the type of "list of ndarray".
     list_of_roidb = [blobs.pop('roidb') for blobs in list_of_blobs]
