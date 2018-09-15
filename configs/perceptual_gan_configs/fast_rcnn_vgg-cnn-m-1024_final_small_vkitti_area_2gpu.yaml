@@ -73,14 +73,14 @@ GAN:
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 0.0002 #0.0001
-    BASE_LR_G: 0.0002 #0.0001
-    BASE_LR_PRE: 0.0025 #0.00125
+    BASE_LR_D: 0.0025 #0.00125
+    BASE_LR_G: 0.0025 #0.00125
+    BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 7000 #14000
-    STEPS: [0, 3500] #[0, 7000]
+    STEPS: [0, 4250, 6000] #[0, 8500, 12000]
     PRE_ITER: 5000 #10000
     PRE_WARM_UP_ITERS: 500
     WARM_UP_ITERS: 500
