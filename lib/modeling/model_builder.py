@@ -157,7 +157,7 @@ class Generalized_RCNN(nn.Module):
     def _forward(self, data, im_info, roidb=None, **rpn_kwargs):
         im_data = data
 
-        if cfg.RPN.RPN_ON:
+        if cfg.DEBUG:
             print("im_data: {}".format(im_data.size()))
 
         if self.training:
