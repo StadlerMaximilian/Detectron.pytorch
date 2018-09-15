@@ -81,7 +81,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
         )
 
         if stats_dis['metrics']:
-            lines += "\t\tDiscriminator_metrics:  " + ", ".join("%s: %.6f" %
+            lines += "\t\tDiscriminator_metrics: " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis['metrics'].items()) +  "\n"
         if stats_dis["head_losses"]:
             lines += "\t\tDiscriminator_head: " + ", ".join("%s: %.6f" %
@@ -100,10 +100,10 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
                  )
 
         if stats_gen['metrics']:
-            lines += "\t\tGenerator_metrics:" + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items())
+            lines += "\t\tGenerator_metrics: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items())
 
         if stats_dis['metrics']:
-            lines += "\t\tDiscriminator_metrics " + ", ".join("%s: %.6f" %
+            lines += "\t\t\tDiscriminator_metrics: " + ", ".join("%s: %.6f" %
                                                       (k, v) for k, v in stats_dis['metrics'].items()) +  "\n"
         if stats_gen['head_losses']:
             lines += "\t\tGenerator_head: " + ", ".join("%s: %.6f" %
@@ -115,7 +115,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
             lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
                                                        (k, v) for k, v in stats_gen['adv_loss'].items())
         if stats_dis['adv_loss']:
-            lines += "\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
+            lines += "\t\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
                                                          (k, v) for k, v in stats_dis['adv_loss'].items()) + "\n"
 
     print(lines[:-1])  # remove last new line

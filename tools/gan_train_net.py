@@ -488,7 +488,7 @@ def main():
 
     # Model
     # only load pre-trained discriminator explicitly specified
-    if cfg.MODEL.FASTER_RCNN:
+    if cfg.GAN.TRAIN.PRETRAINED_WEIGHTS is not "":
         if args.init_dis_pretrained:
             gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
                       discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
@@ -807,7 +807,6 @@ def main():
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStatsReal(step, lr=lr_pre)
 
-            # clean up
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
 
@@ -815,6 +814,9 @@ def main():
             save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
                           model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
+            # CLEAN-UP !!
+            logger.info("clean-up after pre-training ...")
+            optimizer_pre.zero_grad()
             del dataiterator_pre
             del dataloader_pre
             del batchSampler_pre
@@ -823,7 +825,11 @@ def main():
             del input_data_pre
             del loss_pre
             del outputs_pre
+            del optimizer_pre
             torch.cuda.empty_cache()
+
+            logger.info("clean-up finished.")
+
 
         # combined training
         training_stats_dis = TrainingStats(
@@ -839,6 +845,7 @@ def main():
             tblogger_gen if args.use_tfboard and not args.no_save else None)
 
         logger.info('Combined GAN-training starts now!')
+
         for step in range(args.start_step, max_iter):
 
             # Warm up
