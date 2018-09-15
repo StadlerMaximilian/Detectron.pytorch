@@ -803,11 +803,6 @@ def main():
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStatsReal(step, lr=lr_pre)
 
-                if args.online_cleanup:
-                    del input_data_pre
-                    del outputs_pre
-                    del loss_pre
-
             # clean up
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
@@ -816,6 +811,9 @@ def main():
             del dataloader_pre
             del batchSampler_pre
             del dataset_pre
+            del training_stats_pre
+            del input_data_pre
+            del loss_pre
             del training_stats_pre
             torch.cuda.empty_cache()
 
@@ -932,14 +930,6 @@ def main():
                 training_stats_dis_fake.IterToc()
                 training_stats_dis_real.IterToc()
 
-                if args.online_cleanup:
-                    del input_data
-                    del outputs
-                    del loss_real
-                    del loss_fake
-                    del loss_D
-                    torch.cuda.empty_cache()
-
             # train generator on total loss of discriminator (all losses weighted simply with 1)
             training_stats_gen.IterTic()
 
@@ -962,12 +952,6 @@ def main():
             optimizer_G.step()
             training_stats_gen.IterToc()
 
-            if args.online_cleanup:
-                del input_data
-                del outputs
-                del loss_G
-                torch.cuda.empty_cache()
-
             log_gan_stats_combined(step, lr_gen=lr_G, lr_dis=lr_D,
                                    training_stats_dis_real=training_stats_dis_real,
                                    training_stats_gen=training_stats_gen,
@@ -983,6 +967,11 @@ def main():
                                     model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
         # cleanup
         del gan
+        del loss_G
+        del loss_D
+        del loss_real
+        del loss_fake
+        del input_data
         del dataiterator_real_discriminator
         del dataiterator_fake_discriminator
         del dataiterator_fake_generator
