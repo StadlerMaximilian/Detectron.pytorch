@@ -895,6 +895,9 @@ def main():
                 decay_steps_ind_G += 1
 
             # train discriminator only on adversarial branch
+
+            optimizer_G.zero_grad()
+
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
@@ -940,11 +943,11 @@ def main():
                 del outputs_fake
                 del outputs_real
                 del input_data
+                torch.cuda.empty_cache()
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
             training_stats_gen.IterTic()
 
-            optimizer_G.zero_grad()
             input_data, dataiterator_fake_generator = create_input_data(
                 dataiterator_fake_generator, dataloader_fake_generator
             )
@@ -971,6 +974,7 @@ def main():
             del loss_G
             del input_data
             del outputs
+            torch.cuda.empty_cache()
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
