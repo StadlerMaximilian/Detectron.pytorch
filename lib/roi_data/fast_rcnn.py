@@ -448,16 +448,24 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
         rois = rois.cpu().numpy()
 
     if training:
-        labels = rpn_kwargs['labels_int32'].cpu().numpy()
+        labels = rpn_kwargs['labels_int32']
+        if isinstance(rois, torch.Tensor):
+            labels = labels.cpu().numpy()
         labels_list = []
-        targets = rpn_kwargs['bbox_targets'].cpu().numpy()
+        targets = rpn_kwargs['bbox_targets']
+        if isinstance(targets, torch.Tensor):
+            targets = targets.cpu().numpy()
         targets_list = []
-        inside = rpn_kwargs['bbox_inside_weights'].cpu().numpy()
+        inside = rpn_kwargs['bbox_inside_weights']
+        if isinstance(inside, torch.Tensor):
+            inside = inside.cpu().numpy()
         inside_list = []
-        outside = rpn_kwargs['bbox_outside_weights'].cpu().numpy()
+        outside = rpn_kwargs['bbox_outside_weights']
+        if isinstance(outside, torch.Tensor):
+            outside = outside.cpu().numpy()
+
         outside_list = []
 
-    if training:
         assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
 
         for batch in range(rois.shape[0]):

@@ -656,7 +656,13 @@ def main():
     lr_G = optimizer_G.param_groups[0]['lr']
     lr_pre = optimizer_pre.param_groups[0]['lr']
 
-    gan = mynn.DataParallel(gan, cpu_keywords=['im_info', 'roidb'],
+    if cfg.RPN.RPN_ON:
+        cpu_keys = ['im_info', 'roidb']
+    else:
+        cpu_keys = ['im_info', 'roidb', 'labels_int32', 'rois',
+                    'bbox_targets', 'bbox_inside_weights',  'bbox_outside_weights']
+
+    gan = mynn.DataParallel(gan, cpu_keywords=cpu_keys,
                             minibatch=True)
 
     # Training Setups
