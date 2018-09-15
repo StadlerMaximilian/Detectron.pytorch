@@ -257,12 +257,26 @@ def _collate_minibatch(list_of_blobs, train_imgs_per_batch):
     # Because roidb consists of entries of variable length, it can't be batch into a tensor.
     # So we keep roidb in the type of "list of ndarray".
     list_of_roidb = [blobs.pop('roidb') for blobs in list_of_blobs]
+
+    if not cfg.RPN.RPN_ON:
+        list_of_rois = [blobs.pop('rois') for blobs in list_of_blobs]
+        list_of_bbox_targets = [blobs.pop('bbox_targets') for blobs in list_of_blobs]
+        list_of_bbox_inside = [blobs.pop('bbox_inside_weights') for blobs in list_of_blobs]
+        list_of_bbox_outside = [blobs.pop('bbox_outside_weights') for blobs in list_of_blobs]
+
     for i in range(0, len(list_of_blobs), train_imgs_per_batch):
         mini_list = list_of_blobs[i:(i + train_imgs_per_batch)]
         # Pad image data
         mini_list = pad_image_data(mini_list)
         minibatch = default_collate(mini_list)
         minibatch['roidb'] = list_of_roidb[i:(i + train_imgs_per_batch)]
+
+        if not cfg.RPN.RPN_ON:
+            minibatch['rois'] = list_of_rois[i:(i + train_imgs_per_batch)]
+            minibatch['bbox_targets'] = list_of_bbox_targets[i:(i + train_imgs_per_batch)]
+            minibatch['bbox_inside_weights'] = list_of_bbox_inside[i:(i + train_imgs_per_batch)]
+            minibatch['bbox_outside_weights'] = list_of_bbox_outside[i:(i + train_imgs_per_batch)]
+
         for key in minibatch:
             Batch[key].append(minibatch[key])
 
