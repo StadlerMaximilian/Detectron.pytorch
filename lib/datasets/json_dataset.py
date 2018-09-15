@@ -337,14 +337,10 @@ class JsonDataset(object):
 
         for key, value in proposals.items():
 
-            proposals_new = {}
-
             if isinstance(value, torch.Tensor):
                 if cfg.DEBUG:
                     print("{}: {}".format(key, value.size()))
-                proposals_new[key] = value.numpy()
-
-            proposals = proposals_new
+                proposals[key] = value.numpy()
 
         id_field = 'indexes' if 'indexes' in proposals else 'ids'  # compat fix
         _sort_proposals(proposals, id_field)
