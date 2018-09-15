@@ -67,10 +67,12 @@ class ModeFlags(object):
         return self
 
     def __str__(self):
-        return "\t fake \t real \n\t {}\t {}\n \t Gen \t Dis \n \t {} \t {}".format(self.fake_mode,
+        return "\t fake \t real \n\t {}\t {}\n \t Gen \t Dis \t Pre \n \t {} \t {} \t {}".format(self.fake_mode,
                                                                                     self.real_mode,
                                                                                     self.train_generator,
-                                                                                    self.train_discriminator)
+                                                                                    self.train_discriminator,
+                                                                                    self.train_pre
+                                                                                    )
 
 
 class TrainingStats(object):

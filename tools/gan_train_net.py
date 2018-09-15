@@ -398,7 +398,7 @@ def main():
         roidb_real,
         cfg.MODEL.NUM_CLASSES,
         training=True,
-        flags=pre_flag)
+        flags=pre_flag[0])
 
     dataloader_pre = torch.utils.data.DataLoader(
         dataset_pre,
@@ -419,7 +419,7 @@ def main():
         roidb_real,
         cfg.MODEL.NUM_CLASSES,
         training=True,
-        flags=real_dis_flag)
+        flags=real_dis_flag[0])
 
     dataloader_real_discriminator = torch.utils.data.DataLoader(
         dataset_real_discriminator,
@@ -451,7 +451,7 @@ def main():
         roidb_fake,
         cfg.MODEL.NUM_CLASSES,
         training=True,
-        flags=fake_dis_flag
+        flags=fake_dis_flag[0]
     )
 
     dataloader_fake_discriminator = torch.utils.data.DataLoader(
@@ -473,7 +473,7 @@ def main():
         roidb_fake,
         cfg.MODEL.NUM_CLASSES,
         training=True,
-        flags=fake_gen_flag
+        flags=fake_gen_flag[0]
     )
 
     dataloader_fake_generator = torch.utils.data.DataLoader(

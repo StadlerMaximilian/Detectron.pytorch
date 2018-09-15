@@ -139,12 +139,19 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
 
     if cfg.DEBUG:
-        print("flags: {}, GAN_MODE: {}".format(flags, cfg.GAN.GAN_MODE_ON))
+        print("flags: {}, GAN_MODE: {}".format(str(flags), cfg.GAN.GAN_MODE_ON))
 
-    if cfg.GAN.GAN_MODE_ON and flags is not None:
-        return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
+    if flags is not None:
+        if flags.train_pre:
+            _sample_rois_normal(roidb, im_scale, batch_idx)
+        elif cfg.GAN.GAN_MODE_ON:
+            return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
+        else:
+            print("Unexpected Input: flag is set for adversarial training with GAN_MODE_ON is False!!")
+            print("calling _sample_rois_normal...")
+            _sample_rois_normal(roidb, im_scale, batch_idx)
     else:
-        return _sample_rois_normal(roidb, im_scale, batch_idx)
+        _sample_rois_normal(roidb, im_scale, batch_idx)
 
 
 def _sample_rois_normal(roidb, im_scale, batch_idx):
