@@ -175,3 +175,6 @@ class TrainingStats(object):
         stats['adv_loss'] = OrderedDict(adv_loss)
 
         return stats
+
+
+

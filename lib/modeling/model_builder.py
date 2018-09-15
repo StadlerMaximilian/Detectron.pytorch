@@ -12,6 +12,7 @@ from core.config import cfg
 from model.roi_pooling.functions.roi_pool import RoIPoolFunction
 from model.roi_crop.functions.roi_crop import RoICropFunction
 from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
+from roi_data.fast_rcnn import create_fast_rcnn_rpn_ret
 import modeling.rpn_heads as rpn_heads
 import modeling.fast_rcnn_heads as fast_rcnn_heads
 import modeling.mask_rcnn_heads as mask_rcnn_heads
@@ -19,6 +20,7 @@ import modeling.keypoint_rcnn_heads as keypoint_rcnn_heads
 import utils.blob as blob_utils
 import utils.net as net_utils
 import utils.detectron_weight_helper as weight_utils
+
 
 logger = logging.getLogger(__name__)
 
@@ -174,19 +176,7 @@ class Generalized_RCNN(nn.Module):
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
-            rpn_ret = {}
-            rois = rpn_kwargs['rois']
-            if isinstance(rois, torch.Tensor):
-                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
-            else:
-                # during testing, no batch-idx is used
-                rpn_ret['rois'] = rois
-
-            if self.training:
-                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].cpu().numpy().squeeze(dim=0)
-                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].cpu().numpy().squeeze(dim=0)
-                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].cpu().numpy().squeeze(dim=0)
-                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].cpu().numpy().squeeze(dim=0)
+            rpn_ret = create_fast_rcnn_rpn_ret(self.training, **rpn_kwargs)
 
         keys = ['rois', 'labels_int32', 'bbox_targets', 'bbox_inside_weights', 'bbox_outside_weights']
 

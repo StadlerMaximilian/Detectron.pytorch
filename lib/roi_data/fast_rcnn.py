@@ -25,6 +25,8 @@ from __future__ import unicode_literals
 import logging
 import numpy as np
 import numpy.random as npr
+import torch
+
 
 from core.config import cfg
 import roi_data.keypoint_rcnn
@@ -422,3 +424,46 @@ def _add_multilevel_rois(blobs):
         _distribute_rois_over_fpn_levels('mask_rois')
     if cfg.MODEL.KEYPOINTS_ON:
         _distribute_rois_over_fpn_levels('keypoint_rois')
+
+
+def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
+    rpn_ret = {}
+    rois = rpn_kwargs['rois']
+    roi_list = []
+    if isinstance(rois, torch.Tensor):
+        rois = rois.cpu().numpy()
+
+    if training:
+        labels = rpn_kwargs['labels_int32'].cpu().numpy()
+        labels_list = []
+        targets = rpn_kwargs['bbox_targets'].cpu().numpy()
+        targets_list = []
+        inside = rpn_kwargs['bbox_inside_weights'].cpu().numpy()
+        inside_list = []
+        outside = rpn_kwargs['bbox_outside_weights'].cpu().numpy()
+        outside_list = []
+
+    assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
+
+    for batch in rois.shape[0]:
+        roi_list.append(rois[batch, :, :])
+        if training:
+            targets_list.append(targets[batch, :, :])
+            inside_list.append(inside[batch, :, :])
+            outside_list.append(outside[batch, :, :])
+
+    rois = np.vstack(tuple(roi_list))
+    rpn_ret['rois'] = rois
+
+    if training:
+        labels = np.vstack(tuple(labels_list))
+        targets = np.vstack(tuple(targets_list))
+        inside = np.vstack(tuple(inside_list))
+        outside = np.vstack(tuple(outside_list))
+
+        rpn_ret['labels_int32'] = labels
+        rpn_ret['bbox_targets'] = targets
+        rpn_ret['bbox_inside_weights'] = inside
+        rpn_ret['bbox_outside_weights'] = outside
+
+    return rpn_ret
