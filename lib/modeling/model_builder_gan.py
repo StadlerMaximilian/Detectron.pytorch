@@ -52,11 +52,11 @@ class GAN(nn.Module):
             for key in copy_blobs:
                 dis_out[key] = outputs_gen[key]
 
-        if cfg.DEBUG:
-            print("\t memory: allocated: {} (max: {}), cached: {} (max: {})".format(torch.cuda.memory_allocated(),
-                                                                                    torch.cuda.max_memory_allocated(),
-                                                                                    torch.cuda.memory_cached(),
-                                                                                    torch.cuda.max_memory_cached()))
+        #  if cfg.DEBUG:
+        #      print("\t memory: allocated: {} (max: {}), cached: {} (max: {})".format(torch.cuda.memory_allocated(),
+        #                                                                              torch.cuda.max_memory_allocated(),
+        #                                                                              torch.cuda.memory_cached(),
+        #                                                                              torch.cuda.max_memory_cached()))
 
         return dis_out
 

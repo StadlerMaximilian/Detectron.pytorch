@@ -32,6 +32,9 @@ class Discriminator(nn.Module):
                                          #nn.LeakyReLU(negative_slope=0.2, inplace=True),
                                          nn.Linear(1024, 1),
                                          nn.Sigmoid())
+
+        self.adversarial_criterion = nn.BCELoss()
+
         self._init_weights()
 
         self.Box_Head = get_func(cfg.GAN.MODEL.CONV_BODY_FC_HEAD)(dim_in, resolution)
@@ -64,7 +67,7 @@ class Discriminator(nn.Module):
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            loss_adv = self.adversarial_loss(adv_score, adv_target)
+            loss_adv = self.adversarial_criterion(adv_score, adv_target)
 
             # do not consider background rois in adversarial loss
             # mask = np.where(rpn_ret['labels_int32'] == 0)
