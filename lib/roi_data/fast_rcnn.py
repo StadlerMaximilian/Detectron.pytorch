@@ -199,15 +199,11 @@ def _sample_rois_normal(roidb, im_scale, batch_idx):
     sampled_rois = np.hstack((repeated_batch_idx, sampled_rois))
 
     if not cfg.RPN.RPN_ON: # FAST-RCNN training
-        # also format others as (batch_idx, ....)
-        repeated_batch_idx = batch_idx * blob_utils.ones((sampled_labels.shape[0], 1))
-        sampled_labels = np.hstack((repeated_batch_idx, sampled_labels))
-        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_targets.shape[0], 1))
-        bbox_targets = np.hstack((repeated_batch_idx, bbox_targets))
-        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_inside_weights.shape[0], 1))
-        bbox_inside_weights = np.hstack((repeated_batch_idx, bbox_inside_weights))
-        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_outside_weights.shape[0], 1))
-        bbox_outside_weights = np.hstack((repeated_batch_idx, bbox_outside_weights))
+        # also "format" others as (batch_idx, ....) by expanding dimensions
+        sampled_labels = np.expand_dims(sampled_labels, axis=0)
+        bbox_targets = np.expand_dims(bbox_targets, axis=0)
+        bbox_outside_weights = np.expand_dims(bbox_outside_weights, axis=0)
+        bbox_inside_weights = np.expand_dims(bbox_inside_weights, axis=0)
 
     # Base Fast R-CNN blobs
     blob_dict = dict(
