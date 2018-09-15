@@ -53,7 +53,17 @@ def get_minibatch(roidb):
             if isinstance(v, list) and len(v) > 0:
                 blobs[k] = np.concatenate(v)
 
-        blobs['roidb'] = roidb
+        valid_keys = [
+            'has_visible_keypoints', 'boxes', 'segms', 'seg_areas', 'gt_classes',
+            'gt_overlaps', 'is_crowd', 'box_to_gt_ind_map', 'gt_keypoints'
+        ]
+        minimal_roidb = [{} for _ in range(len(roidb))]
+        for i, e in enumerate(roidb):
+            for k in valid_keys:
+                if k in e:
+                    minimal_roidb[i][k] = e[k]
+        # blobs['roidb'] = blob_utils.serialize(minimal_roidb)
+        blobs['roidb'] = minimal_roidb
 
     return blobs, valid
 
