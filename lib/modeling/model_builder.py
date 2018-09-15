@@ -179,10 +179,18 @@ class Generalized_RCNN(nn.Module):
                 rpn_ret['rois'] = rois
 
             if self.training:
-                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
-                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets'].squeeze(dim=0)
-                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights'].squeeze(dim=0)
-                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights'].squeeze(dim=0)
+                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
+                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets']
+                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
+                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
+
+            keys = ['rois', 'labels_int32', 'bbox_targets', 'bbox_inside_weights', 'bbox_outside_weights']
+
+            if cfg.DEBUG:
+                print("Debugging Model-Builder")
+                for key in keys:
+                    if key in rpn_ret:
+                        print("{}: {}".format(key, rpn_ret[key].shape))
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret
