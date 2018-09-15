@@ -37,7 +37,7 @@ class GAN(nn.Module):
             print("roidb: {}".format(type(roidb)))
             print("flags: {}".format(type(flags)))
             print("flags: {}".format(type(adv_target)))
-            for key, value in rpn_kwargs:
+            for key, value in rpn_kwargs.items():
                 print("{}: {}".format(key, type(value)))
 
         gen_out = self.generator(data, im_info, roidb, flags, **rpn_kwargs)

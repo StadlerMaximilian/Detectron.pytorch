@@ -497,10 +497,6 @@ def main():
     else: # if Fast R-CNN, start with new model, but use pre-trained weights from config (on ImageNet)
         gan = GAN()
 
-    print("Network has the following parameters")
-    for key, value in gan.named_parameters():
-        print(key)
-
     if cfg.CUDA:
         gan.cuda()
 
