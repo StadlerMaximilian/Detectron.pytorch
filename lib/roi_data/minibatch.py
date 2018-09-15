@@ -53,8 +53,7 @@ def get_minibatch(roidb):
             if isinstance(v, list) and len(v) > 0:
                 blobs[k] = np.concatenate(v)
 
-        if cfg.DEBUG:
-            print(blobs)
+        blobs['roidb'] = roidb
 
     return blobs, valid
 

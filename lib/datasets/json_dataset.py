@@ -336,6 +336,10 @@ class JsonDataset(object):
             proposals = pickle.load(f)
 
         for key, value in proposals.items():
+
+            if cfg.DEBUG:
+                print("{}: {}".format(key, value))
+
             if isinstance(value, torch.Tensor):
                 proposals[key] = value.numpy()
 
