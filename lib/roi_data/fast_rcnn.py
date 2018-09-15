@@ -143,15 +143,15 @@ def _sample_rois(roidb, im_scale, batch_idx, flags=None):
 
     if flags is not None:
         if flags.train_pre:
-            _sample_rois_normal(roidb, im_scale, batch_idx)
+            return _sample_rois_normal(roidb, im_scale, batch_idx)
         elif cfg.GAN.GAN_MODE_ON:
             return _sample_rois_gan(roidb, im_scale, batch_idx, flags)
         else:
             print("Unexpected Input: flag is set for adversarial training with GAN_MODE_ON is False!!")
             print("calling _sample_rois_normal...")
-            _sample_rois_normal(roidb, im_scale, batch_idx)
+            return _sample_rois_normal(roidb, im_scale, batch_idx)
     else:
-        _sample_rois_normal(roidb, im_scale, batch_idx)
+        return _sample_rois_normal(roidb, im_scale, batch_idx)
 
 
 def _sample_rois_normal(roidb, im_scale, batch_idx):
