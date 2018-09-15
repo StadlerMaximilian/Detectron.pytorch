@@ -200,9 +200,13 @@ def _sample_rois_normal(roidb, im_scale, batch_idx):
 
     if not cfg.RPN.RPN_ON: # FAST-RCNN training
         # also format others as (batch_idx, ....)
+        repeated_batch_idx = batch_idx * blob_utils.ones((sampled_labels.shape[0], 1))
         sampled_labels = np.hstack((repeated_batch_idx, sampled_labels))
+        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_targets.shape[0], 1))
         bbox_targets = np.hstack((repeated_batch_idx, bbox_targets))
+        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_inside_weights.shape[0], 1))
         bbox_inside_weights = np.hstack((repeated_batch_idx, bbox_inside_weights))
+        repeated_batch_idx = batch_idx * blob_utils.ones((bbox_outside_weights.shape[0], 1))
         bbox_outside_weights = np.hstack((repeated_batch_idx, bbox_outside_weights))
 
     # Base Fast R-CNN blobs
