@@ -159,9 +159,6 @@ class Generalized_RCNN(nn.Module):
     def _forward(self, data, im_info, roidb=None, **rpn_kwargs):
         im_data = data
 
-        if cfg.DEBUG:
-            print("im_data: {}".format(im_data.size()))
-
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
 
@@ -177,15 +174,6 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = self.RPN(blob_conv, im_info, roidb)
         else:
             rpn_ret = create_fast_rcnn_rpn_ret(self.training, **rpn_kwargs)
-
-        keys = ['rois', 'labels_int32', 'bbox_targets', 'bbox_inside_weights', 'bbox_outside_weights']
-
-        if cfg.DEBUG:
-            print("Debugging Model-Builder")
-            print("blob_conv: {}".format(blob_conv.size()))
-            for key in keys:
-                if key in rpn_ret:
-                    print("{}: {}".format(key, rpn_ret[key].shape))
 
         if not self.training:
             return_dict['rpn_ret'] = rpn_ret

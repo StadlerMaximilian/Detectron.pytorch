@@ -7,6 +7,7 @@ import numpy as np
 import importlib
 
 from core.config import cfg
+from roi_data.fast_rcnn import create_fast_rcnn_rpn_ret
 from model.roi_pooling.functions.roi_pool import RoIPoolFunction
 from model.roi_crop.functions.roi_crop import RoICropFunction
 from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
@@ -121,27 +122,7 @@ class Generator(nn.Module):
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
         else:
-            rpn_ret = {}
-            rois = rpn_kwargs['rois']
-
-            if isinstance(rois, torch.Tensor):
-                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
-
-            else:
-                rpn_ret['rois'] = rois
-
-            if self.training:
-                rpn_ret['labels_int32'] = rpn_kwargs['labels_int32']
-                rpn_ret['bbox_targets'] = rpn_kwargs['bbox_targets']
-                rpn_ret['bbox_inside_weights'] = rpn_kwargs['bbox_inside_weights']
-                rpn_ret['bbox_outside_weights'] = rpn_kwargs['bbox_outside_weights']
-
-                #rpn_ret['labels_int32'] = np.concatenate(tuple([labels[i] for i in range(labels.shape[0])]), axis=0)
-                #rpn_ret['bbox_targets'] = np.concatenate(tuple([targets[i] for i in range(targets.shape[0])]), axis=0)
-                #rpn_ret['bbox_inside_weights'] = np.concatenate(tuple([inside[i] for i in range(inside.shape[0])]), axis=0)
-                #rpn_ret['bbox_outside_weights'] = np.concatenate(tuple([outside[i] for i in range(outside.shape[0])]), axis=0)
-
-            print("rois: {}, labels: {}".format(rois.shape, rpn_ret['labels_int32'].shape))
+            rpn_ret = create_fast_rcnn_rpn_ret(self.training, **rpn_kwargs)
 
         return_dict['rpn_ret'] = rpn_ret
 
