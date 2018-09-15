@@ -498,7 +498,8 @@ def main():
         gan = GAN()
 
     print("Network has the following parameters")
-    print(gan.named_parameters())
+    for key, value in gan.named_parameters():
+        print(key)
 
     if cfg.CUDA:
         gan.cuda()
