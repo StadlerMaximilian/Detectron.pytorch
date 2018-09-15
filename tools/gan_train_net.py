@@ -935,13 +935,14 @@ def main():
                 training_stats_dis.IterToc()
 
                 # clean-up to save memory
-                del loss_D
-                del loss_real
-                del loss_fake
-                del outputs_fake
-                del outputs_real
-                del input_data
-                torch.cuda.empty_cache()
+                if args.online_cleanup:
+                    del loss_D
+                    del loss_real
+                    del loss_fake
+                    del outputs_fake
+                    del outputs_real
+                    del input_data
+                    torch.cuda.empty_cache()
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
             optimizer_G.zero_grad()
@@ -969,11 +970,12 @@ def main():
                                    training_stats_dis=training_stats_dis,
                                    training_stats_gen=training_stats_gen)
 
-            # clean-up to save memory
-            del loss_G
-            del input_data
-            del outputs
-            torch.cuda.empty_cache()
+            if args.online_cleanup:
+                # clean-up to save memory
+                del loss_G
+                del input_data
+                del outputs
+                torch.cuda.empty_cache()
 
             if (step+1) % CHECKPOINT_PERIOD == 0:
                 save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
