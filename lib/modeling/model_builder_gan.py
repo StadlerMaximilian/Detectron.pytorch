@@ -30,28 +30,18 @@ class GAN(nn.Module):
 
     def _forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
 
-        gen_out = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
+        outputs_gen = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
 
         if self.training:
-            blob_conv = None
-
-            outputs_gen = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
-
-            if flags.real_mode:
-                blob_conv = outputs_gen['blob_conv_pooled']
-            elif flags.fake_mode:
-                blob_conv = outputs_gen['blob_fake']
-
             rpn_ret = outputs_gen['rpn_ret']
 
-            input_discriminator = {'blob_conv': blob_conv,
+            input_discriminator = {'blob_conv': outputs_gen['blob_conv'],
                                    'rpn_ret': rpn_ret,
                                    'adv_target': adv_target
                                    }
         else:
-            blob_fake = gen_out['blob_fake']
-            rpn_ret = gen_out['rpn_ret']
-            input_discriminator = {'blob_conv': blob_fake,
+            rpn_ret = outputs_gen['rpn_ret']
+            input_discriminator = {'blob_conv': outputs_gen['blob_fake'],
                                    'rpn_ret': rpn_ret
                                    }
 
@@ -60,12 +50,13 @@ class GAN(nn.Module):
         if not self.training: # if eval only
             copy_blobs = ['blob_conv_pooled', 'blob_fake', 'blob_conv_residual', 'rpn_ret']
             for key in copy_blobs:
-                dis_out[key] = gen_out[key]
+                dis_out[key] = outputs_gen[key]
 
-        print("\t memory: allocated: {} (max: {}), cached: {} (max: {})".format(torch.cuda.memory_allocated(),
-                                                                                torch.cuda.max_memory_allocated(),
-                                                                                torch.cuda.memory_cached(),
-                                                                                torch.cuda.max_memory_cached()))
+        if cfg.DEBUG:
+            print("\t memory: allocated: {} (max: {}), cached: {} (max: {})".format(torch.cuda.memory_allocated(),
+                                                                                    torch.cuda.max_memory_allocated(),
+                                                                                    torch.cuda.memory_cached(),
+                                                                                    torch.cuda.max_memory_cached()))
 
         return dis_out
 

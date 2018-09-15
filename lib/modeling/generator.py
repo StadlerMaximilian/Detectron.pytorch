@@ -123,23 +123,27 @@ class Generator(nn.Module):
 
         blob_conv, blob_conv_base = self.Conv_Body(im_data)
 
-        if not self.training:
-            return_dict['blob_conv'] = blob_conv
-
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
 
         return_dict['rpn_ret'] = rpn_ret
 
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
-        return_dict['blob_conv_pooled'] = blob_conv_pooled
+
+        if not self.training:
+            return_dict['blob_conv_pooled'] = blob_conv_pooled
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
 
         if not self.training:
             return_dict['blob_conv_residual'] = blob_conv_residual
+            return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
-        return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
+        if self.training:
+            if flags.real_mode:
+                return_dict['blob_conv'] = blob_conv_pooled
+            elif flags.fake_mode:
+                return_dict['blob_conv'] = torch.add(blob_conv_pooled, blob_conv_residual)
 
         return return_dict
 
