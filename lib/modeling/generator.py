@@ -114,6 +114,13 @@ class Generator(nn.Module):
         if self.training:
             roidb = list(map(lambda x: blob_utils.deserialize(x)[0], roidb))
 
+        # if training FAST-RCNN like
+        # create rpn_ret at first (it is ensured that rois-data are numpy arrays and on CPU before
+        # actual convolutional inputs are created to save memory
+
+        if not cfg.RPN.RPN_ON:
+            rpn_ret = create_fast_rcnn_rpn_ret(self.training, **rpn_kwargs)
+
         blob_conv, blob_conv_base = self.Conv_Body(im_data)
 
         if not self.training:
@@ -121,8 +128,6 @@ class Generator(nn.Module):
 
         if cfg.RPN.RPN_ON:
             rpn_ret = self.RPN(blob_conv, im_info, roidb, flags)
-        else:
-            rpn_ret = create_fast_rcnn_rpn_ret(self.training, **rpn_kwargs)
 
         return_dict['rpn_ret'] = rpn_ret
 
