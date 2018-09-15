@@ -188,6 +188,7 @@ class Generalized_RCNN(nn.Module):
 
             if cfg.DEBUG:
                 print("Debugging Model-Builder")
+                print("blob_conv: {}".format(blob_conv.size()))
                 for key in keys:
                     if key in rpn_ret:
                         print("{}: {}".format(key, rpn_ret[key].shape))
