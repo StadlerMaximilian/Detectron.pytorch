@@ -369,6 +369,13 @@ def main():
 
     timers = defaultdict(Timer)
 
+    # prepare flags
+    # for FAST R-CNN: rois are not sampled on the run. The flags therefore have to be passed to the actual dataloader
+    fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
+    real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
+    fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+    pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
+
     # Datasets #
     timers['roidb_real'].tic()
     roidb_real, ratio_list_real, ratio_index_real = combined_roidb_for_training(
@@ -390,7 +397,8 @@ def main():
     dataset_pre = RoiDataLoader(
         roidb_real,
         cfg.MODEL.NUM_CLASSES,
-        training=True)
+        training=True,
+        flags=pre_flag)
 
     dataloader_pre = torch.utils.data.DataLoader(
         dataset_pre,
@@ -410,7 +418,8 @@ def main():
     dataset_real_discriminator = RoiDataLoader(
         roidb_real,
         cfg.MODEL.NUM_CLASSES,
-        training=True)
+        training=True,
+        flags=real_dis_flag)
 
     dataloader_real_discriminator = torch.utils.data.DataLoader(
         dataset_real_discriminator,
@@ -441,7 +450,9 @@ def main():
     dataset_fake_discriminator = RoiDataLoader(
         roidb_fake,
         cfg.MODEL.NUM_CLASSES,
-        training=True)
+        training=True,
+        flags=fake_dis_flag
+    )
 
     dataloader_fake_discriminator = torch.utils.data.DataLoader(
         dataset_fake_discriminator,
@@ -461,7 +472,9 @@ def main():
     dataset_fake_generator = RoiDataLoader(
         roidb_fake,
         cfg.MODEL.NUM_CLASSES,
-        training=True)
+        training=True,
+        flags=fake_gen_flag
+    )
 
     dataloader_fake_generator = torch.utils.data.DataLoader(
         dataset_fake_generator,
@@ -481,7 +494,7 @@ def main():
                       discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
         else:
             gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
-    else: # if Fast R-CNN, start with new model
+    else: # if Fast R-CNN, start with new model, but use pre-trained weights from config (on ImageNet)
         gan = GAN()
 
     if cfg.CUDA:
@@ -718,12 +731,7 @@ def main():
         logger.info('Training starts !')
         step = args.start_step
 
-        # prepare flags and adv_targets for training
-        fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
-        real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
-        fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
-        pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
-
+        # prepare adv_targets for training
         Tensor = torch.cuda.FloatTensor
         batch_size = cfg.GAN.TRAIN.IMS_PER_BATCH_D * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_D
         batch_size_gen = cfg.GAN.TRAIN.IMS_PER_BATCH_G * cfg.GAN.TRAIN.BATCH_SIZE_PER_IM_G

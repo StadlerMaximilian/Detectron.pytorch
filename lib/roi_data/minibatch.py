@@ -24,7 +24,7 @@ def get_minibatch_blob_names(is_training=True):
     return blob_names
 
 
-def get_minibatch(roidb):
+def get_minibatch(roidb, flags=None):
     """Given a roidb, construct a minibatch sampled from it."""
     # We collect blobs from each image onto a list and then concat them into a
     # single tensor, hence we initialize each blob to an empty list
@@ -40,7 +40,7 @@ def get_minibatch(roidb):
         raise NotImplementedError
     else:
         # Fast R-CNN like models trained on precomputed proposals
-        valid = roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb)
+        valid = roi_data.fast_rcnn.add_fast_rcnn_blobs(blobs, im_scales, roidb, flags)
 
         for im_i, entry in enumerate(roidb):
             scale = im_scales[im_i]
