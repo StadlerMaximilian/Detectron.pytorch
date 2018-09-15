@@ -814,7 +814,7 @@ def main():
             del training_stats_pre
             del input_data_pre
             del loss_pre
-            del training_stats_pre
+            del outputs_pre
             torch.cuda.empty_cache()
 
             # save model after pre-training
