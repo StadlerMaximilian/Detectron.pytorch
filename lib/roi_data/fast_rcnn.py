@@ -445,7 +445,7 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
 
     assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
 
-    for batch in rois.shape[0]:
+    for batch in range(rois.shape[0]):
         roi_list.append(rois[batch, :, :])
         if training:
             targets_list.append(targets[batch, :, :])
