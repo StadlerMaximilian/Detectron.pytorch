@@ -30,6 +30,16 @@ class GAN(nn.Module):
 
     def _forward(self, data, im_info, roidb=None, flags=None, adv_target=None, **rpn_kwargs):
 
+        if cfg.DEBUG:
+            print("forward in model_builder_gan")
+            print("data: {}".format(type(data)))
+            print("im_info: {}".format(im_info))
+            print("roidb: {}".format(type(roidb)))
+            print("flags: {}".format(type(flags)))
+            print("flags: {}".format(type(adv_target)))
+            for key, value in rpn_kwargs:
+            print("{}: {}".format(key, type(value)))
+
         gen_out = self.generator(data, im_info, roidb, flags, **rpn_kwargs)
 
         if self.training:
