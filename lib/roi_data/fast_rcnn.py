@@ -199,7 +199,8 @@ def _sample_rois_normal(roidb, im_scale, batch_idx):
     sampled_rois = np.hstack((repeated_batch_idx, sampled_rois))
 
     if not cfg.RPN.RPN_ON: # FAST-RCNN training
-        # also "format" others as (batch_idx, ....) by expanding dimensions
+        # need to unsqueeze things for functionality in loader / minibatch.py ...
+        sampled_rois = np.expand_dims(sampled_rois, axis=0)
         sampled_labels = np.expand_dims(sampled_labels, axis=0)
         bbox_targets = np.expand_dims(bbox_targets, axis=0)
         bbox_outside_weights = np.expand_dims(bbox_outside_weights, axis=0)
