@@ -137,7 +137,6 @@ def add_fast_rcnn_blobs(blobs, im_scales, roidb, flags=None):
 
 
 def _sample_rois(roidb, im_scale, batch_idx, flags=None):
-
     if flags is not None:
         if flags.train_pre:
             return _sample_rois_normal(roidb, im_scale, batch_idx)
@@ -347,6 +346,14 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     repeated_batch_idx = batch_idx * blob_utils.ones((sampled_rois.shape[0], 1))
     sampled_rois = np.hstack((repeated_batch_idx, sampled_rois))
 
+    if not cfg.RPN.RPN_ON: # FAST-RCNN training
+        # need to unsqueeze things for functionality in loader / minibatch.py ...
+        sampled_rois = np.expand_dims(sampled_rois, axis=0)
+        sampled_labels = np.expand_dims(sampled_labels, axis=0)
+        bbox_targets = np.expand_dims(bbox_targets, axis=0)
+        bbox_outside_weights = np.expand_dims(bbox_outside_weights, axis=0)
+        bbox_inside_weights = np.expand_dims(bbox_inside_weights, axis=0)
+        
     # Base Fast R-CNN blobs
     blob_dict = dict(
         labels_int32=sampled_labels.astype(np.int32, copy=False),
