@@ -941,8 +941,8 @@ def main():
             )
 
             input_data.update({"flags": fake_gen_flag,
-                                      "adv_target": adv_target_gen}
-                                     )
+                               "adv_target": adv_target_gen}
+                              )
             outputs = gan(**input_data)
             training_stats_gen.UpdateIterStats(out=outputs)
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
