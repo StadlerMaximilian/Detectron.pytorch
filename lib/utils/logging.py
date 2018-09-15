@@ -115,7 +115,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
             lines += "\t\tGenerator_adv: " + ", ".join("%s: %.6f" %
                                                        (k, v) for k, v in stats_gen['adv_loss'].items())
         if stats_dis['adv_loss']:
-            lines += "\t\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
+            lines += "\t\t\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
                                                          (k, v) for k, v in stats_dis['adv_loss'].items()) + "\n"
 
     print(lines[:-1])  # remove last new line

@@ -896,8 +896,6 @@ def main():
 
             # train discriminator only on adversarial branch
 
-            optimizer_G.zero_grad()
-
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
@@ -946,6 +944,7 @@ def main():
                 torch.cuda.empty_cache()
 
             # train generator on total loss of discriminator (all losses weighted simply with 1)
+            optimizer_G.zero_grad()
             training_stats_gen.IterTic()
 
             input_data, dataiterator_fake_generator = create_input_data(
