@@ -173,10 +173,10 @@ class Generalized_RCNN(nn.Module):
             rpn_ret = {}
             rois = rpn_kwargs['rois']
             if isinstance(rois, torch.Tensor):
-                rpn_ret['rois'] = rois.cpu().numpy().squeeze(axis=0)
+                rpn_ret['rois'] = rois.cpu().numpy()
             else:
                 # during testing, no batch-idx is used
-                rpn_ret['rois'] = rois # rois.squeeze(axis=0)
+                rpn_ret['rois'] = rois
 
             if self.training:
                 rpn_ret['labels_int32'] = rpn_kwargs['labels_int32'].squeeze(dim=0)
