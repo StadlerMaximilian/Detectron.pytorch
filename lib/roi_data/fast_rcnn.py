@@ -443,7 +443,8 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
         outside = rpn_kwargs['bbox_outside_weights'].cpu().numpy()
         outside_list = []
 
-    assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
+    if training:
+        assert rois.shape[0] == labels.shape[0] == targets.shape[0] == inside.shape[0] == outside.shape[0]
 
     for batch in range(rois.shape[0]):
         roi_list.append(rois[batch, :, :])
@@ -457,7 +458,7 @@ def create_fast_rcnn_rpn_ret(training, **rpn_kwargs):
     rpn_ret['rois'] = rois
 
     if training:
-        labels = np.vstack(tuple(labels_list))
+        labels = np.hstack(tuple(labels_list))
         targets = np.vstack(tuple(targets_list))
         inside = np.vstack(tuple(inside_list))
         outside = np.vstack(tuple(outside_list))
