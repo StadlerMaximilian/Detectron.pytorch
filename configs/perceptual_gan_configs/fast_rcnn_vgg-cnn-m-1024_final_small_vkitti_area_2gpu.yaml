@@ -75,7 +75,7 @@ GAN:
     LR_POLICY_PRE: steps_with_decay
     BASE_LR_D: 0.0025 #0.00125
     BASE_LR_G: 0.0025 #0.00125
-    BASE_LR_PRE: 0.00125
+    BASE_LR_PRE: 0.0025 #0.0025
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1

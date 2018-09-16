@@ -251,8 +251,7 @@ class ResidualBlock(nn.Module):
 
         self.block = nn.Sequential(nn.Conv2d(in_channels, num, kernel, stride=stride, padding=1),
                                    nn.BatchNorm2d(num),
-                                   #nn.ReLU(),
-                                   nn.PReLU(),
+                                   nn.LeakyReLU(negative_slope=0.2),
                                    nn.Conv2d(num, num, kernel, stride=stride, padding=1),
                                    nn.BatchNorm2d(num)
                                    )
@@ -301,9 +300,9 @@ class GeneratorBlock(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
         self.gen_base = nn.Sequential(nn.Conv2d(dim_out_base, 256, 3, padding=1, stride=2),
-                                      nn.PReLU(),
+                                      nn.LeakyReLU(negative_slope=0.2),
                                       nn.Conv2d(256, dim_out, 1, padding=0, stride=1),
-                                      nn.PReLU()
+                                      nn.LeakyReLU(negative_slope=0.2),
                                       )
         self._init_weights()
 
