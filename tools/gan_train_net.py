@@ -767,11 +767,11 @@ def main():
                     else:
                         raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
                     lr_new_pre = cfg.GAN.SOLVER.BASE_LR_PRE * warmup_factor
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre, type='pre')
+                    net_utils.update_learning_rate_gan(optimizer_pre, lr_pre, lr_new_pre, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == lr_new_pre
                 elif step == cfg.GAN.SOLVER.PRE_WARM_UP_ITERS :
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE, type='pre')
+                    net_utils.update_learning_rate_gan(optimizer_pre, lr_pre, cfg.GAN.SOLVER.BASE_LR_PRE, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == cfg.GAN.SOLVER.BASE_LR_PRE
 
@@ -780,7 +780,7 @@ def main():
                         step == cfg.GAN.SOLVER.STEPS_PRE[decay_steps_ind_pre]:
                     logger.info('Decay the learning (pre-training) on step %d', step)
                     lr_new_pre = lr_pre * cfg.GAN.SOLVER.GAMMA_PRE
-                    net_utils.update_learning_rate(optimizer_pre, lr_pre, lr_new_pre, type='pre')
+                    net_utils.update_learning_rate_gan(optimizer_pre, lr_pre, lr_new_pre, type='pre')
                     lr_pre = optimizer_pre.param_groups[0]['lr']
                     assert lr_pre == lr_new_pre
                     decay_steps_ind_pre += 1
@@ -861,15 +861,15 @@ def main():
                     raise KeyError('Unknown SOLVER.WARM_UP_METHOD: {}'.format(method))
                 lr_new_D = cfg.GAN.SOLVER.BASE_LR_D * warmup_factor
                 lr_new_G = cfg.GAN.SOLVER.BASE_LR_G * warmup_factor
-                net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
-                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
+                net_utils.update_learning_rate_gan(optimizer_D, lr_D, lr_new_D, type='dis')
+                net_utils.update_learning_rate_gan(optimizer_G, lr_G, lr_new_G, type='gen')
                 lr_D = optimizer_D.param_groups[0]['lr']
                 lr_G = optimizer_G.param_groups[0]['lr']
                 assert lr_D == lr_new_D
                 assert lr_G == lr_new_G
             elif step == cfg.GAN.SOLVER.WARM_UP_ITERS:
-                net_utils.update_learning_rate(optimizer_D, lr_D, cfg.GAN.SOLVER.BASE_LR_D)
-                net_utils.update_learning_rate(optimizer_G, lr_G, cfg.GAN.SOLVER.BASE_LR_G)
+                net_utils.update_learning_rate_gan(optimizer_D, lr_D, cfg.GAN.SOLVER.BASE_LR_D, type="dis")
+                net_utils.update_learning_rate_gan(optimizer_G, lr_G, cfg.GAN.SOLVER.BASE_LR_G, type="gen")
                 lr_D = optimizer_D.param_groups[0]['lr']
                 lr_G = optimizer_G.param_groups[0]['lr']
                 assert lr_D == cfg.GAN.SOLVER.BASE_LR_D
@@ -880,7 +880,7 @@ def main():
                     step == cfg.GAN.SOLVER.STEPS_D[decay_steps_ind_D]:
                 logger.info('Decay the learning (discriminator) on step %d', step)
                 lr_new_D = lr_D * cfg.GAN.SOLVER.GAMMA_D
-                net_utils.update_learning_rate(optimizer_D, lr_D, lr_new_D)
+                net_utils.update_learning_rate_gan(optimizer_D, lr_D, lr_new_D, type="dis")
                 lr_D = optimizer_D.param_groups[0]['lr']
                 assert lr_D == lr_new_D
                 decay_steps_ind_D += 1
@@ -889,7 +889,7 @@ def main():
                     step == cfg.GAN.SOLVER.STEPS_G[decay_steps_ind_G]:
                 logger.info('Decay the learning (generator) on step %d', step)
                 lr_new_G = lr_G * cfg.GAN.SOLVER.GAMMA_G
-                net_utils.update_learning_rate(optimizer_G, lr_G, lr_new_G)
+                net_utils.update_learning_rate_gan(optimizer_G, lr_G, lr_new_G, type="gen")
                 lr_G = optimizer_G.param_groups[0]['lr']
                 assert lr_G == lr_new_G
                 decay_steps_ind_G += 1

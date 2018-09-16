@@ -56,7 +56,7 @@ class GAN(nn.Module):
         #      print("\t memory: allocated: {} (max: {}), cached: {} (max: {})".format(torch.cuda.memory_allocated(),
         #                                                                              torch.cuda.max_memory_allocated(),
         #                                                                              torch.cuda.memory_cached(),
-        #                                                                              torch.cuda.max_memory_cached()))
+        #                                                                               torch.cuda.max_memory_cached()))
 
         return dis_out
 
