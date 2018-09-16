@@ -25,11 +25,11 @@ class Discriminator(nn.Module):
         self.orphans_in_detectron = None
 
         self.adversarial = nn.Sequential(nn.Linear(self.fc_dim, 4096),
-                                         nn.ReLU(inplace=True),
-                                         #nn.LeakyReLU(negative_slope=0.2, inplace=True),
+                                         #nn.ReLU(inplace=True),
+                                         nn.LeakyReLU(negative_slope=0.2, inplace=True),
                                          nn.Linear(4096, 1024),
-                                         nn.ReLU(inplace=True),
-                                         #nn.LeakyReLU(negative_slope=0.2, inplace=True),
+                                         #nn.ReLU(inplace=True),
+                                         nn.LeakyReLU(negative_slope=0.2, inplace=True),
                                          nn.Linear(1024, 1),
                                          nn.Sigmoid())
 

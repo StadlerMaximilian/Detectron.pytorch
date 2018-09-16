@@ -586,6 +586,8 @@ def main():
         'bias_param_names': [],
         'nonbias_params': [],
         'nonbias_param_names': [],
+        'relu_params': [],
+        'relu_param_names': [],
         'nograd_param_names': []
     }
 
@@ -595,6 +597,9 @@ def main():
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
                 params_list_G['bias_param_names'].append(key)
+            elif 'PReLU' in key:
+                params_list_G['relu_params'].append(value)
+                params_list_G['relu_param_names'].append(key)
             else:
                 params_list_G['nonbias_params'].append(value)
                 params_list_G['nonbias_param_names'].append(key)
@@ -607,10 +612,16 @@ def main():
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G},
         {'params': params_list_G['bias_params'],
          'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_G + 1),
-         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0}
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0},
+        {
+            'params': params_list_G['relu_params'],
+            'lr': 0,
+            'weight_decay': 0
+        }
     ]
 
-    param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
+    param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names'],
+                     params_list_G['relu_param_names']]
     logger.info("Parameters generator is trained on")
     logger.info(param_names_G)
 
