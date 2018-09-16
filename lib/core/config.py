@@ -1041,6 +1041,10 @@ __C.GAN.TRAIN.BATCH_SIZE_PER_IM_G = 128
 __C.GAN.TRAIN.FG_FRACTION_G = 0.25
 __C.GAN.TRAIN.SNAPSHOT_ITERS = 5000
 
+# Flag if update of discriminator during adversarial training should be carried out on both
+# perceptual and adversarial branch
+__C.GAN.TRAIN.TRAIN_FULL_DIS = False
+
 __C.GAN.SOLVER = AttrDict()
 
 # e.g 'SGD', 'Adam'
@@ -1095,8 +1099,8 @@ __C.GAN.SOLVER.WEIGHT_DECAY_G = 0.0005
 __C.GAN.SOLVER.WEIGHT_DECAY_PRE = 0.0005
 
 # Whether to double the learning rate for bias
-__C.GAN.SOLVER.BIAS_DOUBLE_LR_D = False
-__C.GAN.SOLVER.BIAS_DOUBLE_LR_G = False
+__C.GAN.SOLVER.BIAS_DOUBLE_LR_D = True
+__C.GAN.SOLVER.BIAS_DOUBLE_LR_G = True
 __C.GAN.SOLVER.BIAS_DOUBLE_LR_PRE = True
 
 # Whether to have weight decay on bias as well

@@ -509,7 +509,12 @@ def main():
     }
 
     # train discriminator only on adversarial branch
-    for key, value in gan.discriminator.adversarial.named_parameters():
+    if GAN.TRAIN.TRAIN_FULL_DIS:
+        dis_params = gan.discriminator.named_parameters()
+    else:
+        dis_params = gan.discriminator.adversarial.named_parameters()
+
+    for key, value in dis_params:
         if value.requires_grad:
             if 'bias' in key:
                 params_list_D['bias_params'].append(value)
@@ -553,9 +558,16 @@ def main():
             pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
                                      gan.discriminator.Box_Outs.named_parameters())
     else:
-        pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
-                                 gan.discriminator.Box_Outs.named_parameters(),
-                                 gan.generator.Conv_Body.named_parameters())
+        if cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
+            pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
+                                     gan.discriminator.Box_Outs.named_parameters(),
+                                     gan.generator.Conv_Body.named_parameters(),
+                                     gan.generator.Generator_Block.named_parameters()
+                                     )
+        else:
+            pre_named_params = chain(gan.discriminator.Box_Head.named_parameters(),
+                                     gan.discriminator.Box_Outs.named_parameters(),
+                                     gan.generator.Conv_Body.named_parameters())
 
     for key, value in pre_named_params:
         if value.requires_grad:
@@ -590,7 +602,9 @@ def main():
     }
 
     # train generator only on generator network (generator block)
-    for key, value in gan.generator.Generator_Block.named_parameters():
+    gen_params = gan.generator.Generator_Block.named_parameters()
+
+    for key, value in gen_params:
         if value.requires_grad:
             if 'bias' in key:
                 params_list_G['bias_params'].append(value)
