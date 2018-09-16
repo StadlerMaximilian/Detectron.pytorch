@@ -509,7 +509,7 @@ def main():
     }
 
     # train discriminator only on adversarial branch
-    if GAN.TRAIN.TRAIN_FULL_DIS:
+    if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
         dis_params = gan.discriminator.named_parameters()
     else:
         dis_params = gan.discriminator.adversarial.named_parameters()
