@@ -141,6 +141,12 @@ def parse_args():
         help='Flag for deleting objects and freeing GPU-cache, may increase run-time.'
     )
 
+    parser.add_argument(
+        '--testing_pre_training',
+        action='store_true',
+        help='Flag for deleting objects and freeing GPU-cache, may increase run-time.'
+    )
+
     return parser.parse_args()
 
 
@@ -851,24 +857,25 @@ def main():
         final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
                                     model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
 
-        test_output_dir = os.path.join(output_dir_pre, 'testing')
+        if args.testing_pre_training:
+            test_output_dir = os.path.join(output_dir_pre, 'testing')
 
-        logger.info("Testing model after pre-training")
-        if final_model is not None:
-            if args.multi_gpu_testing:
-                args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
-                                      load_ckpt='{}'.format(final_model),
-                                      load_dis=None, load_gen=None,
-                                      multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
-                                      range=None, set_cfgs=args.set_cfgs, vis=False)
-            else:
-                args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
-                                      load_ckpt='{}'.format(final_model),
-                                      load_dis=None, load_gen=None,
-                                      multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
-                                      range=None, set_cfgs=args.set_cfgs, vis=False)
+            logger.info("Testing model after pre-training")
+            if final_model is not None:
+                if args.multi_gpu_testing:
+                    args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                          load_ckpt='{}'.format(final_model),
+                                          load_dis=None, load_gen=None,
+                                          multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
+                                          range=None, set_cfgs=args.set_cfgs, vis=False)
+                else:
+                    args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                          load_ckpt='{}'.format(final_model),
+                                          load_dis=None, load_gen=None,
+                                          multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
+                                          range=None, set_cfgs=args.set_cfgs, vis=False)
 
-            test_net_routine(args_test)
+                test_net_routine(args_test)
 
 
         # combined training
