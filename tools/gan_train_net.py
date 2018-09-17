@@ -830,9 +830,6 @@ def main():
             if args.use_tfboard and not args.no_save:
                 tblogger_pre.close()
 
-            # save model after pre-training
-            final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
-                                        model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
             # CLEAN-UP !!
             logger.info("clean-up after pre-training ...")
@@ -849,6 +846,10 @@ def main():
             torch.cuda.empty_cache()
 
             logger.info("clean-up finished.")
+
+        # save model after pre-training
+        final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                                    model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
         test_output_dir = os.path.join(output_dir_pre, 'testing')
 
