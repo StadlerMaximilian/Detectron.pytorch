@@ -72,8 +72,9 @@ class Discriminator(nn.Module):
                     # do not consider background rois in adversarial loss
                     mask = np.where(rpn_ret['labels_int32'] == 0)
                     if cfg.DEBUG:
-                        lenMask = [len(x) for x in mask]
-                        lenMask = len(lenMask)
+                        lenMask = 0
+                        for x in mask:
+                            lenMask += sum(x) 
                         print("ignoring backgound rois in adv_loss: {} / {}".format(lenMask,
                                                                                     len(rpn_ret['labels_int32'])))
                     loss_adv = self.adversarial_loss(adv_score, adv_target, reduce=False)
