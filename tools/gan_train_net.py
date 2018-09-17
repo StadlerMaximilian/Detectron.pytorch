@@ -831,8 +831,8 @@ def main():
                 tblogger_pre.close()
 
             # save model after pre-training
-            save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
-                          model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
+            final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
+                                        model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
 
             # CLEAN-UP !!
             logger.info("clean-up after pre-training ...")
@@ -849,6 +849,25 @@ def main():
             torch.cuda.empty_cache()
 
             logger.info("clean-up finished.")
+
+        test_output_dir = os.path.join(output_dir_pre, 'testing')
+
+        logger.info("Testing model after pre-training")
+        if final_model is not None:
+            if args.multi_gpu_testing:
+                args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                      load_ckpt='{}'.format(final_model),
+                                      load_dis=None, load_gen=None,
+                                      multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
+                                      range=None, set_cfgs=args.set_cfgs, vis=False)
+            else:
+                args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                      load_ckpt='{}'.format(final_model),
+                                      load_dis=None, load_gen=None,
+                                      multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
+                                      range=None, set_cfgs=args.set_cfgs, vis=False)
+
+            test_net_routine(args_test)
 
 
         # combined training

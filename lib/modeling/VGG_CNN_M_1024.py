@@ -147,7 +147,6 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
 
     def forward(self, x, rpn_ret):
 
-
         # for debugging:
         if cfg.DEBUG:
             x_copy = x.clone()
