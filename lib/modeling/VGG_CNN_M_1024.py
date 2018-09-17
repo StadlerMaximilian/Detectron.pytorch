@@ -147,10 +147,12 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
 
     def forward(self, x, rpn_ret):
 
+
         # for debugging:
         if cfg.DEBUG:
+            x_copy = x.copy()
             y = self.roi_pool(x, rpn_ret)
-            z = self.roi_pool(x, rpn_ret)
+            z = self.roi_pool(x_copy, rpn_ret)
 
             x = 0.5 * (y + z)  # test if roiPool involves some randomness
 
