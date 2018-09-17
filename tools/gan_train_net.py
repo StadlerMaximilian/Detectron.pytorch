@@ -799,6 +799,9 @@ def main():
                     assert lr_pre == lr_new_pre
                     decay_steps_ind_pre += 1
 
+                if cfg.DEBUG:
+                    print("pre-training ...")
+
                 optimizer_pre.zero_grad()
                 training_stats_pre.IterTic()
 
@@ -917,6 +920,11 @@ def main():
 
                 # train on fake data
 
+
+                if cfg.DEBUG:
+                    print("training on fake data ...")
+
+
                 input_data, dataiterator_fake_discriminator = create_input_data(
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
                 )
@@ -930,6 +938,9 @@ def main():
                 input_data, dataiterator_real_discriminator = create_input_data(
                     dataiterator_real_discriminator, dataloader_real_discriminator
                 )
+
+                if cfg.DEBUG:
+                    print("training on real data ...")
 
                 input_data.update({"flags": real_dis_flag,
                                    "adv_target": adv_target_real}

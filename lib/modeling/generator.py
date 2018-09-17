@@ -342,7 +342,7 @@ class GeneratorBlock(nn.Module):
         for n in range(cfg.GAN.MODEL.NUM_BLOCKS):
             x = self.__getattr__('gen_res_block' + str(n+1))(x)
             if cfg.DEBUG:
-                print("\tShape ShapeGANBlock{}: {}".format(n, x.size()))
+                print("\tShape ShapeGANBlock{}: {}".format(n+1, x.size()))
 
         return x
 
