@@ -939,8 +939,14 @@ def main():
                 training_stats_dis.UpdateIterStats(out=outputs_real, out_add=outputs_fake)
                 training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
 
-                loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
-                loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
+                if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
+                    loss_fake = outputs_fake['losses']['loss_adv'] + outputs_fake['losses']['loss_cls'] \
+                                                                   + outputs_fake['losses']['loss_bbox']
+                    loss_real = outputs_real['losses']['loss_adv'] + outputs_real['losses']['loss_cls'] \
+                                                                   + outputs_real['losses']['loss_bbox']
+                else:
+                    loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
+                    loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
@@ -974,8 +980,7 @@ def main():
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
-            loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox']
-            loss_G = loss_G + outputs['losses']['loss_adv']
+            loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] + outputs['losses']['loss_adv']
             loss_G.backward()
             optimizer_G.step()
             training_stats_gen.IterToc()
