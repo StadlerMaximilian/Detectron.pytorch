@@ -19,7 +19,7 @@ class GAN(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
 
-        self.generator = Generator(generator_weights)
+        self.generator = Generator(self.roi_feature_transform, generator_weights)
         resolution = self.generator.Conv_Body.resolution
 
         if cfg.RPN.RPN_ON:
