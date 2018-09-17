@@ -62,11 +62,16 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
 
+        if cfg.DEBUG:
+            print("\tShape Conv1: {}".format(x.size()))
+
         if cfg.GAN.GAN_MODE_ON:
             x_base = x
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)
+            if cfg.DEBUG:
+                print("\tShape Conv{}: {}".format(i, x.size()))
 
         if cfg.GAN.GAN_MODE_ON:
             return x, x_base

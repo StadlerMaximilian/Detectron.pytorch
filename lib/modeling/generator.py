@@ -130,10 +130,16 @@ class Generator(nn.Module):
 
         blob_conv_pooled = self.roi_pool(blob_conv, rpn_ret)
 
+        if cfg.DEBUG:
+            print("\tShape ConvPooled: {}".format(blob_conv_pooled.size()))
+
         if not self.training:
             return_dict['blob_conv_pooled'] = blob_conv_pooled
 
         blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
+
+        if cfg.DEBUG:
+            print("\tShape Residual: {}".format(blob_conv_residual.size()))
 
         if not self.training:
             return_dict['blob_conv_residual'] = blob_conv_residual
@@ -142,8 +148,12 @@ class Generator(nn.Module):
         if self.training:
             if flags.real_mode:
                 return_dict['blob_conv'] = blob_conv_pooled
+                if cfg.DEBUG:
+                    print("\tblob_conv: blob_conv_pooled")
             elif flags.fake_mode:
-                return_dict['blob_conv'] = torch.add(blob_conv_pooled, blob_conv_residual)
+                return_dict['blob_conv'] = blob_conv_pooled + blob_conv_residual
+                if cfg.DEBUG:
+                    print("\tblob_conv: blob_conv_pooled + blob_conv_residual")
 
         return return_dict
 
@@ -321,10 +331,18 @@ class GeneratorBlock(nn.Module):
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)
+
+        if cfg.DEBUG:
+            print("\tShape GenBase: {}".format(x.size()))
+
         x = self.roi_xform.forward(x, rpn_ret)
+        if cfg.DEBUG:
+            print("\tShape GenBasePooled: {}".format(x.size()))
 
         for n in range(cfg.GAN.MODEL.NUM_BLOCKS):
             x = self.__getattr__('gen_res_block' + str(n+1))(x)
+            if cfg.DEBUG:
+                print("\tShape ShapeGANBlock{}: {}".format(n, x.size()))
 
         return x
 
