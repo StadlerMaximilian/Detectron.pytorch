@@ -151,7 +151,8 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
         y = self.roi_pool(x, rpn_ret)
         z = self.roi_pool(x, rpn_ret)
 
-        x = 0.5 * (y + z) # test if roiPool involves some randomness
+        x = 0.5 * (y + z)  # test if roiPool involves some randomness
+
         print("debugging roi-pool: addind twice pooled and multiplying with 0.5 ...")
 
         batch_size = x.size(0)
