@@ -37,7 +37,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
                                    )
 
         self.spatial_scale = 1. / 16.
-        self.spatial_scale_base = 1. / 2.
+        self.spatial_scale_base = 1. / 4.
         self.dim_out_base = 96
         self.dim_out = 512
         self.resolution = 6
