@@ -74,7 +74,7 @@ class Discriminator(nn.Module):
                     if cfg.DEBUG:
                         lenMask = 0
                         for x in mask:
-                            lenMask += sum(x) 
+                            lenMask += len(x)
                         print("ignoring backgound rois in adv_loss: {} / {}".format(lenMask,
                                                                                     len(rpn_ret['labels_int32'])))
                     loss_adv = self.adversarial_loss(adv_score, adv_target, reduce=False)
