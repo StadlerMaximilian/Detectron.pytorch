@@ -285,6 +285,10 @@ class Generalized_RCNN(nn.Module):
           - Use of FPN or not
           - Specifics of the transform method
         """
+
+        if cfg.DEBUG:
+            print("roi_feature_transform: resolution: {}, spatial_scale: {}".format(resolution, spatial_scale))
+
         assert method in {'RoIPoolF', 'RoICrop', 'RoIAlign'}, \
             'Unknown pooling method: {}'.format(method)
 

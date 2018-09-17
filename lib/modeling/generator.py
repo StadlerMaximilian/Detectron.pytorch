@@ -8,9 +8,6 @@ import importlib
 
 from core.config import cfg
 from roi_data.fast_rcnn import create_fast_rcnn_rpn_ret
-from model.roi_pooling.functions.roi_pool import RoIPoolFunction
-from model.roi_crop.functions.roi_crop import RoICropFunction
-from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
 import modeling.rpn_heads as rpn_heads
 import utils.net as net_utils
 import utils.blob as blob_utils
@@ -44,7 +41,7 @@ class Generator(nn.Module):
     usage of the branch of conv1 features, additional pooling and is building the main GeneratorBlock upon this pooled
     features
     """
-    def __init__(self, pretrained_weights=None):
+    def __init__(self, roi_feature_transform, pretrained_weights=None):
         assert cfg.GAN.GAN_MODE_ON
         super().__init__()
 
@@ -60,10 +57,10 @@ class Generator(nn.Module):
             self.RPN = rpn_heads.generic_rpn_outputs(
                 self.Conv_Body.dim_out, self.Conv_Body.spatial_scale)
 
-        self.roi_pool = net_utils.roiPoolingLayer(self.roi_feature_transform, self.Conv_Body.spatial_scale,
+        self.roi_pool = net_utils.roiPoolingLayer(roi_feature_transform, self.Conv_Body.spatial_scale,
                                                   self.Conv_Body.resolution)
 
-        self.Generator_Block = GeneratorBlock(self.roi_feature_transform, self.Conv_Body.spatial_scale_base,
+        self.Generator_Block = GeneratorBlock(roi_feature_transform, self.Conv_Body.spatial_scale_base,
                                               self.Conv_Body.resolution, self.Conv_Body.dim_out_base,
                                               self.Conv_Body.dim_out)
 
@@ -156,80 +153,6 @@ class Generator(nn.Module):
                     print("\tblob_conv: blob_conv_pooled + blob_conv_residual")
 
         return return_dict
-
-    def roi_feature_transform(self, blobs_in, rpn_ret, blob_rois='rois', method='RoIPoolF',
-                              resolution=7, spatial_scale=1. / 16., sampling_ratio=0):
-        """Add the specified RoI pooling method. The sampling_ratio argument
-        is supported for some, but not all, RoI transform methods.
-
-        RoIFeatureTransform abstracts away:
-          - Use of FPN or not
-          - Specifics of the transform method
-        """
-        assert method in {'RoIPoolF', 'RoICrop', 'RoIAlign'}, \
-            'Unknown pooling method: {}'.format(method)
-
-        if isinstance(blobs_in, list):
-            # FPN case: add RoIFeatureTransform to each FPN level
-            device_id = blobs_in[0].get_device()
-            k_max = cfg.FPN.ROI_MAX_LEVEL  # coarsest level of pyramid
-            k_min = cfg.FPN.ROI_MIN_LEVEL  # finest level of pyramid
-            assert len(blobs_in) == k_max - k_min + 1
-            bl_out_list = []
-            for lvl in range(k_min, k_max + 1):
-                bl_in = blobs_in[k_max - lvl]  # blobs_in is in reversed order
-                sc = spatial_scale[k_max - lvl]  # in reversed order
-                bl_rois = blob_rois + '_fpn' + str(lvl)
-                if len(rpn_ret[bl_rois]):
-                    rois = Variable(torch.from_numpy(rpn_ret[bl_rois])).cuda(device_id)
-                    if method == 'RoIPoolF':
-                        # Warning!: Not check if implementation matches Detectron
-                        xform_out = RoIPoolFunction(resolution, resolution, sc)(bl_in, rois)
-                    elif method == 'RoICrop':
-                        # Warning!: Not check if implementation matches Detectron
-                        grid_xy = net_utils.affine_grid_gen(
-                            rois, bl_in.size()[2:], self.grid_size)
-                        grid_yx = torch.stack(
-                            [grid_xy.data[:, :, :, 1], grid_xy.data[:, :, :, 0]], 3).contiguous()
-                        xform_out = RoICropFunction()(bl_in, Variable(grid_yx).detach())
-                        if cfg.CROP_RESIZE_WITH_MAX_POOL:
-                            xform_out = F.max_pool2d(xform_out, 2, 2)
-                    elif method == 'RoIAlign':
-                        xform_out = RoIAlignFunction(
-                            resolution, resolution, sc, sampling_ratio)(bl_in, rois)
-                    bl_out_list.append(xform_out)
-
-            # The pooled features from all levels are concatenated along the
-            # batch dimension into a single 4D tensor.
-            xform_shuffled = torch.cat(bl_out_list, dim=0)
-
-            # Unshuffle to match rois from dataloader
-            device_id = xform_shuffled.get_device()
-            restore_bl = rpn_ret[blob_rois + '_idx_restore_int32']
-            restore_bl = Variable(
-                torch.from_numpy(restore_bl.astype('int64', copy=False))).cuda(device_id)
-            xform_out = xform_shuffled[restore_bl]
-        else:
-            # Single feature level
-            # rois: holds R regions of interest, each is a 5-tuple
-            # (batch_idx, x1, y1, x2, y2) specifying an image batch index and a
-            # rectangle (x1, y1, x2, y2)
-            device_id = blobs_in.get_device()
-            rois = Variable(torch.from_numpy(rpn_ret[blob_rois])).cuda(device_id)
-            if method == 'RoIPoolF':
-                xform_out = RoIPoolFunction(resolution, resolution, spatial_scale)(blobs_in, rois)
-            elif method == 'RoICrop':
-                grid_xy = net_utils.affine_grid_gen(rois, blobs_in.size()[2:], self.grid_size)
-                grid_yx = torch.stack(
-                    [grid_xy.data[:, :, :, 1], grid_xy.data[:, :, :, 0]], 3).contiguous()
-                xform_out = RoICropFunction()(blobs_in, Variable(grid_yx).detach())
-                if cfg.CROP_RESIZE_WITH_MAX_POOL:
-                    xform_out = F.max_pool2d(xform_out, 2, 2)
-            elif method == 'RoIAlign':
-                xform_out = RoIAlignFunction(
-                    resolution, resolution, spatial_scale, sampling_ratio)(blobs_in, rois)
-
-        return xform_out
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:

@@ -146,7 +146,13 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
         return self.mapping_to_detectron, self.orphans_in_detectron
 
     def forward(self, x, rpn_ret):
-        x = self.roi_pool(x, rpn_ret)
+
+        # for debugging: x = self.roi_pool(x, rpn_ret)
+        y = self.roi_pool(x, rpn_ret)
+        z = self.roi_pool(x, rpn_ret)
+
+        x = 0.5 * (y + z) # test if roiPool involves some randomness
+
         batch_size = x.size(0)
         x = self.fc_head(x.view(batch_size, -1))
         return x

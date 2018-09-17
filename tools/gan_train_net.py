@@ -757,10 +757,13 @@ def main():
 
         adv_target_real = [Variable(Tensor(batch_size, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                     requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+
         adv_target_gen = [Variable(Tensor(batch_size_gen, 1).fill_(1.0),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+
         adv_target_pre = [Variable(Tensor(batch_size_pre, 1).fill_(cfg.GAN.MODEL.LABEL_SMOOTHING),
                                    requires_grad=False) for _ in range(cfg.NUM_GPUS)]
+
         adv_target_fake = [Variable(Tensor(batch_size, 1).fill_(0.0),
                                     requires_grad=False) for _ in range(cfg.NUM_GPUS)]
 
