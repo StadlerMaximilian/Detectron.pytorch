@@ -849,7 +849,7 @@ def main():
 
         # save model after pre-training
         final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
-                                    model=gan, optimizer_dis=optimizer_pre, optimizer_gen=optimizer_G)
+                                    model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
 
         test_output_dir = os.path.join(output_dir_pre, 'testing')
 
