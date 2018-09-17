@@ -67,8 +67,6 @@ class Discriminator(nn.Module):
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            loss_adv = self.adversarial_criterion(adv_score, adv_target)
-
             if flags is not None:
                 if flags.train_generator:
                     # do not consider background rois in adversarial loss
@@ -76,8 +74,12 @@ class Discriminator(nn.Module):
                     if cfg.DEBUG:
                         print("ignoring backgound rois in adv_loss: {} / {}".format(len(mask),
                                                                                     len(rpn_ret['labels_int32'])))
+                    loss_adv = self.adversarial_criterion(adv_score, adv_target, reduce='False')
                     loss_adv[mask] = 0.0
                     loss_adv = loss_adv / cfg.GAN.TRAIN.FG_FRACTION_G
+                    loss_adv = loss_adv.mean()
+            else:
+                loss_adv = self.adversarial_criterion(adv_score, adv_target)
 
             return_dict['losses']['loss_adv'] = loss_adv
 
