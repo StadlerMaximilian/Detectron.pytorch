@@ -147,13 +147,16 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
 
     def forward(self, x, rpn_ret):
 
-        # for debugging: x = self.roi_pool(x, rpn_ret)
-        y = self.roi_pool(x, rpn_ret)
-        z = self.roi_pool(x, rpn_ret)
+        # for debugging:
+        if cfg.DEBUG:
+            y = self.roi_pool(x, rpn_ret)
+            z = self.roi_pool(x, rpn_ret)
 
-        x = 0.5 * (y + z)  # test if roiPool involves some randomness
+            x = 0.5 * (y + z)  # test if roiPool involves some randomness
 
-        print("debugging roi-pool: addind twice pooled and multiplying with 0.5 ...")
+            print("debugging roi-pool: addind twice pooled and multiplying with 0.5 ...")
+        else:
+            x = self.roi_pool(x, rpn_ret)
 
         batch_size = x.size(0)
         x = self.fc_head(x.view(batch_size, -1))
