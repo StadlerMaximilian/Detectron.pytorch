@@ -78,6 +78,8 @@ class Discriminator(nn.Module):
                     loss_adv[mask] = 0.0
                     loss_adv = loss_adv / cfg.GAN.TRAIN.FG_FRACTION_G
                     loss_adv = loss_adv.mean()
+                else:
+                    loss_adv = self.adversarial_criterion(adv_score, adv_target)
             else:
                 loss_adv = self.adversarial_criterion(adv_score, adv_target)
 
