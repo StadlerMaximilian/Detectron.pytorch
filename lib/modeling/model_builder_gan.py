@@ -42,7 +42,8 @@ class GAN(nn.Module):
 
             input_discriminator = {'blob_conv': outputs_gen['blob_conv'],
                                    'rpn_ret': rpn_ret,
-                                   'adv_target': adv_target
+                                   'adv_target': adv_target,
+                                   'flags': flags
                                    }
         else:
             rpn_ret = outputs_gen['rpn_ret']

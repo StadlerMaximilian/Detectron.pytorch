@@ -41,11 +41,11 @@ class Discriminator(nn.Module):
         self.Box_Outs = fast_rcnn_heads.fast_rcnn_outputs(self.Box_Head.dim_out)
         self._init_modules(pretrained_weights)
 
-    def forward(self, blob_conv, rpn_ret, adv_target=None):
+    def forward(self, blob_conv, rpn_ret, adv_target=None, flags=None):
         with torch.set_grad_enabled(self.training):
-            return self._forward(blob_conv, rpn_ret, adv_target)
+            return self._forward(blob_conv, rpn_ret, adv_target, flags)
 
-    def _forward(self, blob_conv, rpn_ret, adv_target=None):
+    def _forward(self, blob_conv, rpn_ret, adv_target=None, flags=None):
         return_dict = {}
 
         batch_size = blob_conv.size(0)
@@ -69,10 +69,14 @@ class Discriminator(nn.Module):
 
             loss_adv = self.adversarial_criterion(adv_score, adv_target)
 
-            # do not consider background rois in adversarial loss
-            # mask = np.where(rpn_ret['labels_int32'] == 0)
-            # loss_adv[mask] = 0.0
-            # loss_adv = loss_adv.mean()
+            if flags is not None:
+                if flags.train_generator:
+                    # do not consider background rois in adversarial loss
+                    mask = np.where(rpn_ret['labels_int32'] == 0)
+                    if cfg.DEBUG:
+                        print("ignoring backgound rois in adv_loss: {} / {}".format(mask.sum(), len(mask)))
+                    loss_adv[mask] = 0.0
+                    loss_adv = loss_adv / cfg.GAN.TRAIN.FG_FRACTION_G
 
             return_dict['losses']['loss_adv'] = loss_adv
 
