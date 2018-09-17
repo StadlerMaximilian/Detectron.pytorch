@@ -150,7 +150,7 @@ class VGG_CNN_M_1024_roi_fc_head(nn.Module):
 
         # for debugging:
         if cfg.DEBUG:
-            x_copy = x.copy()
+            x_copy = x.clone()
             y = self.roi_pool(x, rpn_ret)
             z = self.roi_pool(x_copy, rpn_ret)
 
