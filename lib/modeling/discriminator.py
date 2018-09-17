@@ -74,7 +74,8 @@ class Discriminator(nn.Module):
                     # do not consider background rois in adversarial loss
                     mask = np.where(rpn_ret['labels_int32'] == 0)
                     if cfg.DEBUG:
-                        print("ignoring backgound rois in adv_loss: {} / {}".format(mask.sum(), len(mask)))
+                        print("ignoring backgound rois in adv_loss: {} / {}".format(len(mask),
+                                                                                    len(rpn_ret['labels_int32'])))
                     loss_adv[mask] = 0.0
                     loss_adv = loss_adv / cfg.GAN.TRAIN.FG_FRACTION_G
 
