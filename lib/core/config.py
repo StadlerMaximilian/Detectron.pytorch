@@ -981,6 +981,7 @@ __C.CROP_RESIZE_WITH_MAX_POOL = True
 __C.CUDA = False
 
 __C.DEBUG = False
+__C.DEBUG_GAN = False
 
 # [Infered value]
 __C.PYTORCH_VERSION_LESS_THAN_040 = False

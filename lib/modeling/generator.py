@@ -153,6 +153,11 @@ class Generator(nn.Module):
                 return_dict['blob_conv'] = blob_conv_pooled + blob_conv_residual
                 if cfg.DEBUG:
                     print("\tblob_conv: blob_conv_pooled + blob_conv_residual")
+        else:
+            if cfg.DEBUG_GAN:
+                return_dict['blob_conv'] = blob_conv_pooled
+            else:
+                return_dict['blob_conv'] = blob_conv_pooled + blob_conv_residual
 
         return return_dict
 
