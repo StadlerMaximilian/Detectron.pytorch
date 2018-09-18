@@ -1021,7 +1021,11 @@ def main():
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
-            loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] + outputs['losses']['loss_adv']
+            if cfg.GAN.TRAN.TRANSFER_LEARNING:
+                loss_G = outputs['losses']['loss_adv']
+            else:
+                loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] + outputs['losses']['loss_adv']
+
             loss_G.backward()
             optimizer_G.step()
             training_stats_gen.IterToc()
