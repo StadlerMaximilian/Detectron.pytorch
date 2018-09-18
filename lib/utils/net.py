@@ -79,7 +79,9 @@ def update_learning_rate(optimizer, cur_lr, new_lr):
                 param_group['lr'] = new_lr * 2
             else:
                 param_group['lr'] = new_lr
-            param_keys += param_group['params']
+        for param_group in optimizer.state_dict()['param_groups']:
+            param_keys.extend(param_group['params'])
+
         if cfg.SOLVER.TYPE in ['SGD'] and cfg.SOLVER.SCALE_MOMENTUM and cur_lr > 1e-7 and \
                 ratio > cfg.SOLVER.SCALE_MOMENTUM_THRESHOLD:
             _CorrectMomentum(optimizer, param_keys, new_lr / cur_lr)
@@ -138,10 +140,7 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
     state_dict = optimizer.state_dict()
     for p_key in param_keys:
-        try:
-            state_dict['state'][p_key]['momentum_buffer'] *= correction
-        except KeyError:
-            continue
+        state_dict['state'][p_key]['momentum_buffer'] *= correction
     optimizer.load_state_dict(state_dict)
 
 
