@@ -47,7 +47,7 @@ class GAN(nn.Module):
                                    }
         else:
             rpn_ret = outputs_gen['rpn_ret']
-            input_discriminator = {'blob_conv': outputs_gen['blob_fake'],
+            input_discriminator = {'blob_conv': outputs_gen['blob_conv'],
                                    'rpn_ret': rpn_ret
                                    }
 

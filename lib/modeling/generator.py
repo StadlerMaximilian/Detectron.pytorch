@@ -74,6 +74,9 @@ class Generator(nn.Module):
         """
         if pretrained_weights is None:
             if cfg.MODEL.LOAD_PRETRAINED_BACKBONE_WEIGHTS:
+                print("\n-------------------------------------------")
+                print("Load pre-trained ImageNet weights")
+                print("\n-------------------------------------------")
                 weight_utils.load_caffe2_pretrained_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
             return
 
