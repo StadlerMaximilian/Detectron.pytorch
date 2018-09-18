@@ -162,11 +162,11 @@ class Discriminator(nn.Module):
             if cfg.DEBUG:
                 print("\tInit ResidualBlock with XAVIER")
             mynn.init.XavierFill(self.adversarial[0].weight)
-            init.constant(self.adversarial[0].bias, 0)
+            init.constant_(self.adversarial[0].bias, 0)
             mynn.init.XavierFill(self.adversarial[2].weight)
-            init.constant(self.adversarial[2].bias, 0)
+            init.constant_(self.adversarial[2].bias, 0)
             mynn.init.XavierFill(self.adversarial[4].weight)
-            init.constant(self.adversarial[4].bias, 0)
+            init.constant_(self.adversarial[4].bias, 0)
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:

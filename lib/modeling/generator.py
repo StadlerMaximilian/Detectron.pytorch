@@ -229,10 +229,14 @@ class ResidualBlock(nn.Module):
             if cfg.DEBUG:
                 print("\tInit ResidualBlock with XAVIER")
             mynn.init.XavierFill(self.block[0].weight)
-            init.constant(self.block[0].bias, 0)
+            init.constant_(self.block[0].bias, 0)
             mynn.init.XavierFill(self.block[3].weight)
-            init.constant(self.block[3].bias, 0)
+            init.constant_(self.block[3].bias, 0)
 
+        init.constant_(self.block[1].weight, 1.0) # BN weight with 1
+        init.constant_(self.block[1].bias, 0)
+        init.constant_(self.block[4].weight, 1.0) # BN weight with 1
+        init.constant_(self.block[4].bias, 0)
 
 ########################################################################################################################
 
@@ -271,9 +275,9 @@ class GeneratorBlock(nn.Module):
             if cfg.DEBUG:
                 print("\tInit Gen_Base with XAVIER")
             mynn.init.XavierFill(self.gen_base[0].weight)
-            init.constant(self.gen_base[0].bias, 0)
+            init.constant_(self.gen_base[0].bias, 0)
             mynn.init.XavierFill(self.gen_base[2].weight)
-            init.constant(self.gen_base[2].bias, 0)
+            init.constant_(self.gen_base[2].bias, 0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)
