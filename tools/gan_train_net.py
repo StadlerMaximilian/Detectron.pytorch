@@ -949,13 +949,16 @@ def main():
                 training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
 
                 if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
-                    loss_fake = outputs_fake['losses']['loss_adv'] + outputs_fake['losses']['loss_cls'] \
-                                                                   + outputs_fake['losses']['loss_bbox']
-                    loss_real = outputs_real['losses']['loss_adv'] + outputs_real['losses']['loss_cls'] \
-                                                                   + outputs_real['losses']['loss_bbox']
+                    loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv'] \
+                                + outputs_fake['losses']['loss_cls'] \
+                                + outputs_fake['losses']['loss_bbox']
+                    loss_real = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_real['losses']['loss_adv'] \
+                                + outputs_real['losses']['loss_cls'] \
+                                + outputs_real['losses']['loss_bbox']
                 else:
-                    loss_fake = outputs_fake['losses']['loss_adv']  # adversarial loss for discriminator
-                    loss_real = outputs_real['losses']['loss_adv']  # adversarial loss for discriminator
+                    # adversarial loss for discriminator
+                    loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv']
+                    loss_real = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_real['losses']['loss_adv']
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
@@ -990,9 +993,10 @@ def main():
 
             # train generator on Faster R-CNN loss and adversarial loss
             if cfg.GAN.TRAIN.TRANSFER_LEARNING:
-                loss_G = outputs['losses']['loss_adv']
+                loss_G = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
             else:
-                loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] + outputs['losses']['loss_adv']
+                loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] \
+                         + cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
 
             loss_G.backward()
             optimizer_G.step()
