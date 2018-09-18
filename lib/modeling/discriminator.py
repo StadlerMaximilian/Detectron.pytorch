@@ -15,6 +15,7 @@ import utils.blob as blob_utils
 import utils.net as net_utils
 import utils.detectron_weight_helper as weight_utils
 import utils.net as net_utils
+import nn as mynn
 
 
 class Discriminator(nn.Module):
@@ -150,12 +151,22 @@ class Discriminator(nn.Module):
         """
         initialize layers before ReLU activation with kaiming initialization
         """
-        if not cfg.GAN.MODEL.KAIMING_INIT:
-            return
-        init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.adversarial[0].bias, 0)
-        init.kaiming_uniform_(self.adversarial[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-        init.constant_(self.adversarial[2].bias, 0)
+        if cfg.MODEL.KAIMING_INIT:
+            if cfg.DEBUG:
+                print("\tInit Adversarial with KAIMING")
+            init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+            init.constant_(self.adversarial[0].bias, 0)
+            init.kaiming_uniform_(self.adversarial[2].weight, a=0, mode='fan_in', nonlinearity='relu')
+            init.constant_(self.adversarial[2].bias, 0)
+        else:
+            if cfg.DEBUG:
+                print("\tInit ResidualBlock with XAVIER")
+            mynn.init.XavierFill(self.adversarial[0].weight)
+            init.constant(self.adversarial[0].bias, 0)
+            mynn.init.XavierFill(self.adversarial[2].weight)
+            init.constant(self.adversarial[2].bias, 0)
+            mynn.init.XavierFill(self.adversarial[4].weight)
+            init.constant(self.adversarial[4].bias, 0)
 
     def detectron_weight_mapping(self):
         if self.mapping_to_detectron is None:

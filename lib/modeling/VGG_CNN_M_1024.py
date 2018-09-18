@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from core.config import cfg
 import utils.net as net_utils
-
+import nn as mynn
 
 class VGG_CNN_M_1024_conv5_body(nn.Module):
     def __init__(self):
@@ -95,10 +95,20 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.fc1[0].bias, 0)
-        init.kaiming_uniform_(self.fc2[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-        #init.constant_(self.fc2[0].bias, 0)
+        if cfg.MODEL.KAIMING_INIT:
+            if cfg.DEBUG:
+                print("\tInit VGG-CNN-M-1024 FC-HEAD with KAIMING")
+            init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+            init.constant_(self.fc1[0].bias, 0)
+            init.kaiming_uniform_(self.fc2[0].weight, a=0, mode='fan_in', nonlinearity='relu')
+            init.constant_(self.fc2[0].bias, 0)
+        else:
+            if cfg.DEBUG:
+                print("\tInit VGG-CNN-M-1024 FC-HEAD with XAVIER")
+            mynn.init.XavierFill(self.fc[0].weight)
+            init.constant(self.fc[0].bias, 0)
+            mynn.init.XavierFill(self.fc[2].weight)
+            init.constant(self.fc[2].bias, 0)
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
