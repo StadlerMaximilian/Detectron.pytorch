@@ -133,9 +133,10 @@ class Generator(nn.Module):
         if not self.training:
             return_dict['blob_conv_pooled'] = blob_conv_pooled
 
-        blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
+        if not self.training or flags.fake_mode:
+            blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
 
-        if cfg.DEBUG:
+        if cfg.DEBUG and (not self.training or flags.fake_mode):
             print("\tShape Residual: {}".format(blob_conv_residual.size()))
 
         if not self.training:
@@ -216,6 +217,8 @@ class ResidualBlock(nn.Module):
         return self.mapping_to_detectron, self.orphans_in_detectron
 
     def _init_weights(self):
+        if not cfg.GAN.MODEL.KAIMING_INIT:
+            return
         init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
         init.constant_(self.block[0].bias, 0)
         init.kaiming_uniform_(self.block[3].weight, a=0, mode='fan_in', nonlinearity='relu')
@@ -233,9 +236,9 @@ class GeneratorBlock(nn.Module):
         self.mapping_to_detectron = None
         self.orphans_in_detectron = None
         self.gen_base = nn.Sequential(nn.Conv2d(dim_out_base, 256, 3, padding=1, stride=2),
-                                      nn.ReLU(), #nn.LeakyReLU(negative_slope=0.2),
+                                      nn.ReLU(),
                                       nn.Conv2d(256, dim_out, 1, padding=0, stride=1),
-                                      nn.ReLU() #nn.LeakyReLU(negative_slope=0.2),
+                                      nn.ReLU()
                                       )
         self._init_weights()
 
@@ -247,6 +250,8 @@ class GeneratorBlock(nn.Module):
             self.add_module('gen_res_block' + str(n + 1), ResidualBlock(in_channels=dim_out, num=dim_out))
 
     def _init_weights(self):
+        if not cfg.GAN.MODEL.KAIMING_INIT:
+            return
         init.kaiming_uniform_(self.gen_base[0].weight, a=0, mode='fan_in', nonlinearity='relu')
         init.constant_(self.gen_base[0].bias, 0)
         init.kaiming_uniform_(self.gen_base[2].weight, a=0, mode='fan_in', nonlinearity='relu')

@@ -93,7 +93,9 @@ class GAN(nn.Module):
         """
 
         if cfg.DEBUG:
-            print("roi_feature_transform: resolution: {}, spatial_scale: {}".format(resolution, spatial_scale))
+            print("roi_feature_transform: resolution: {}, spatial_scale: {}, method: {}".format(resolution,
+                                                                                                spatial_scale,
+                                                                                                method))
 
         assert method in {'RoIPoolF', 'RoICrop', 'RoIAlign'}, \
             'Unknown pooling method: {}'.format(method)

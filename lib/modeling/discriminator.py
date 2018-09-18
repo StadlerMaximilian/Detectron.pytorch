@@ -25,11 +25,9 @@ class Discriminator(nn.Module):
         self.orphans_in_detectron = None
 
         self.adversarial = nn.Sequential(nn.Linear(self.fc_dim, 4096),
-                                         #nn.ReLU(inplace=True),
-                                         nn.LeakyReLU(negative_slope=0.2, inplace=True),
+                                         nn.LeakyReLU(negative_slope=0.2),
                                          nn.Linear(4096, 1024),
-                                         #nn.ReLU(inplace=True),
-                                         nn.LeakyReLU(negative_slope=0.2, inplace=True),
+                                         nn.LeakyReLU(negative_slope=0.2),
                                          nn.Linear(1024, 1),
                                          nn.Sigmoid())
 
@@ -52,8 +50,10 @@ class Discriminator(nn.Module):
         if self.training and cfg.DEBUG:
             # debug: batch_size and fg-fraction
             fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
-            print("\t\tbatch-size in discriminator: {} (fg: {}%)".format(batch_size,
+            print("\tbatch-size in discriminator: {} (fg: {}%)".format(batch_size,
                                                                      1.0 * fg / batch_size * 100.0))
+
+            print("\tBlob_conv size in discriminator: {}".format(blob_conv.view(batch_size, -1).size()))
 
         adv_score = self.adversarial(blob_conv.view(batch_size, -1))
 
@@ -150,6 +150,8 @@ class Discriminator(nn.Module):
         """
         initialize layers before ReLU activation with kaiming initialization
         """
+        if not cfg.GAN.MODEL.KAIMING_INIT:
+            return
         init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
         init.constant_(self.adversarial[0].bias, 0)
         init.kaiming_uniform_(self.adversarial[2].weight, a=0, mode='fan_in', nonlinearity='relu')

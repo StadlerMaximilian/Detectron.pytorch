@@ -506,44 +506,32 @@ def main():
     if cfg.CUDA:
         gan.cuda()
 
-    params_list_D = {
-        'bias_params': [],
-        'bias_param_names': [],
-        'nonbias_params': [],
-        'nonbias_param_names': [],
-        'nograd_param_names': []
-    }
-
     # train discriminator only on adversarial branch
     if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
         dis_params = gan.discriminator.named_parameters()
+        params_D = {
+            'params': gan.discriminator.parameters(),
+            'lr': 0,
+            'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D
+        }
     else:
         dis_params = gan.discriminator.adversarial.named_parameters()
+        params_D = [{
+            'params': gan.discriminator.adversarial.parameters(),
+            'lr': 0,
+            'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D
+        }]
 
+    param_names_D = []
     for key, value in dis_params:
         if value.requires_grad:
-            if 'bias' in key:
-                params_list_D['bias_params'].append(value)
-                params_list_D['bias_param_names'].append(key)
-            else:
-                params_list_D['nonbias_params'].append(value)
-                params_list_D['nonbias_param_names'].append(key)
-        else:
-            params_list_D['nograd_param_names'].append(key)
-
-    params_D = [
-        {'params': params_list_D['nonbias_params'],
-         'lr': 0,
-         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D},
-        {'params': params_list_D['bias_params'],
-         'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_D + 1),
-         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_D else 0}
-    ]
-    param_names_D = [params_list_D['nonbias_param_names'], params_list_D['bias_param_names']]
+            param_names_D.append(key)
 
     logger.info("Parameters discriminator is trained on")
     logger.info(param_names_D)
 
+
+    # pre-training in classical fashion with seperate groups for bias and non-bias parameters
     params_list_pre = {
         'bias_params': [],
         'bias_param_names': [],
@@ -599,38 +587,18 @@ def main():
     logger.info("Parameters during pre-training")
     logger.info(param_names_pre)
 
-    params_list_G = {
-        'bias_params': [],
-        'bias_param_names': [],
-        'nonbias_params': [],
-        'nonbias_param_names': [],
-        'nograd_param_names': []
-    }
-
     # train generator only on generator network (generator block)
     gen_params = gan.generator.Generator_Block.named_parameters()
-
+    param_names_G = []
     for key, value in gen_params:
         if value.requires_grad:
-            if 'bias' in key:
-                params_list_G['bias_params'].append(value)
-                params_list_G['bias_param_names'].append(key)
-            else:
-                params_list_G['nonbias_params'].append(value)
-                params_list_G['nonbias_param_names'].append(key)
-        else:
-            params_list_G['nograd_param_names'].append(key)
+            param_names_G.append(key)
 
     params_G = [
-        {'params': params_list_G['nonbias_params'],
+        {'params': gan.generator.Generator_Block.parameters(),
          'lr': 0,
-         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G},
-        {'params': params_list_G['bias_params'],
-         'lr': 0 * (cfg.GAN.SOLVER.BIAS_DOUBLE_LR_G + 1),
-         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G if cfg.GAN.SOLVER.BIAS_WEIGHT_DECAY_G else 0}
+         'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G}
     ]
-
-    param_names_G = [params_list_G['nonbias_param_names'], params_list_G['bias_param_names']]
     logger.info("Parameters generator is trained on")
     logger.info(param_names_G)
 
