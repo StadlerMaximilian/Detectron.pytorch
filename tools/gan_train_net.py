@@ -509,11 +509,11 @@ def main():
     # train discriminator only on adversarial branch
     if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
         dis_params = gan.discriminator.named_parameters()
-        params_D = {
+        params_D = [{
             'params': gan.discriminator.parameters(),
             'lr': 0,
             'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_D
-        }
+        }]
     else:
         dis_params = gan.discriminator.adversarial.named_parameters()
         params_D = [{
