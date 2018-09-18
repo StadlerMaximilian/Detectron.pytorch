@@ -1021,7 +1021,7 @@ def main():
             training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
-            if cfg.GAN.TRAN.TRANSFER_LEARNING:
+            if cfg.GAN.TRAIN.TRANSFER_LEARNING:
                 loss_G = outputs['losses']['loss_adv']
             else:
                 loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] + outputs['losses']['loss_adv']

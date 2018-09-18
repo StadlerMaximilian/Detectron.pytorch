@@ -1045,7 +1045,7 @@ __C.GAN.TRAIN.SNAPSHOT_ITERS = 5000
 # perceptual and adversarial branch
 __C.GAN.TRAIN.TRAIN_FULL_DIS = False
 
-__C.GAN.TRAN.TRANSFER_LEARNING = False
+__C.GAN.TRAIN.TRANSFER_LEARNING = False
 
 __C.GAN.SOLVER = AttrDict()
 
