@@ -105,10 +105,10 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
         else:
             if cfg.DEBUG:
                 print("\tInit VGG-CNN-M-1024 FC-HEAD with XAVIER")
-            mynn.init.XavierFill(self.fc[0].weight)
-            init.constant(self.fc[0].bias, 0)
-            mynn.init.XavierFill(self.fc[2].weight)
-            init.constant(self.fc[2].bias, 0)
+            mynn.init.XavierFill(self.fc1[0].weight)
+            init.constant(self.fc1[0].bias, 0)
+            mynn.init.XavierFill(self.fc2[0].weight)
+            init.constant(self.fc2[0].bias, 0)
 
     def detectron_weight_mapping(self):
         detectron_weight_mapping = {
