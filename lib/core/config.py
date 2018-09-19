@@ -949,11 +949,6 @@ __C.OUTPUT_DIR = 'Outputs'
 # Name (or path to) the matlab executable
 __C.MATLAB = 'matlab'
 
-# Dump detection visualizations
-__C.VIS = False
-
-# Score threshold for visualization
-__C.VIS_TH = 0.9
 
 # Expected results should take the form of a list of expectations, each
 # specified by four elements (dataset, task, metric, expected value). For
@@ -1179,6 +1174,12 @@ __C.VIS.LABEL.PAD = 1
 __C.VIS.LABEL.GT_TEXTCOLOR = 'black'
 __C.VIS.LABEL.DT_TEXTCOLOR = 'black'
 __C.VIS.LABEL.FP_TEXTCOLOR = 'black'
+# Dump detection visualizations
+__C.VIS.VIS = False
+
+# Score threshold for visualization
+__C.VIS.VIS_TH = 0.9
+
 
 
 def assert_and_infer_cfg(make_immutable=True):
