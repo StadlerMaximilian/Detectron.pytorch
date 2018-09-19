@@ -66,7 +66,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
             print("\tShape Conv1: {}".format(x.size()))
 
         if cfg.GAN.GAN_MODE_ON:
-            x_base = x
+            x_base = x.clone()
 
         for i in range(1, 5):
             x = getattr(self, 'conv{}'.format(i+1))(x)

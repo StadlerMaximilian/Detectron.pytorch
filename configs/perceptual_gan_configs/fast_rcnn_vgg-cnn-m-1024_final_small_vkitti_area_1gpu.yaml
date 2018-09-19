@@ -47,7 +47,7 @@ GAN:
   AREA_THRESHOLD: 60
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
-    LABEL_SMOOTHING: 0.9
+    LABEL_SMOOTHING: 1.0
   TRAIN:
     DATASETS_REAL: ('vkitti_clone_trainval_large',)
     PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval_large/rpn_proposals.pkl',)
@@ -73,14 +73,14 @@ GAN:
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 0.00125
-    BASE_LR_G: 0.00125
+    BASE_LR_D: 0.0005
+    BASE_LR_G: 0.0005
     BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 20000
-    STEPS: [0, 12000, 16000]
+    STEPS: [0, 10000]
     PRE_ITER: 10000
     WARM_UP_ITERS: 500
     PRE_WARM_UP_ITERS: 500

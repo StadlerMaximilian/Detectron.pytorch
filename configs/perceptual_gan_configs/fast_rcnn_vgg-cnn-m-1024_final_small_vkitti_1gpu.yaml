@@ -47,7 +47,7 @@ GAN:
   AREA_THRESHOLD: 60
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
-    LABEL_SMOOTHING: 0.9
+    LABEL_SMOOTHING: 1.0
   TRAIN:
     DATASETS_REAL: ('vkitti_clone_trainval',)
     PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
