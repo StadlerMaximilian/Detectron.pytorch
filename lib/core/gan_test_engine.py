@@ -287,21 +287,6 @@ def test_net(
                 )
             )
 
-        if cfg.VIS.VIS:
-            im_name = os.path.splitext(os.path.basename(entry['image']))[0]
-            vis_utils.vis_one_image(
-                im[:, :, ::-1],
-                '{:d}_{:s}'.format(i, im_name),
-                os.path.join(output_dir, 'vis'),
-                cls_boxes_i,
-                segms=cls_segms_i,
-                keypoints=cls_keyps_i,
-                thresh=cfg.VIS.VIS_TH,
-                box_alpha=0.8,
-                dataset=dataset,
-                show_class=True
-            )
-
     cfg_yaml = yaml.dump(cfg)
     if ind_range is not None:
         det_name = 'detection_range_%s_%s.pkl' % tuple(ind_range)
