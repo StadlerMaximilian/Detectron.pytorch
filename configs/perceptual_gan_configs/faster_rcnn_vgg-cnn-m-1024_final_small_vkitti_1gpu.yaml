@@ -28,7 +28,7 @@ TRAIN:
   SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('vkitti_clone_test',)
+  DATASETS: ('vkitti_clone_test', 'vkitti_rain_test')
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3

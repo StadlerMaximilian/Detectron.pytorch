@@ -381,10 +381,7 @@ def main():
     real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
     fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
-    if cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
-        pre_flag = [ModeFlags("fake", "pre") for _ in range(cfg.NUM_GPUS)]
-    else:
-        pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
+    pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
     # Datasets #
     timers['roidb_real'].tic()

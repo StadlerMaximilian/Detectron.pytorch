@@ -30,8 +30,8 @@ TRAIN:
   SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('vkitti_clone_test',)
-  PROPOSAL_FILES: ('data/proposals/vkitti_clone_test/rpn_proposals.pkl',)
+  DATASETS: ('vkitti_clone_test', 'vkitti_rain_text')
+  PROPOSAL_FILES: ('data/proposals/vkitti_clone_test/rpn_proposals.pkl', 'data/proposals/vkitti_rain_test/rpn_proposals.pkl',)
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3
