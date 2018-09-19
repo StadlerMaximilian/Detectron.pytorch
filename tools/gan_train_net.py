@@ -830,6 +830,9 @@ def main():
             test_output_dir = os.path.join(output_dir_pre, 'testing')
 
             logger.info("Testing model after pre-training")
+
+            args.set_cfgs.append('DEBUG.GAN True')
+
             if final_model is not None:
                 if args.multi_gpu_testing:
                     args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
