@@ -831,7 +831,7 @@ def main():
 
             logger.info("Testing model after pre-training")
 
-            args.set_cfgs.append('DEBUG.GAN True')
+            args.set_cfgs.append('DEBUG_GAN, True')
 
             if final_model is not None:
                 if args.multi_gpu_testing:
