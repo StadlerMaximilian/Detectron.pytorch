@@ -962,8 +962,8 @@ def main():
                                 + outputs_real['losses']['loss_bbox']
                 else:
                     # adversarial loss for discriminator
-                    loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv']
-                    loss_real = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_real['losses']['loss_adv']
+                    loss_fake = outputs_fake['losses']['loss_adv']
+                    loss_real = outputs_real['losses']['loss_adv']
 
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
