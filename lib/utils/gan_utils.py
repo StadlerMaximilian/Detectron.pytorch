@@ -131,6 +131,9 @@ class TrainingStats(object):
                 total_loss = 0
 
                 for loss_key in out['losses']:
+
+                    print(loss_key)
+
                     loss = out['losses'][loss_key]
                     loss_add = out_add['losses'][loss_key]
 
@@ -154,13 +157,18 @@ class TrainingStats(object):
                 out['total_loss'] = total_loss  # Add the total loss for back propagation
                 out_add['total_loss'] = total_loss
 
-                self.smoothed_total_loss.AddValue(total_loss.data[0].cpu())
+                self.smoothed_total_loss.AddValue(total_loss.data[0])
 
                 for metric_key in out['metrics']:
+
+                    print(metric_key)
+
                     metric = out['metrics'][metric_key].mean(dim=0, keepdim=True)
                     metric_add = out_add['metrics'][metric_key].mean(dim=0, keepdim=True)
 
-                    self.smoothed_metrics[metric_key].AddValue(0.5*(metric.data[0].cpu() + metric_add.data[0].cpu() ) )
+                    print("metric {}, metric_add".format(metric, metric_add))
+
+                    self.smoothed_metrics[metric_key].AddValue(0.5*(metric.data[0] + metric_add.data[0] ) )
 
     def LogIterStatsReal(self, cur_iter, lr):
         """Log the tracked statistics."""
