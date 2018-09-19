@@ -22,7 +22,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
                                    nn.ReLU(),
                                    nn.LocalResponseNorm(size=5, alpha=0.0005, beta=0.75, k=2.),
                                    nn.MaxPool2d(kernel_size=3, padding=0, stride=2)
-                                  )
+                                   )
 
         self.conv3 = nn.Sequential(nn.Conv2d(256, 512, 3, padding=1, stride=1),
                                    nn.ReLU()
@@ -68,8 +68,8 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         if cfg.GAN.GAN_MODE_ON:
             x_base = x.clone()
 
-        for i in range(1, 5):
-            x = getattr(self, 'conv{}'.format(i+1))(x)
+        for i in range(2, 6):
+            x = getattr(self, 'conv{}'.format(i))(x)
             if cfg.DEBUG:
                 print("\tShape Conv{}: {}".format(i, x.size()))
 
