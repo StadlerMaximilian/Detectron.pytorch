@@ -132,8 +132,6 @@ class TrainingStats(object):
 
                 for loss_key in out['losses']:
 
-                    print(loss_key)
-
                     loss = out['losses'][loss_key]
                     loss_add = out_add['losses'][loss_key]
 
@@ -142,6 +140,8 @@ class TrainingStats(object):
 
                     loss = loss.mean(dim=0, keepdim=True)
                     loss_add = loss_add.mean(dim=0, keepdim=True)
+
+                    print("{}: loss: {}, loss_add {}".format(loss_key, loss, loss_add))
 
                     total_loss += loss
                     total_loss += loss_add
@@ -161,12 +161,10 @@ class TrainingStats(object):
 
                 for metric_key in out['metrics']:
 
-                    print(metric_key)
-
                     metric = out['metrics'][metric_key].mean(dim=0, keepdim=True)
                     metric_add = out_add['metrics'][metric_key].mean(dim=0, keepdim=True)
 
-                    print("metric {}, metric_add".format(metric, metric_add))
+                    print("metric {}, metric_add {}".format(metric, metric_add))
 
                     self.smoothed_metrics[metric_key].AddValue(0.5*(metric.data[0] + metric_add.data[0] ) )
 
