@@ -923,10 +923,8 @@ def main():
 
                 # train on fake data
 
-
                 if cfg.DEBUG:
                     print("training on fake data ...")
-
 
                 input_data, dataiterator_fake_discriminator = create_input_data(
                     dataiterator_fake_discriminator, dataloader_fake_discriminator
@@ -962,6 +960,8 @@ def main():
                                 + outputs_real['losses']['loss_bbox']
                 else:
                     # adversarial loss for discriminator
+                    if cfg.DEBUG:
+                        print("train discriminator only on adversarial loss")
                     loss_fake = outputs_fake['losses']['loss_adv']
                     loss_real = outputs_real['losses']['loss_adv']
 
@@ -1000,6 +1000,8 @@ def main():
             if cfg.GAN.TRAIN.TRANSFER_LEARNING:
                 loss_G = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
             else:
+                if cfg.DEBUG:
+                    print("train generator on combined loss")
                 loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] \
                          + cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
 
@@ -1077,7 +1079,7 @@ def main():
     logger.info("Start testing final model")
 
     test_output_dir = os.path.join(output_dir, 'testing')
-    if not os.path.exists(test_output_dir):
+    if not os.path.exists(test_output_dir) and not args.no_save:
         os.makedirs(test_output_dir)
 
     if final_model is not None:
