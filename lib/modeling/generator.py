@@ -194,9 +194,10 @@ class ResidualBlock(nn.Module):
 
         self.block = nn.Sequential(nn.Conv2d(in_channels, num, kernel, stride=stride, padding=1),
                                    nn.BatchNorm2d(num),
-                                   nn.ReLU(), #nn.LeakyReLU(negative_slope=0.2),
-                                   nn.Conv2d(num, num, kernel, stride=stride, padding=1)
-                                   #,nn.BatchNorm2d(num)
+                                   nn.ReLU(),
+                                   nn.Conv2d(num, num, kernel, stride=stride, padding=1),
+                                   nn.BatchNorm2d(num),
+                                   nn.ReLU()
                                    )
         self._init_weights()
 
@@ -214,11 +215,11 @@ class ResidualBlock(nn.Module):
             'block.1.running_var': 'blockBN1_rv',
             'block.1.bias': 'blockBN1_b',
             'block.3.weight': 'blockConv2_w',
-            'block.3.bias': 'blockConv2_b'
-            #,'block.4.weight': 'blockBN2_w',
-            #'block.4.bias': 'blockBN2_b',
-            #'block.4.running_mean': 'blockBN4_rm',
-            #'block.4.running_var': 'blockBN4_rv',
+            'block.3.bias': 'blockConv2_b',
+            'block.4.weight': 'blockBN2_w',
+            'block.4.bias': 'blockBN2_b',
+            'block.4.running_mean': 'blockBN4_rm',
+            'block.4.running_var': 'blockBN4_rv',
         }
         orphan_in_detectron = []
         self.mapping_to_detectron = detectron_weight_mapping
@@ -243,8 +244,8 @@ class ResidualBlock(nn.Module):
 
         init.constant_(self.block[1].weight, 1.0) # BN weight with 1
         init.constant_(self.block[1].bias, 0)
-        #init.constant_(self.block[4].weight, 1.0) # BN weight with 1
-        #init.constant_(self.block[4].bias, 0)
+        init.constant_(self.block[4].weight, 1.0) # BN weight with 1
+        init.constant_(self.block[4].bias, 0)
 
 ########################################################################################################################
 
