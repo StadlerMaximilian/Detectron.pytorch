@@ -831,10 +831,10 @@ def main():
 
             logger.info("Testing model after pre-training")
 
-            old_set_cfgs = args.set_cfgs
+            test_pre_cfgs = args.set_cfgs
 
-            args.set_cfgs.append('DEBUG_GAN')
-            args.set_cfgs.append('True')
+            test_pre_cfgs.append('DEBUG_GAN')
+            test_pre_cfgs.append('True')
 
             if final_model is not None:
                 if args.multi_gpu_testing:
@@ -842,20 +842,17 @@ def main():
                                           load_ckpt='{}'.format(final_model),
                                           load_dis=None, load_gen=None,
                                           multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
-                                          range=None, set_cfgs=args.set_cfgs, vis=False)
+                                          range=None, set_cfgs=test_pre_cfgs, vis=False)
                 else:
                     args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
                                           load_ckpt='{}'.format(final_model),
                                           load_dis=None, load_gen=None,
                                           multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
-                                          range=None, set_cfgs=args.set_cfgs, vis=False)
+                                          range=None, set_cfgs=test_pre_cfgs, vis=False)
 
                 test_net_routine(args_test)
 
-
         # combined training
-
-        args.set_cfgs = old_set_cfgs
 
         training_stats_dis = TrainingStats(
             args,
