@@ -310,7 +310,7 @@ class GeneratorBlock(nn.Module):
 
         x = self.gen_head(x)
 
-        if self.DEBUG:
+        if cfg.DEBUG:
             print("\tShape GenHead: {}".format(x.size()))
 
         return x
