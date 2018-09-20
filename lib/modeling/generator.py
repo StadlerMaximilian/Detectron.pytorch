@@ -290,7 +290,7 @@ class GeneratorBlock(nn.Module):
             mynn.init.XavierFill(self.gen_base[2].weight)
             init.constant_(self.gen_base[2].bias, 0)
             mynn.init.XavierFill(self.gen_head.weight)
-            init.constant_(self.gan_head.bias, 0)
+            init.constant_(self.gen_head.bias, 0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)
