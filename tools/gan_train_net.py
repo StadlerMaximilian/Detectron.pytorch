@@ -998,7 +998,7 @@ def main():
 
             # train generator on Faster R-CNN loss and adversarial loss
             if cfg.GAN.TRAIN.TRANSFER_LEARNING:
-                loss_G = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
+                loss_G = outputs['losses']['loss_adv']
             else:
                 if cfg.DEBUG:
                     print("train generator on combined loss")

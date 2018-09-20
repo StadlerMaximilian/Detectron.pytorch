@@ -323,9 +323,11 @@ class GeneratorBlock(nn.Module):
         d_wmap['gen_base.0.bias'] = 'baseConv1_b'
         d_wmap['gen_base.2.weight'] = 'baseConv2_w'
         d_wmap['gen_base.2.bias'] = 'baseConv2_b'
+        d_wmap['gen_head.weight'] = 'headConv2_w'
+        d_wmap['gen_head.bias'] = 'headConv2_b'
 
         for name, m_child in self.named_children():
-            if name == 'gen_base': #skip gen_base
+            if name in ['gen_base', 'gen_head']:  # skip gen_base
                 continue
             if list(m_child.parameters()):  # if module has any parameter
                 child_map, child_orphan = m_child.detectron_weight_mapping()
