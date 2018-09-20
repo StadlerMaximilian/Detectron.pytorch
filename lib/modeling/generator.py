@@ -263,7 +263,6 @@ class GeneratorBlock(nn.Module):
                                       nn.Conv2d(256, dim_out, 1, padding=0, stride=1),
                                       nn.ReLU()
                                       )
-        self._init_weights()
 
         self.spatial_scale = spatial_scale_base * (1. / 2.)
 
@@ -273,6 +272,8 @@ class GeneratorBlock(nn.Module):
             self.add_module('gen_res_block' + str(n + 1), ResidualBlock(in_channels=dim_out, num=dim_out))
 
         self.gen_head = nn.Conv2d(dim_out, dim_out, padding=0, stride=1)
+
+        self._init_weights()
 
     def _init_weights(self):
         if cfg.MODEL.KAIMING_INIT:
