@@ -271,8 +271,6 @@ class GeneratorBlock(nn.Module):
         for n in range(cfg.GAN.MODEL.NUM_BLOCKS):
             self.add_module('gen_res_block' + str(n + 1), ResidualBlock(in_channels=dim_out, num=dim_out))
 
-        self.gen_head = nn.Conv2d(dim_out, dim_out, kernel_size=1, padding=0, stride=1)
-
         self._init_weights()
 
     def _init_weights(self):
@@ -290,8 +288,6 @@ class GeneratorBlock(nn.Module):
             init.constant_(self.gen_base[0].bias, 0)
             mynn.init.XavierFill(self.gen_base[2].weight)
             init.constant_(self.gen_base[2].bias, 0)
-            mynn.init.XavierFill(self.gen_head.weight)
-            init.constant_(self.gen_head.bias, 0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)
@@ -308,11 +304,6 @@ class GeneratorBlock(nn.Module):
             if cfg.DEBUG:
                 print("\tShape ShapeGANBlock{}: {}".format(n+1, x.size()))
 
-        x = self.gen_head(x)
-
-        if cfg.DEBUG:
-            print("\tShape GenHead: {}".format(x.size()))
-
         return x
 
     def detectron_weight_mapping(self):
@@ -323,11 +314,9 @@ class GeneratorBlock(nn.Module):
         d_wmap['gen_base.0.bias'] = 'baseConv1_b'
         d_wmap['gen_base.2.weight'] = 'baseConv2_w'
         d_wmap['gen_base.2.bias'] = 'baseConv2_b'
-        d_wmap['gen_head.weight'] = 'headConv2_w'
-        d_wmap['gen_head.bias'] = 'headConv2_b'
 
         for name, m_child in self.named_children():
-            if name in ['gen_base', 'gen_head']:  # skip gen_base
+            if name in ['gen_base']:  # skip gen_base
                 continue
             if list(m_child.parameters()):  # if module has any parameter
                 child_map, child_orphan = m_child.detectron_weight_mapping()

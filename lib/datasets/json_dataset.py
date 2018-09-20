@@ -212,6 +212,7 @@ class JsonDataset(object):
 
     def _add_gt_annotations(self, entry):
         """Add ground truth annotation metadata to an roidb entry."""
+
         ann_ids = self.COCO.getAnnIds(imgIds=entry['id'], iscrowd=None)
         objs = self.COCO.loadAnns(ann_ids)
         # Sanitize bboxes -- some are invalid
@@ -219,6 +220,10 @@ class JsonDataset(object):
         valid_segms = []
         width = entry['width']
         height = entry['height']
+
+        if cfg.GAN.GAN_MODE_ON and cfg.GAN.AREA_THRESHOLD > 0:
+            area_threshold = cfg.GAN.AREA_THRESHOLD * cfg.GAN.AREA_THRESHOLD
+
         for obj in objs:
             # crowd regions are RLE encoded and stored as dicts
             if isinstance(obj['segmentation'], list):
@@ -226,6 +231,7 @@ class JsonDataset(object):
                 obj['segmentation'] = [
                     p for p in obj['segmentation'] if len(p) >= 6
                 ]
+
             if obj['area'] < cfg.TRAIN.GT_MIN_AREA:
                 continue
             if 'ignore' in obj and obj['ignore'] == 1:

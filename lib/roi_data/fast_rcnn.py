@@ -247,15 +247,14 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
 
     if cfg.DEBUG:
         logger.info("sample from {} gt boxes".format(len(gt_boxes)))
+        areas_gt, _ = box_utils.boxes_area(gt_boxes)
+        areas_gt = np.sqrt(areas_gt)
+        print("gt-boxes: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_gt))
 
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
         area_thres = 1.0 * cfg.GAN.AREA_THRESHOLD * cfg.GAN.AREA_THRESHOLD  # no scaling, as rois are scaled latter
 
-        if cfg.DEBUG:
-            areas, _ = box_utils.boxes_area(gt_boxes)
-            areas = np.sqrt(areas)
-            print("area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas))
         if flags.fake_mode:
             #  for fake samples: keep only samples with area < area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_large_boxes_area(gt_boxes, max_area=area_thres)]
@@ -282,19 +281,20 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     # i.e. whose corresponding index to gt-box is in gt_keep_inds
 
     if cfg.GAN.AREA_THRESHOLD > 0:
-        #if cfg.DEBUG:
-        #    fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
-        #    areas_fg, _ = box_utils.boxes_area(fg_boxes)
-        #    areas_fg = np.sqrt(areas_fg)
-        #    print("fg-before: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
+
+        if cfg.DEBUG:
+            fg_boxes = gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
+            areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            areas_fg = np.sqrt(areas_fg)
+            print("fg-before: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
 
         fg_inds = np.asarray([x for x in fg_inds if gt_inds[roidb['box_to_gt_ind_map'][x]] in gt_keep_inds]).astype(int)
 
-    #    if cfg.DEBUG:
-    #        fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
-    #        areas_fg, _ = box_utils.boxes_area(fg_boxes)
-    #        areas_fg = np.sqrt(areas_fg)
-    #        print("fg-after: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
+        if cfg.DEBUG:
+            fg_boxes =  gt_boxes[gt_inds[roidb['box_to_gt_ind_map'][fg_inds]], :]
+            areas_fg, _ = box_utils.boxes_area(fg_boxes)
+            areas_fg = np.sqrt(areas_fg)
+            print("fg-after: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_fg))
 
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
