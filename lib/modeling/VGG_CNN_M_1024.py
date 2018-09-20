@@ -13,10 +13,13 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         self.orphans_in_detectron = None
 
         self.conv1 = nn.Sequential(nn.Conv2d(3, 96, 7, padding=0, stride=2),
-                                   nn.ReLU(),
-                                   nn.LocalResponseNorm(size=5, alpha=0.0005, beta=0.75, k=2.),
-                                   nn.MaxPool2d(kernel_size=3, padding=0, stride=2)
+                                   nn.ReLU()
                                    )
+
+        self.conv1_pool = nn.Sequential(
+                                        nn.LocalResponseNorm(size=5, alpha=0.0005, beta=0.75, k=2.),
+                                        nn.MaxPool2d(kernel_size=3, padding=0, stride=2)
+                                        )
 
         self.conv2 = nn.Sequential(nn.Conv2d(96, 256, 5, padding=0, stride=2),
                                    nn.ReLU(),
@@ -37,7 +40,11 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
                                    )
 
         self.spatial_scale = 1. / 16.
-        self.spatial_scale_base = 1. / 4.
+
+        if cfg.GAN.MODEL.BRANCH_EARLY:
+            self.spatial_scale_base = 1. / 2.
+        else:
+            self.spatial_scale_base = 1. / 4.
         self.dim_out_base = 96
         self.dim_out = 512
         self.resolution = 6
@@ -62,11 +69,17 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
 
+        if cfg.GAN.MODEL.BRANCH_EARLY:
+            if cfg.GAN.GAN_MODE_ON:
+                x_base = x.clone()
+            x = self.conv1_pool(x)
+        else:
+            x = self.conv1_pool(x)
+            if cfg.GAN.GAN_MODE_ON:
+                x_base = x.clone()
+
         if cfg.DEBUG:
             print("\tShape Conv1: {}".format(x.size()))
-
-        if cfg.GAN.GAN_MODE_ON:
-            x_base = x.clone()
 
         for i in range(2, 6):
             x = getattr(self, 'conv{}'.format(i))(x)
