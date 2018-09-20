@@ -831,6 +831,8 @@ def main():
 
             logger.info("Testing model after pre-training")
 
+            old_set_cfgs = args.set_cfgs
+
             args.set_cfgs.append('DEBUG_GAN')
             args.set_cfgs.append('True')
 
@@ -852,6 +854,9 @@ def main():
 
 
         # combined training
+
+        args.set_cfgs = old_set_cfgs
+
         training_stats_dis = TrainingStats(
             args,
             args.disp_interval,

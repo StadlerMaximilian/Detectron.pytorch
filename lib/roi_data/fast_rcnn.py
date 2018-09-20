@@ -251,10 +251,11 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
         area_thres = 1.0 * cfg.GAN.AREA_THRESHOLD * cfg.GAN.AREA_THRESHOLD  # no scaling, as rois are scaled latter
-        #if cfg.DEBUG:
-        #    areas, _ = box_utils.boxes_area(gt_boxes)
-        #    areas = np.sqrt(areas)
-        #    print("area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas))
+
+        if cfg.DEBUG:
+            areas, _ = box_utils.boxes_area(gt_boxes)
+            areas = np.sqrt(areas)
+            print("area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas))
         if flags.fake_mode:
             #  for fake samples: keep only samples with area < area-threshold
             gt_keep_inds = gt_inds[box_utils.filter_large_boxes_area(gt_boxes, max_area=area_thres)]
