@@ -271,7 +271,7 @@ class GeneratorBlock(nn.Module):
         for n in range(cfg.GAN.MODEL.NUM_BLOCKS):
             self.add_module('gen_res_block' + str(n + 1), ResidualBlock(in_channels=dim_out, num=dim_out))
 
-        self.gen_head = nn.Conv2d(dim_out, dim_out, padding=0, stride=1)
+        self.gen_head = nn.Conv2d(dim_out, dim_out, kernel_size=1, padding=0, stride=1)
 
         self._init_weights()
 
