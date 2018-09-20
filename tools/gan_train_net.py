@@ -831,7 +831,7 @@ def main():
 
             logger.info("Testing model after pre-training")
 
-            test_pre_cfgs = args.set_cfgs
+            test_pre_cfgs = [x for x in args.set_cfgs]
 
             test_pre_cfgs.append('DEBUG_GAN')
             test_pre_cfgs.append('True')
