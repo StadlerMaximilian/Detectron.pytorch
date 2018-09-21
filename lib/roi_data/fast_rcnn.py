@@ -238,11 +238,11 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
     gt_inds = np.where(roidb['gt_classes'] > 0)[0]
     gt_boxes = roidb['boxes'][gt_inds, :]
 
-    #if cfg.DEBUG:
-    #    logger.info("sample from {} gt boxes".format(len(gt_boxes)))
-    #    areas_gt, _ = box_utils.boxes_area(gt_boxes)
-    #    areas_gt = np.sqrt(areas_gt)
-    #    print("gt-boxes: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_gt))
+    if cfg.DEBUG:
+        logger.info("sample from {} gt boxes".format(len(gt_boxes)))
+        areas_gt, _ = box_utils.boxes_area(gt_boxes)
+        areas_gt = np.sqrt(areas_gt)
+        print("gt-boxes: area_thres: {} vs areas: {}".format(cfg.GAN.AREA_THRESHOLD, areas_gt))
 
     gt_keep_inds = []
     if cfg.GAN.AREA_THRESHOLD > 0:
