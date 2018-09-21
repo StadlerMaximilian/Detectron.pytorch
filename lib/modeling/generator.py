@@ -98,11 +98,6 @@ class Generator(nn.Module):
         del pretrained_detectron
         torch.cuda.empty_cache()
 
-        # finaly freeze Conv_Body and RPN
-        if cfg.RPN.RPN_ON and cfg.GAN.TRAIN.FREEZE_CONV_BODY:
-            freeze_params(self.Conv_Body)
-        if cfg.MODEL.FASTER_RCNN and cfg.GAN.TRAIN.FREEZE_RPN:
-            freeze_params(self.RPN)
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):
@@ -196,8 +191,8 @@ class ResidualBlock(nn.Module):
                                    nn.BatchNorm2d(num),
                                    nn.ReLU(),
                                    nn.Conv2d(num, num, kernel, stride=stride, padding=1),
-                                   nn.BatchNorm2d(num)
-                                   ## nn.ReLU()
+                                   nn.BatchNorm2d(num),
+                                   nn.ReLU()
                                    )
         self._init_weights()
 

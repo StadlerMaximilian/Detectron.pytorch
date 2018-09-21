@@ -49,9 +49,7 @@ class VGG_CNN_M_1024_conv5_body(nn.Module):
         self.dim_out = 512
         self.resolution = 6
 
-        # freeze gradients for first bottom convolutional blocks
-        if cfg.GAN.TRAIN.FREEZE_CONV1:
-            freeze_params(self.conv1)
+        freeze_params(self.conv1)
 
     def detectron_weight_mapping(self):
         mapping_to_detectron = {}

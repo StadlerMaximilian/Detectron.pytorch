@@ -144,7 +144,11 @@ def parse_args():
     parser.add_argument(
         '--testing_pre_training',
         action='store_true',
-        help='Flag for deleting objects and freeing GPU-cache, may increase run-time.'
+    )
+
+    parser.add_argument(
+        '--quit_after_pre_training',
+        action='store_true',
     )
 
     return parser.parse_args()
@@ -383,7 +387,10 @@ def main():
 
     pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
-    # Datasets #
+    ##################################################################################################################
+    #################################### DATASETS and Loader Setup  ##################################################
+    ##################################################################################################################
+
     timers['roidb_real'].tic()
     roidb_real, ratio_list_real, ratio_index_real = combined_roidb_for_training(
         cfg.GAN.TRAIN.DATASETS_REAL, cfg.GAN.TRAIN.PROPOSAL_FILES_REAL)
@@ -493,7 +500,10 @@ def main():
     dataiterator_fake_generator = iter(dataloader_fake_generator)
     train_size = max(train_size_D // 2, train_size_G)
 
-    # Model
+    ##################################################################################################################
+    ############################################# MODEL INITIALIZATION  ##############################################
+    ##################################################################################################################
+
     # only load pre-trained discriminator explicitly specified
     if cfg.GAN.TRAIN.PRETRAINED_WEIGHTS is not "":
         if args.init_dis_pretrained:
@@ -506,6 +516,10 @@ def main():
 
     if cfg.CUDA:
         gan.cuda()
+
+    ##################################################################################################################
+    ############################################# PARAMETER SETUP   ##################################################
+    ##################################################################################################################
 
     # train discriminator only on adversarial branch
     if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
@@ -659,7 +673,10 @@ def main():
     gan = mynn.DataParallel(gan, cpu_keywords=cpu_keys,
                             minibatch=True)
 
-    # Training Setups
+    ##################################################################################################################
+    ############################################# logger setup      ##################################################
+    ##################################################################################################################
+
     args.run_name = misc_utils.get_run_name() + '_step'
     output_dir = misc_utils.get_output_dir(args, args.run_name)
     output_dir_pre = os.path.join(output_dir, 'pre')
@@ -725,6 +742,9 @@ def main():
     # use maximum max_iter for training
     max_iter = max(cfg.GAN.SOLVER.MAX_ITER_D, cfg.GAN.SOLVER.MAX_ITER_G)
 
+##################################################################################################################
+############################################# PRE-TRAINING-LOOP ##################################################
+##################################################################################################################
     try:
         logger.info('Training starts !')
         step = args.start_step
@@ -857,7 +877,14 @@ def main():
 
                 test_net_routine(args_test)
 
-        # combined training
+        if args.quit_after_pre_training:
+            return
+
+
+##################################################################################################################
+#################################        Combined Training loop    ###############################################
+##################################################################################################################
+
 
         training_stats_dis = TrainingStats(
             args,
@@ -921,7 +948,7 @@ def main():
                 assert lr_G == lr_new_G
                 decay_steps_ind_G += 1
 
-            # train discriminator only on adversarial branch
+            #################### training discrriminator ############################
 
             for _ in range(cfg.GAN.TRAIN.k):
 
@@ -988,7 +1015,8 @@ def main():
                     del input_data
                     torch.cuda.empty_cache()
 
-            # train generator on total loss of discriminator (all losses weighted simply with 1)
+            #################### training generator #################################
+
             optimizer_G.zero_grad()
             training_stats_gen.IterTic()
 
@@ -1031,8 +1059,9 @@ def main():
                 save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
                               model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
 
-        # ---- Training ends ----
-        # Save last checkpoint
+        ####################### Training ends #################################
+
+        #  Save last checkpoint
         final_model = save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
                                     model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
         # cleanup
@@ -1080,6 +1109,9 @@ def main():
             tblogger_dis.close()
         logger.info('Aborted training.')
         return
+
+
+    ############## Testing final model ##########################################
 
     logger.info('Finished training.')
     time.sleep(5) # sleep some time to make sure that cache is free for testing
