@@ -148,11 +148,11 @@ class Generator(nn.Module):
             return_dict['blob_fake'] = blob_conv_pooled + blob_conv_residual
 
         if self.training:
-            if flags.real_mode and not cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
+            if flags.real_mode:
                 return_dict['blob_conv'] = blob_conv_pooled
                 if cfg.DEBUG:
                     print("\tblob_conv: blob_conv_pooled")
-            elif flags.fake_mode or cfg.GAN.TRAIN.PRE_TRAIN_GENERATOR:
+            elif flags.fake_mode:
                 return_dict['blob_conv'] = blob_conv_pooled + blob_conv_residual
                 if cfg.DEBUG:
                     print("\tblob_conv: blob_conv_pooled + blob_conv_residual")

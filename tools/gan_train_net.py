@@ -595,8 +595,13 @@ def main():
         if value.requires_grad:
             param_names_G.append(key)
 
+
+     # debugging
+    generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
+    ## usually generator_params = gan.generator.Generator_Block.parameters()
+
     params_G = [
-        {'params': gan.generator.Generator_Block.parameters(),
+        {'params': generator_params,
          'lr': 0,
          'weight_decay': cfg.GAN.SOLVER.WEIGHT_DECAY_G}
     ]
