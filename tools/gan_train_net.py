@@ -884,6 +884,7 @@ def main():
 
         if args.load_pretrained and args.init_dis_pretrained:
 
+            test_output_dir = os.path.join(output_dir_pre, 'testing')
             test_pre_cfgs = [x for x in args.set_cfgs]
 
             test_pre_cfgs.append('DEBUG_GAN')
