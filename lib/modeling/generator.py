@@ -196,8 +196,8 @@ class ResidualBlock(nn.Module):
                                    nn.BatchNorm2d(num),
                                    nn.ReLU(),
                                    nn.Conv2d(num, num, kernel, stride=stride, padding=1),
-                                   nn.BatchNorm2d(num),
-                                   nn.ReLU()
+                                   nn.BatchNorm2d(num)
+                                   ## nn.ReLU()
                                    )
         self._init_weights()
 

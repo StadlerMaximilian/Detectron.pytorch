@@ -597,8 +597,8 @@ def main():
 
 
      # debugging
-    generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
-    ## usually generator_params = gan.generator.Generator_Block.parameters()
+    ##generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
+    generator_params = gan.generator.Generator_Block.parameters()
 
     params_G = [
         {'params': generator_params,
