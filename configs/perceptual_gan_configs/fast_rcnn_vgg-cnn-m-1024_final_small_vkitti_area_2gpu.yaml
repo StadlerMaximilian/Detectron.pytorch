@@ -49,10 +49,10 @@ GAN:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
   TRAIN:
-    DATASETS_REAL: ('vkitti_clone_trainval_large',)
-    PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval_large/rpn_proposals.pkl',)
-    DATASETS_FAKE: ('vkitti_clone_trainval_small',)
-    PROPOSAL_FILES_FAKE: ('data/proposals/vkitti_clone_trainval_small/rpn_proposals.pkl',)
+    DATASETS_REAL: ('vkitti_clone_trainval',)
+    PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
+    DATASETS_FAKE: ('vkitti_clone_trainval',)
+    PROPOSAL_FILES_FAKE: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
@@ -81,7 +81,7 @@ GAN:
     GAMMA_PRE: 0.1
     MAX_ITER: 10000 #20000
     STEPS: [0, 5000] #[0, 10000]
-    PRE_ITER: 6250 #12500
     WARM_UP_ITERS: 500
+    PRE_ITER: 15000 #30000
+    STEPS_PRE: [0, 9000, 12000] #[0, 18000, 24000]
     PRE_WARM_UP_ITERS: 500
-    STEPS_PRE: [0, 3750, 5000] #[0, 7500, 1000]
