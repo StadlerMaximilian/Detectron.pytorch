@@ -253,6 +253,10 @@ def main():
     else:
         raise ValueError("Need Cuda device to run !")
 
+    cfg_from_file(args.cfg_file)
+    if args.set_cfgs is not None:
+        cfg_from_list(args.set_cfgs)
+
     if cfg.RPN.RPN_ON:
         assert (args.load_pretrained is not None) | (args.load_ckpt is not None)
     else:
@@ -263,10 +267,6 @@ def main():
         raise ValueError("Specified pretrained detectron model does not exists")
     elif args.load_pretrained is not None:
         cfg.GAN.TRAIN.PRETRAINED_WEIGHTS = args.load_pretrained
-
-    cfg_from_file(args.cfg_file)
-    if args.set_cfgs is not None:
-        cfg_from_list(args.set_cfgs)
 
     if args.output_dir is not None:
         cfg.OUTPUT_DIR = args.output_dir
