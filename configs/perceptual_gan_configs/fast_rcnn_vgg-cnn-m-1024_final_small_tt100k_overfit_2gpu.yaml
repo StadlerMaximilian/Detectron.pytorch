@@ -51,15 +51,15 @@ GAN:
     LABEL_SMOOTHING: 0.9
     DEBUG: False
   TRAIN:
-    DATASETS_REAL: ('tt100k_trainval_ignore_complete_overfit_large',)
-    PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_overfit_large/rpn_proposals.pkl',)
-    DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit_small',)
-    PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_overfit_small/rpn_proposals.pkl',)
+    DATASETS_REAL: ('tt100k_trainval_ignore_complete_overfit',)
+    PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl',)
+    DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit',)
+    PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
     IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 8
+    BATCH_SIZE_PER_IM_D: 32
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 1
     BATCH_SIZE_PER_IM_G: 128
@@ -76,15 +76,15 @@ GAN:
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 0.0002 #0.00125
-    BASE_LR_G: 0.0002 #0.00125
+    BASE_LR_D: 0.002 #0.001
+    BASE_LR_G: 0.002 #0.001
     BASE_LR_PRE: 0.0025 #0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 500 #1000
-    WARM_UP_ITERS: 50 #100
-    STEPS: [0, 250] #[0, 600, 800]
-    PRE_ITER: 300 #600
-    PRE_WARM_UP_ITERS: 25 #50
-    STEPS_PRE: [0, 180, 240] #[0, 360, 480]
+    WARM_UP_ITERS: 50
+    STEPS: [0, 250 ] #[0, 500]
+    PRE_ITER: 550 #1100
+    PRE_WARM_UP_ITERS: 50
+    STEPS_PRE: [0, 330, 440] #[0, 660, 880]

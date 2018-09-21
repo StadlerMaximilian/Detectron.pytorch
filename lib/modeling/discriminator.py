@@ -77,12 +77,17 @@ class Discriminator(nn.Module):
                 print("ignoring backgound rois in adv_loss: {} / {}".format(bg,
                                                                             len(rpn_ret['labels_int32'])))
 
-            loss_adv = self.adversarial_loss(adv_score, adv_target, reduce=False)
 
-            loss_adv[mask] = 0.0
-            if fg > 0:
-                loss_adv = loss_adv * len(rpn_ret['labels_int32']) / fg
-            loss_adv = loss_adv.mean()
+            if cfg.GAN.TRAIN.IGNORE_BG_ADV_LOSS:
+                loss_adv = self.adversarial_loss(adv_score, adv_target,
+                                                 reduce=False)
+                loss_adv[mask] = 0.0
+                if fg > 0:
+                    loss_adv = loss_adv * len(rpn_ret['labels_int32']) / fg
+                loss_adv = loss_adv.mean()
+            else:
+                loss_adv = self.adversarial_loss(adv_score, adv_target,
+                                                 reduce=True)
 
             return_dict['losses']['loss_adv'] = loss_adv
 
