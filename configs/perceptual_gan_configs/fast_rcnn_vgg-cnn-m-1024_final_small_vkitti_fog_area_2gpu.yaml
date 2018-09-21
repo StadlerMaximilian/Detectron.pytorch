@@ -66,14 +66,19 @@ GAN:
   SOLVER:
     TYPE_G: 'SGD'
     TYPE_D: 'SGD'
+    TYPE_PRE: 'SGD'
     WEIGHT_DECAY_D: 0.0005
     WEIGHT_DECAY_G: 0.0005
+    WEIGHT_DECAY_PRE: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
-    BASE_LR_D: 0.0002 #0.0001
-    BASE_LR_G: 0.0002 #0.0001
+    LR_POLICY_PRE: steps_with_decay
+    BASE_LR_D: 0.0001
+    BASE_LR_G: 0.0001
+    BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
+    GAMMA_PRE: 0.1
     MAX_ITER: 10000 #20000
     STEPS: [0, 5000] #[0, 10000]
     WARM_UP_ITERS: 500

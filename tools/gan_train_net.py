@@ -609,8 +609,7 @@ def main():
         if value.requires_grad:
             param_names_G.append(key)
 
-
-     # debugging
+    # debugging
     ##generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
     generator_params = gan.generator.Generator_Block.parameters()
 
