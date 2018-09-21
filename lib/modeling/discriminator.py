@@ -80,7 +80,8 @@ class Discriminator(nn.Module):
             loss_adv = self.adversarial_loss(adv_score, adv_target, reduce=False)
 
             loss_adv[mask] = 0.0
-            loss_adv = loss_adv * len(rpn_ret['labels_int32']) / fg
+            if fg > 0:
+                loss_adv = loss_adv * len(rpn_ret['labels_int32']) / fg
             loss_adv = loss_adv.mean()
 
             return_dict['losses']['loss_adv'] = loss_adv
