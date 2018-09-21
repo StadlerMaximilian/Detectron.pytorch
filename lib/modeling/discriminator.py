@@ -73,12 +73,12 @@ class Discriminator(nn.Module):
             fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
             bg = len([x for x in rpn_ret['labels_int32'] if x == 0])
 
-            if cfg.DEBUG:
-                print("ignoring backgound rois in adv_loss: {} / {}".format(bg,
-                                                                            len(rpn_ret['labels_int32'])))
-
 
             if cfg.GAN.TRAIN.IGNORE_BG_ADV_LOSS:
+                if cfg.DEBUG:
+                    print("ignoring backgound rois in adv_loss: {} / {}".format(bg,
+                                                                                len(rpn_ret['labels_int32'])))
+
                 loss_adv = self.adversarial_loss(adv_score, adv_target,
                                                  reduce=False)
                 loss_adv[mask] = 0.0
