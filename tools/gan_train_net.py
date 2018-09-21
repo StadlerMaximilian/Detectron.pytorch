@@ -880,6 +880,32 @@ def main():
             return
 
 
+    ###################### testing pretrained loaded model #######################################################
+
+        if args.load_pretrained and args.init_dis_pretrained:
+
+            test_pre_cfgs = [x for x in args.set_cfgs]
+
+            test_pre_cfgs.append('DEBUG_GAN')
+            test_pre_cfgs.append('True')
+
+            if final_model is not None:
+                if args.multi_gpu_testing:
+                    args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                          load_ckpt='{}'.format(args.load_pretrained),
+                                          load_dis=None, load_gen=None,
+                                          multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
+                                          range=None, set_cfgs=test_pre_cfgs, vis=False)
+                else:
+                    args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
+                                          load_ckpt='{}'.format(args.load_pretrained),
+                                          load_dis=None, load_gen=None,
+                                          multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
+                                          range=None, set_cfgs=test_pre_cfgs, vis=False)
+
+                test_net_routine(args_test)
+
+
 ##################################################################################################################
 #################################        Combined Training loop    ###############################################
 ##################################################################################################################
