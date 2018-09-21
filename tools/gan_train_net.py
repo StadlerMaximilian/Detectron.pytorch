@@ -648,7 +648,7 @@ def main():
     # loading checkpoint is only possible for combined gan training
     if args.load_ckpt:
         args.init_dis_pretrained = True
-        load_name = args.load_ckp
+        load_name = args.load_ckpt
         logging.info("loading checkpoint %s", load_name)
         checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
         net_utils.load_ckpt(gan, checkpoint['model'])
