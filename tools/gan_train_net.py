@@ -695,7 +695,7 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger_dis = SummaryWriter(os.path.join(output_dir, 'log', 'dis'),
-                                         filename_suffix="_discriminator"),
+                                         filename_suffix="_discriminator")
             tblogger_dis_fake = SummaryWriter(os.path.join(output_dir, 'log', 'dis_fake'),
                                               filename_suffix="_discriminator_fake")
             tblogger_gen = SummaryWriter(os.path.join(output_dir, 'log', 'gen'),
@@ -1103,6 +1103,17 @@ def main():
         #  Save last checkpoint
         final_model = save_ckpt_gan(output_dir, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
                                     model=gan, optimizer_dis=optimizer_D, optimizer_gen=optimizer_G)
+
+        logger.info("Closing dataloader and tfboard if used")
+        if args.use_tfboard and not args.no_save:
+            tblogger_dis.close()
+            tblogger_dis_fake.close()
+            tblogger_gen.close()
+
+        del training_stats_dis
+        del training_stats_gen
+        del training_stats_dis_fake
+
         # cleanup
         del gan
         del dataiterator_real_discriminator
@@ -1121,13 +1132,6 @@ def main():
         del optimizer_D
         torch.cuda.empty_cache()
 
-        logger.info("Closing dataloader and tfboard if used")
-        if args.use_tfboard and not args.no_save:
-            tblogger_dis.close()
-            tblogger_gen.close()
-
-        del training_stats_dis
-        del training_stats_gen
 
     except (RuntimeError, KeyboardInterrupt):
 
@@ -1145,6 +1149,7 @@ def main():
         logger.info("Closing dataloader and tfboard if used")
         if args.use_tfboard and not args.no_save:
             tblogger_gen.close()
+            tblogger_dis.close()
             tblogger_dis.close()
         logger.info('Aborted training.')
         return
