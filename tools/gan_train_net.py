@@ -1169,8 +1169,9 @@ def main():
 
     if final_model is not None:
 
-        args.set_cfgs.append('DEBUG_GAN')
-        args.set_cfgs.append('False')
+        if not cfg.DEBUG_GAN:
+            args.set_cfgs.append('DEBUG_GAN')
+            args.set_cfgs.append('False')
 
         if args.multi_gpu_testing:
             args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
