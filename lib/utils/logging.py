@@ -180,7 +180,7 @@ def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, tr
             stats_dis = training_stats_dis.GetStats(cur_iter, lr_dis)
             stats_dis_fake = training_stats_dis_fake.GetStats(cur_iter, lr_dis)
             log_gan_stats(training_stats_gen.misc_args, training_stats_gen.max_iter,
-                          stats_gen, stats_dis, eta)
+                          stats_gen, stats_dis, stats_dis_fake, eta=eta)
 
 
 class SmoothedValue(object):
