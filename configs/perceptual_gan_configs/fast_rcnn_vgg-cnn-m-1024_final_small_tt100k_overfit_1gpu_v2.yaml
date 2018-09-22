@@ -45,7 +45,7 @@ CUSTOM_DATA:
 # options specifically for Perceptual GAN version
 GAN:
   GAN_MODE_ON: True
-  AREA_THRESHOLD: 55
+  AREA_THRESHOLD: -1
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
