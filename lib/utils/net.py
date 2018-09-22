@@ -244,8 +244,6 @@ def load_ckpt(model, ckpt):
                     else:
                         raise e
 
-
-
     model.load_state_dict(state_dict, strict=False)
 
 

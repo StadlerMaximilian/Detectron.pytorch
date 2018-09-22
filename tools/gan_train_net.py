@@ -517,6 +517,15 @@ def main():
     if cfg.CUDA:
         gan.cuda()
 
+    # Load checkpoint
+    # loading checkpoint is only possible for combined gan training
+    if args.load_ckpt:
+        load_name = args.load_ckpt
+        logger.info("loading checkpoint %s", load_name)
+        checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(gan, checkpoint['model'])
+        del checkpoint
+
     ##################################################################################################################
     ############################################# PARAMETER SETUP   ##################################################
     ##################################################################################################################
@@ -641,22 +650,6 @@ def main():
         optimizer_pre = torch.optim.Adam(params_pre)
     else:
         raise ValueError("INVALID Optimizer_pre specified. Must be SGD or Adam!")
-
-    # Load checkpoint
-    # loading checkpoint is only possible for combined gan training
-    if args.load_ckpt:
-        args.init_dis_pretrained = True
-        load_name = args.load_ckpt
-        logging.info("loading checkpoint %s", load_name)
-        checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
-        net_utils.load_ckpt(gan, checkpoint['model'])
-
-        if args.resume:
-            # as for every k steps of discriminator, G is updated once
-            optimizer_G.load_state_dict(checkpoint['optimizer_gen'])
-            optimizer_D.load_state_dict(checkpoint['optimizer_dis'])
-        del checkpoint
-        torch.cuda.empty_cache()
 
     lr_D = optimizer_D.param_groups[0]['lr']  # lr of non-bias parameters, for commmand line outputs.
     lr_G = optimizer_G.param_groups[0]['lr']
