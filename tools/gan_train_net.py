@@ -545,7 +545,6 @@ def main():
     logger.info("Parameters discriminator is trained on")
     logger.info(param_names_D)
 
-
     # pre-training in classical fashion with seperate groups for bias and non-bias parameters
     params_list_pre = {
         'bias_params': [],
