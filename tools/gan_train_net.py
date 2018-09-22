@@ -507,9 +507,6 @@ def main():
     # only load pre-trained discriminator explicitly specified
     if args.load_pretrained and args.init_dis_pretrained:
         gan = GAN()
-        logger.info("loading checkpoint %s", args.load_pretrained)
-        checkpoint = torch.load(args.load_pretrained, map_location=lambda storage, loc: storage)
-        net_utils.load_ckpt(gan, checkpoint['model'])
     elif cfg.GAN.TRAIN.PRETRAINED_WEIGHTS is not "":
         if args.init_dis_pretrained:
             gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
@@ -530,6 +527,14 @@ def main():
         checkpoint = torch.load(load_name, map_location=lambda storage, loc: storage)
         net_utils.load_ckpt(gan, checkpoint['model'])
         del checkpoint
+        torch.cuda.empty_cache()
+
+    if args.load_pretrained and args.init_dis_pretrained:
+        logger.info("loading pretrained checkpoint %s", args.load_pretrained)
+        checkpoint = torch.load(args.load_pretrained, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(gan, checkpoint['model'])
+        del checkpoint
+        torch.cuda.empty_cache()
 
     ##################################################################################################################
     ############################################# PARAMETER SETUP   ##################################################
@@ -883,7 +888,7 @@ def main():
 
         if args.load_pretrained and args.init_dis_pretrained:
 
-            test_output_dir = os.path.join(output_dir_pre, 'testing')
+            test_output_dir = os.path.join(output_dir_pre, 'testing_initialization')
             test_pre_cfgs = [x for x in args.set_cfgs]
 
             test_pre_cfgs.append('DEBUG_GAN')
@@ -1129,7 +1134,6 @@ def main():
         del optimizer_G
         del optimizer_D
         torch.cuda.empty_cache()
-
 
     except (RuntimeError, KeyboardInterrupt):
 
