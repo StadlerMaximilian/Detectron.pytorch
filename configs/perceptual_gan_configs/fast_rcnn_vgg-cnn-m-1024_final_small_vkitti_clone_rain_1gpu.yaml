@@ -44,7 +44,7 @@ CUSTOM_DATA:
 # options specifically for Perceptual GAN version
 GAN:
   GAN_MODE_ON: True
-  AREA_THRESHOLD: 60
+  AREA_THRESHOLD: -1 # for transfer training !!!!
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 0.9
@@ -83,7 +83,7 @@ GAN:
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 20000
-    WARM_UP_ITERS: 50
+    WARM_UP_ITERS: 0 # no warm-up on 1 GPU for GAN-training
     STEPS: [0, 10000]
     PRE_ITER: 30000
     STEPS_PRE: [0, 18000, 24000]
