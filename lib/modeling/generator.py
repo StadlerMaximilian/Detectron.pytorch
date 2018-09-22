@@ -80,13 +80,8 @@ class Generator(nn.Module):
                 weight_utils.load_caffe2_pretrained_weights(self, cfg.MODEL.PRETRAINED_BACKBONE_WEIGHTS)
             return
 
-        ckpt = torch.load(pretrained_weights)
-        self.load_state_dict(ckpt['model'])
+        pretrained_detectron = torch.load(pretrained_weights)
 
-        del ckpt
-        torch.cuda.empty_cache()
-
-        """
         if cfg.RPN.RPN_ON:
             load_layers = ['Conv_Body', 'RPN']
         else:
@@ -102,7 +97,6 @@ class Generator(nn.Module):
         self.load_state_dict(state_dict, strict=False)
         del pretrained_detectron
         torch.cuda.empty_cache()
-        """
 
     def forward(self, data, im_info, roidb=None, flags=None, **rpn_kwargs):
         with torch.set_grad_enabled(self.training):

@@ -507,8 +507,14 @@ def main():
     # only load pre-trained discriminator explicitly specified
     if cfg.GAN.TRAIN.PRETRAINED_WEIGHTS is not "":
         if args.init_dis_pretrained:
-            gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS,
-                      discriminator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+            gan = GAN()
+
+            ckpt = torch.load(cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
+            gan.load_state_dict(ckpt['model'])
+
+            del ckpt
+            torch.cuda.empty_cache()
+
         else:
             gan = GAN(generator_weights=cfg.GAN.TRAIN.PRETRAINED_WEIGHTS)
     else: # if Fast R-CNN, start with new model, but use pre-trained weights from config (on ImageNet)

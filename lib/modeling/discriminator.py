@@ -115,13 +115,7 @@ class Discriminator(nn.Module):
         also freezes weights of Conv_Body and RPN
         """
         if pretrained_weights is not None:
-            ckpt = torch.load(pretrained_weights)
-            self.load_state_dict(ckpt['model'])
 
-            del ckpt
-            torch.cuda.empty_cache()
-
-            """
             pretrained_detectron = torch.load(pretrained_weights)
             load_layers = ['Box_Head', 'Box_Outs']
             mapping, _ = self.detectron_weight_mapping()
@@ -152,7 +146,6 @@ class Discriminator(nn.Module):
             self.load_state_dict(state_dict, strict=False)
             del pretrained_detectron
             torch.cuda.empty_cache()
-            """
 
     def _init_weights(self):
         """
