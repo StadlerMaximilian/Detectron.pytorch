@@ -145,7 +145,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, stats_dis
                                                      (k, v) for k, v in stats_dis['head_losses'].items())
 
         if stats_dis_fake["head_losses"]:
-            lines += "\t\tDis_Fake_head: " + ", ".join("%s: %.6f" %
+            lines += "\tDis_Fake_head: " + ", ".join("%s: %.6f" %
                                                      (k, v) for k, v in stats_dis_fake['head_losses'].items()) + "\n"
 
         if stats_gen['adv_loss']:
