@@ -68,12 +68,11 @@ class Discriminator(nn.Module):
             return_dict['losses'] = {}
             return_dict['metrics'] = {}
 
-            # ignore adversarial loss for background RoIs
-            mask = np.where(rpn_ret['labels_int32'] == 0)
-            fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
-            bg = len([x for x in rpn_ret['labels_int32'] if x == 0])
-
             if cfg.GAN.TRAIN.IGNORE_BG_ADV_LOSS:
+                # ignore adversarial loss for background RoIs
+                mask = np.where(rpn_ret['labels_int32'] == 0)
+                fg = len([x for x in rpn_ret['labels_int32'] if x > 0])
+                bg = len([x for x in rpn_ret['labels_int32'] if x == 0])
                 if cfg.DEBUG:
                     print("ignoring backgound rois in adv_loss: {} / {}".format(bg,
                                                                                 len(rpn_ret['labels_int32'])))

@@ -65,7 +65,7 @@ def log_stats(stats, misc_args):
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None):
+def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, stats_dis_fake=None, eta=None):
     """Log training statistics specifically for gans to terminal"""
     if hasattr(misc_args, 'epoch'):
         lines = "[%s][%s][Epoch %d][Iter %d / %d]\n" % (
@@ -90,7 +90,7 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
             lines += "\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
                                                          (k, v) for k, v in stats_dis['adv_loss'].items()) + "\n"
 
-    else:
+    elif stats_gen is not None and stats_dis is not None and stats_dis_fake is None:
         assert stats_dis is not None and stats_dis is not None and eta is not None
 
         lines += "\t\tloss_Generator: %.6f, loss_Discriminator: % .6f, " \
@@ -118,10 +118,52 @@ def log_gan_stats(misc_args, max_iter, stats_gen=None, stats_dis=None, eta=None)
             lines += "\t\t\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
                                                          (k, v) for k, v in stats_dis['adv_loss'].items()) + "\n"
 
+    elif stats_gen is not None and stats_dis is not None and stats_dis_fake is not None:
+
+        lines += "loss_Generator: %.6f, loss_Discriminator: % .6f, " \
+                 "lr_gen: %.6f, lr_dis: %.6f time_dis: %.6f, time_gen: %.6g, eta: %s\n" % (
+                  stats_gen['loss'], stats_dis['loss'], stats_gen['lr'],
+                  stats_dis['lr'], stats_dis['time'], stats_gen['time'], eta
+                 )
+
+        if stats_gen['metrics']:
+            lines += "Generator_metrics: " + ", ".join("%s: %.6f" % (k, v) for k, v in stats_gen['metrics'].items())
+
+        if stats_dis['metrics']:
+            lines += "\t\t\tDiscriminator_metrics: " + ", ".join("%s: %.6f" %
+                                                      (k, v) for k, v in stats_dis['metrics'].items())
+
+        if stats_dis_fake['metrics']:
+            lines += "\t\t\tDis_Fake_metrics: " + ", ".join("%s: %.6f" %
+                                                      (k, v) for k, v in stats_dis_fake['metrics'].items()) + "\n"
+
+        if stats_gen['head_losses']:
+            lines += "Generator_head: " + ", ".join("%s: %.6f" %
+                                                        (k, v) for k, v in stats_gen['head_losses'].items())
+        if stats_dis["head_losses"]:
+            lines += "\t\tDiscriminator_head: " + ", ".join("%s: %.6f" %
+                                                     (k, v) for k, v in stats_dis['head_losses'].items())
+
+        if stats_dis_fake["head_losses"]:
+            lines += "\t\tDis_Fake_head: " + ", ".join("%s: %.6f" %
+                                                     (k, v) for k, v in stats_dis_fake['head_losses'].items()) + "\n"
+
+        if stats_gen['adv_loss']:
+            lines += "Generator_adv: " + ", ".join("%s: %.6f" %
+                                                       (k, v) for k, v in stats_gen['adv_loss'].items())
+        if stats_dis['adv_loss']:
+            lines += "\t\t\t\tDiscriminator_adv: " + ", ".join("%s: %.6f" %
+                                                         (k, v) for k, v in stats_dis['adv_loss'].items())
+
+        if stats_dis_fake['adv_loss']:
+            lines += "\t\t\t\tDis_Fake_adv: " + ", ".join("%s: %.6f" %
+                                                         (k, v) for k, v in stats_dis_fake['adv_loss'].items()) + "\n"
+
     print(lines[:-1])  # remove last new line
 
 
-def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, training_stats_dis=None):
+def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, training_stats_dis=None,
+                           training_stats_dis_fake=None):
         if (cur_iter % training_stats_gen.LOG_PERIOD == 0 or
                 cur_iter == training_stats_gen.max_iter - 1):
 
@@ -136,12 +178,9 @@ def log_gan_stats_combined(cur_iter, lr_gen, lr_dis, training_stats_gen=None, tr
 
             stats_gen = training_stats_gen.GetStats(cur_iter, lr_gen)
             stats_dis = training_stats_dis.GetStats(cur_iter, lr_dis)
+            stats_dis_fake = training_stats_dis_fake.GetStats(cur_iter, lr_dis)
             log_gan_stats(training_stats_gen.misc_args, training_stats_gen.max_iter,
                           stats_gen, stats_dis, eta)
-            if training_stats_gen.tblogger:
-                training_stats_gen.tb_log_stats(stats_gen, cur_iter)
-            if training_stats_dis.tblogger:
-                training_stats_dis.tb_log_stats(stats_dis, cur_iter)
 
 
 class SmoothedValue(object):

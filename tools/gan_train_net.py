@@ -695,7 +695,9 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger_dis = SummaryWriter(os.path.join(output_dir, 'log', 'dis'),
-                                             filename_suffix="_discriminator")
+                                         filename_suffix="_discriminator"),
+            tblogger_dis_fake = SummaryWriter(os.path.join(output_dir, 'log', 'dis_fake'),
+                                              filename_suffix="_discriminator_fake")
             tblogger_gen = SummaryWriter(os.path.join(output_dir, 'log', 'gen'),
                                          filename_suffix="_generator")
             tblogger_pre = SummaryWriter(os.path.join(output_dir_pre, 'log', 'pre'),
@@ -917,6 +919,12 @@ def main():
             max_iter,
             tblogger_dis if args.use_tfboard and not args.no_save else None)
 
+        training_stats_dis_fake = TrainingStats(
+            args,
+            args.disp_interval,
+            max_iter,
+            tblogger_dis_fake if args.use_tfboard and not args.no_save else None)
+
         training_stats_gen = TrainingStats(
             args,
             args.disp_interval,
@@ -979,6 +987,7 @@ def main():
 
                 optimizer_D.zero_grad()
                 training_stats_dis.IterTic()
+                training_stats_dis_fake.IterTic()
 
                 # train on fake data
 
@@ -1007,16 +1016,19 @@ def main():
                                   )
                 outputs_real = gan(**input_data)
 
-                training_stats_dis.UpdateIterStats(out=outputs_real, out_add=outputs_fake)
+                training_stats_dis.UpdateIterStats(out=outputs_real)
                 training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
 
+                training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
+                training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
+
                 if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
-                    loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv'] \
-                                + outputs_fake['losses']['loss_cls'] \
-                                + outputs_fake['losses']['loss_bbox']
-                    loss_real = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_real['losses']['loss_adv'] \
-                                + outputs_real['losses']['loss_cls'] \
-                                + outputs_real['losses']['loss_bbox']
+                    loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv']
+                    loss_fake += outputs_fake['losses']['loss_cls']
+                    loss_fake += outputs_fake['losses']['loss_bbox']
+                    loss_real = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_real['losses']['loss_adv']
+                    loss_real += outputs_real['losses']['loss_cls']
+                    loss_real += outputs_real['losses']['loss_bbox']
                 else:
                     # adversarial loss for discriminator
                     if cfg.DEBUG:
@@ -1029,6 +1041,7 @@ def main():
                 optimizer_D.step()
 
                 training_stats_dis.IterToc()
+                training_stats_dis_fake.IterToc()
 
                 # clean-up to save memory
                 if args.online_cleanup:
@@ -1062,8 +1075,8 @@ def main():
             else:
                 if cfg.DEBUG:
                     print("train generator on combined loss")
-                loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox'] \
-                         + cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
+                loss_G = outputs['losses']['loss_cls'] + outputs['losses']['loss_bbox']
+                loss_G += cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs['losses']['loss_adv']
 
             loss_G.backward()
             optimizer_G.step()
@@ -1071,6 +1084,7 @@ def main():
 
             log_gan_stats_combined(step, lr_gen=lr_G, lr_dis=lr_D,
                                    training_stats_dis=training_stats_dis,
+                                   training_stats_dis_fake=training_stats_dis_fake,
                                    training_stats_gen=training_stats_gen)
 
             if args.online_cleanup:
