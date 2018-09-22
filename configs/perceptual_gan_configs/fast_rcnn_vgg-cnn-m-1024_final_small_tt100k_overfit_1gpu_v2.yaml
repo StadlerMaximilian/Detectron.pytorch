@@ -71,8 +71,8 @@ GAN:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
     TYPE_PRE: 'SGD'
-    WEIGHT_DECAY_D: 0 #0.0005
-    WEIGHT_DECAY_G: 0 #0.0005
+    WEIGHT_DECAY_D: 0.0 #0.0005
+    WEIGHT_DECAY_G: 0.0 #0.0005
     WEIGHT_DECAY_PRE: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
