@@ -539,7 +539,7 @@ def main():
         except KeyError:
             gan.cpu()
             del gan
-            gan = GAN(generator_weights=args.load_pretrained, discriminator_weights=args.load_pretarined)
+            gan = GAN(generator_weights=args.load_pretrained, discriminator_weights=args.load_pretrained)
             if cfg.CUDA:
                 gan.cuda()
 
