@@ -530,18 +530,11 @@ def main():
         torch.cuda.empty_cache()
 
     if args.load_pretrained and args.init_dis_pretrained:
-        try:
-            logger.info("loading pretrained checkpoint %s", args.load_pretrained)
-            checkpoint = torch.load(args.load_pretrained, map_location=lambda storage, loc: storage)
-            net_utils.load_ckpt(gan, checkpoint['model'])
-            del checkpoint
-            torch.cuda.empty_cache()
-        except KeyError:
-            gan.cpu()
-            del gan
-            gan = GAN(generator_weights=args.load_pretrained, discriminator_weights=args.load_pretrained)
-            if cfg.CUDA:
-                gan.cuda()
+        logger.info("loading pretrained checkpoint %s", args.load_pretrained)
+        checkpoint = torch.load(args.load_pretrained, map_location=lambda storage, loc: storage)
+        net_utils.load_ckpt(gan, checkpoint['model'])
+        del checkpoint
+        torch.cuda.empty_cache()
 
     ##################################################################################################################
     ############################################# PARAMETER SETUP   ##################################################
