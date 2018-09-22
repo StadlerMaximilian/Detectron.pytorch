@@ -63,25 +63,27 @@ GAN:
     BATCH_SIZE_PER_IM_G: 64
     FG_FRACTION_G: 0.25
     SNAPSHOT_ITERS: 5000
+    k: 1
+    IGNORE_BG_ADV_LOSS: True
   SOLVER:
-    TYPE_G: 'SGD'
-    TYPE_D: 'SGD'
+    TYPE_G: 'Adam'
+    TYPE_D: 'Adam'
     TYPE_PRE: 'SGD'
-    WEIGHT_DECAY_D: 0.0005
-    WEIGHT_DECAY_G: 0.0005
+    WEIGHT_DECAY_D: 0.0 #0.0005
+    WEIGHT_DECAY_G: 0.0 #0.0005
     WEIGHT_DECAY_PRE: 0.0005
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 0.0001
-    BASE_LR_G: 0.0001
+    BASE_LR_D: 1e-4
+    BASE_LR_G: 1e-4
     BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 20000
+    WARM_UP_ITERS: 50
     STEPS: [0, 10000]
-    WARM_UP_ITERS: 500
     PRE_ITER: 30000
     STEPS_PRE: [0, 18000, 24000]
     PRE_WARM_UP_ITERS: 500
