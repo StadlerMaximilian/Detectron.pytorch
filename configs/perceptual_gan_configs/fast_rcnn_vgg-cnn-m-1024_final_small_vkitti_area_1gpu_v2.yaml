@@ -53,7 +53,7 @@ GAN:
     PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
     DATASETS_FAKE: ('vkitti_clone_trainval',)
     PROPOSAL_FILES_FAKE: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
-    DATASETS_FAKE_GEN: ('vkitti_clone_trainval',)
+    DATASETS_GEN: ('vkitti_clone_trainval',)
     PROPOSAL_FILES_GEN: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
