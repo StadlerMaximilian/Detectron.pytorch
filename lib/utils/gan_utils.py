@@ -37,6 +37,7 @@ class ModeFlags(object):
         self.train_pre = False
         self.fake_mode = False
         self.real_mode = True
+        self.real_fake_mode = True
 
         self.set(mode, train)
 
@@ -44,9 +45,15 @@ class ModeFlags(object):
         if mode == "fake":
             self.fake_mode = True
             self.real_mode = False
+            self.real_fake_mode = False
         elif mode == "real":
             self.real_mode = True
             self.fake_mode = False
+            self.real_fake_mode = False
+        elif mode == "real_fake":
+            self.real_mode = False
+            self.fake_mode = False
+            self.real_fake_mode = True
         else:
             raise ValueError("mode ({}) has to be either 'real' or 'fake'!".format(mode))
 

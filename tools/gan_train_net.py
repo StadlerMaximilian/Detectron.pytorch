@@ -383,7 +383,12 @@ def main():
     # for FAST R-CNN: rois are not sampled on the run. The flags therefore have to be passed to the actual dataloader
     fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
     real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
-    fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+
+    # debugging
+    # train generator on real and fake datasets to better create zero-mappings
+
+    ## fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+    fake_gen_flag = [ModeFlags("real_fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
     pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
