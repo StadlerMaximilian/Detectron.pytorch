@@ -146,7 +146,7 @@ class Generator(nn.Module):
                 return_dict['blob_conv'] = blob_conv_pooled
                 if cfg.DEBUG:
                     print("\tblob_conv: blob_conv_pooled")
-            elif flags.fake_mode:
+            elif flags.fake_mode or flags.real_fake_mode:
                 return_dict['blob_conv'] = blob_conv_pooled + blob_conv_residual
                 if cfg.DEBUG:
                     print("\tblob_conv: blob_conv_pooled + blob_conv_residual")
