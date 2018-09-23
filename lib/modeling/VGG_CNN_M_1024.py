@@ -106,7 +106,7 @@ class VGG_CNN_M_1024_fc_head(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        if cfg.MODEL.KAIMING_INIT:
+        if cfg.GAN.MODEL.KAIMING_INIT:
             if cfg.DEBUG:
                 print("\tInit VGG-CNN-M-1024 FC-HEAD with KAIMING")
             init.kaiming_uniform_(self.fc1[0].weight, a=0, mode='fan_in', nonlinearity='relu')

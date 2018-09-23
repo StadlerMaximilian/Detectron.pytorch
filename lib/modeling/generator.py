@@ -220,7 +220,7 @@ class ResidualBlock(nn.Module):
         return self.mapping_to_detectron, self.orphans_in_detectron
 
     def _init_weights(self):
-        if cfg.MODEL.KAIMING_INIT:
+        if cfg.GAN.MODEL.KAIMING_INIT:
             if cfg.DEBUG:
                 print("\tInit ResidualBlock with KAIMING")
             init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
@@ -267,7 +267,7 @@ class GeneratorBlock(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        if cfg.MODEL.KAIMING_INIT:
+        if cfg.GAN.MODEL.KAIMING_INIT:
             if cfg.DEBUG:
                 print("\tInit Gen_Base with KAIMING")
             init.kaiming_uniform_(self.gen_base[0].weight, a=0, mode='fan_in', nonlinearity='relu')

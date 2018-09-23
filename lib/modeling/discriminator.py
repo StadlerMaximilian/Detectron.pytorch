@@ -151,7 +151,7 @@ class Discriminator(nn.Module):
         """
         initialize layers before ReLU activation with kaiming initialization
         """
-        if cfg.MODEL.KAIMING_INIT:
+        if cfg.GAN.MODEL.KAIMING_INIT:
             if cfg.DEBUG:
                 print("\tInit Adversarial with KAIMING")
             init.kaiming_uniform_(self.adversarial[0].weight, a=0, mode='fan_in', nonlinearity='relu')
