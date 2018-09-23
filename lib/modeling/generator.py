@@ -131,7 +131,7 @@ class Generator(nn.Module):
         if not self.training:
             return_dict['blob_conv_pooled'] = blob_conv_pooled
 
-        if not self.training or flags.fake_mode:
+        if not self.training or flags.fake_mode or flags.real_fake_mode:
             blob_conv_residual = self.Generator_Block(blob_conv_base, rpn_ret)
 
         if cfg.DEBUG and (not self.training or flags.fake_mode):
