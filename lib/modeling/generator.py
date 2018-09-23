@@ -224,21 +224,21 @@ class ResidualBlock(nn.Module):
             if cfg.DEBUG:
                 print("\tInit ResidualBlock with KAIMING")
             init.kaiming_uniform_(self.block[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-            init.constant_(self.block[0].bias, 0)
+            init.constant_(self.block[0].bias, 0.0)
             init.kaiming_uniform_(self.block[3].weight, a=0, mode='fan_in', nonlinearity='relu')
-            init.constant_(self.block[3].bias, 0)
+            init.constant_(self.block[3].bias, 0.0)
         else:
             if cfg.DEBUG:
                 print("\tInit ResidualBlock with XAVIER")
             mynn.init.XavierFill(self.block[0].weight)
-            init.constant_(self.block[0].bias, 0)
+            init.constant_(self.block[0].bias, 0.0)
             mynn.init.XavierFill(self.block[3].weight)
-            init.constant_(self.block[3].bias, 0)
+            init.constant_(self.block[3].bias, 0.0)
 
         init.constant_(self.block[1].weight, 1.0) # BN weight with 1
-        init.constant_(self.block[1].bias, 0)
+        init.constant_(self.block[1].bias, 0.0)
         init.constant_(self.block[4].weight, 1.0) # BN weight with 1
-        init.constant_(self.block[4].bias, 0)
+        init.constant_(self.block[4].bias, 0.0)
 
 ########################################################################################################################
 
@@ -271,16 +271,16 @@ class GeneratorBlock(nn.Module):
             if cfg.DEBUG:
                 print("\tInit Gen_Base with KAIMING")
             init.kaiming_uniform_(self.gen_base[0].weight, a=0, mode='fan_in', nonlinearity='relu')
-            init.constant_(self.gen_base[0].bias, 0)
+            init.constant_(self.gen_base[0].bias, 0.0)
             init.kaiming_uniform_(self.gen_base[2].weight, a=0, mode='fan_in', nonlinearity='relu')
-            init.constant_(self.gen_base[2].bias, 0)
+            init.constant_(self.gen_base[2].bias, 0.0)
         else:
             if cfg.DEBUG:
                 print("\tInit Gen_Base with XAVIER")
             mynn.init.XavierFill(self.gen_base[0].weight)
-            init.constant_(self.gen_base[0].bias, 0)
+            init.constant_(self.gen_base[0].bias, 0.0)
             mynn.init.XavierFill(self.gen_base[2].weight)
-            init.constant_(self.gen_base[2].bias, 0)
+            init.constant_(self.gen_base[2].bias, 0.0)
 
     def forward(self, x_base, rpn_ret):
         x = self.gen_base(x_base)

@@ -46,6 +46,7 @@ CUSTOM_DATA:
 GAN:
   GAN_MODE_ON: True
   AREA_THRESHOLD: -1
+  KAIMING_INIT: True
   MODEL:
     CONV_BODY_FC_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_fc_head
     LABEL_SMOOTHING: 1.0
@@ -54,6 +55,8 @@ GAN:
     PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_overfit_large/rpn_proposals.pkl',)
     DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit_small',)
     PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_overfit_small/rpn_proposals.pkl',)
+    DATASETS_GEN: ('tt100k_trainval_ignore_complete_overfit',)
+    PROPOSAL_FILES_GEN: ('data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25

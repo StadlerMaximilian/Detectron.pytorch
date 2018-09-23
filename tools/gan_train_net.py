@@ -384,11 +384,10 @@ def main():
     fake_dis_flag = [ModeFlags("fake", "discriminator") for _ in range(cfg.NUM_GPUS)]
     real_dis_flag = [ModeFlags("real", "discriminator") for _ in range(cfg.NUM_GPUS)]
 
-    # debugging
-    # train generator on real and fake datasets to better create zero-mappings
-
-    ## fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
-    fake_gen_flag = [ModeFlags("real_fake", "generator") for _ in range(cfg.NUM_GPUS)]
+    if not cfg.GAN.TRAIN.DATASETS_GEN:
+        fake_gen_flag = [ModeFlags("fake", "generator") for _ in range(cfg.NUM_GPUS)]
+    else:
+        fake_gen_flag = [ModeFlags("real_fake", "generator") for _ in range(cfg.NUM_GPUS)]
 
     pre_flag = [ModeFlags("real", "pre") for _ in range(cfg.NUM_GPUS)]
 
@@ -482,28 +481,63 @@ def main():
 
     dataiterator_fake_discriminator = iter(dataloader_fake_discriminator)
 
-    batchSampler_fake_generator = BatchSampler(
-        sampler=MinibatchSampler(ratio_list_fake, ratio_index_fake, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
-        batch_size=args.batch_size_G,
-        drop_last=True
-    )
+    # if no further dataets for training the generator are specified
+    # use the same dataset settings as for training the discriminator
+    # on fake samples
+    if not cfg.GAN.TRAIN.DATASETS_GEN:
 
-    dataset_fake_generator = RoiDataLoader(
-        roidb_fake,
-        cfg.MODEL.NUM_CLASSES,
-        training=True,
-        flags=fake_gen_flag[0]
-    )
+        batchSampler_fake_generator = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_fake, ratio_index_fake, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+            batch_size=args.batch_size_G,
+            drop_last=True
+        )
 
-    dataloader_fake_generator = torch.utils.data.DataLoader(
-        dataset_fake_generator,
-        batch_sampler=batchSampler_fake_generator,
-        num_workers=cfg.DATA_LOADER.NUM_THREADS,
-        collate_fn=collate_minibatch_generator,
-        pin_memory=False)
+        dataset_fake_generator = RoiDataLoader(
+            roidb_fake,
+            cfg.MODEL.NUM_CLASSES,
+            training=True,
+            flags=fake_gen_flag[0]
+        )
 
-    dataiterator_fake_generator = iter(dataloader_fake_generator)
-    train_size = max(train_size_D // 2, train_size_G)
+        dataloader_fake_generator = torch.utils.data.DataLoader(
+            dataset_fake_generator,
+            batch_sampler=batchSampler_fake_generator,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS,
+            collate_fn=collate_minibatch_generator,
+            pin_memory=False)
+
+        dataiterator_fake_generator = iter(dataloader_fake_generator)
+
+    else:
+        timers['roidb_fake_gen'].tic()
+        roidb_fake_gen, ratio_list_fake_gen, ratio_index_fake_gen = combined_roidb_for_training(
+            cfg.GAN.TRAIN.DATASETS_GEN, cfg.GAN.TRAIN.PROPOSAL_FILES_GEN)
+        timers['roidb_fake_gen'].toc()
+        roidb_size_fake_gen = len(roidb_fake_gen)
+        logger.info('{:d} roidb entries'.format(roidb_size_fake_gen))
+        logger.info('Takes %.2f sec(s) to construct roidb', timers['roidb_fake_gen'].average_time)
+
+        batchSampler_fake_generator = BatchSampler(
+            sampler=MinibatchSampler(ratio_list_fake_gen, ratio_index_fake_gen, cfg.GAN.TRAIN.IMS_PER_BATCH_G),
+            batch_size=args.batch_size_G,
+            drop_last=True
+        )
+
+        dataset_fake_generator = RoiDataLoader(
+            roidb_fake_gen,
+            cfg.MODEL.NUM_CLASSES,
+            training=True,
+            flags=fake_gen_flag[0]
+        )
+
+        dataloader_fake_generator = torch.utils.data.DataLoader(
+            dataset_fake_generator,
+            batch_sampler=batchSampler_fake_generator,
+            num_workers=cfg.DATA_LOADER.NUM_THREADS,
+            collate_fn=collate_minibatch_generator,
+            pin_memory=False)
+
+        dataiterator_fake_generator = iter(dataloader_fake_generator)
 
     ##################################################################################################################
     ############################################# MODEL INITIALIZATION  ##############################################
