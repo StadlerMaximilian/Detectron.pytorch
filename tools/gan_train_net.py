@@ -660,15 +660,14 @@ def main():
     logger.info(param_names_pre)
 
     # train generator only on generator network (generator block)
-    gen_params = gan.generator.Generator_Block.named_parameters()
+    if cfg.GAN.TRAIN.GENERATOR_PATH_UPDATE:
+        generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
+    else:
+        generator_params = gan.generator.Generator_Block.named_parameters()
     param_names_G = []
-    for key, value in gen_params:
+    for key, value in generator_params:
         if value.requires_grad:
             param_names_G.append(key)
-
-    # debugging
-    ##generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
-    generator_params = gan.generator.Generator_Block.parameters()
 
     params_G = [
         {'params': generator_params,

@@ -69,6 +69,7 @@ GAN:
     SNAPSHOT_ITERS: 5000
     k: 3
     IGNORE_BG_ADV_LOSS: True
+    GENERATOR_PATH_UPDATE: True
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
