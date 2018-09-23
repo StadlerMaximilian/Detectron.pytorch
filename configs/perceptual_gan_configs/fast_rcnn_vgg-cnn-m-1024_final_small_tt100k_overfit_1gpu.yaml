@@ -55,8 +55,8 @@ GAN:
     PROPOSAL_FILES_REAL: ('data/proposals/tt100k_trainval_ignore_complete_overfit_large/rpn_proposals.pkl',)
     DATASETS_FAKE: ('tt100k_trainval_ignore_complete_overfit_small',)
     PROPOSAL_FILES_FAKE: ('data/proposals/tt100k_trainval_ignore_complete_overfit_small/rpn_proposals.pkl',)
-    DATASETS_GEN: ('tt100k_trainval_ignore_complete_overfit',)
-    PROPOSAL_FILES_GEN: ('data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl',)
+    #DATASETS_GEN: ('tt100k_trainval_ignore_complete_overfit',)
+    #PROPOSAL_FILES_GEN: ('data/proposals/tt100k_trainval_ignore_complete_overfit/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
@@ -67,7 +67,7 @@ GAN:
     BATCH_SIZE_PER_IM_G: 64
     FG_FRACTION_G: 0.25
     SNAPSHOT_ITERS: 5000
-    k: 1
+    k: 3
     IGNORE_BG_ADV_LOSS: True
   SOLVER:
     TYPE_G: 'Adam'
