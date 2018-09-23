@@ -1025,11 +1025,12 @@ def main():
 
             #################### training discrriminator ############################
 
+            training_stats_dis.IterTic()
+            training_stats_dis_fake.IterTic()
+
             for _ in range(cfg.GAN.TRAIN.k):
 
                 optimizer_D.zero_grad()
-                training_stats_dis.IterTic()
-                training_stats_dis_fake.IterTic()
 
                 # train on fake data
 
@@ -1082,9 +1083,6 @@ def main():
                 loss_D.backward()
                 optimizer_D.step()
 
-                training_stats_dis.IterToc()
-                training_stats_dis_fake.IterToc()
-
                 # clean-up to save memory
                 if args.online_cleanup:
                     del loss_D
@@ -1096,6 +1094,9 @@ def main():
                     torch.cuda.empty_cache()
 
             #################### training generator #################################
+
+            training_stats_dis.IterToc()
+            training_stats_dis_fake.IterToc()
 
             optimizer_G.zero_grad()
             training_stats_gen.IterTic()
