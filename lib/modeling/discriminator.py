@@ -56,9 +56,11 @@ class Discriminator(nn.Module):
 
             print("\tBlob_conv size in discriminator: {}".format(blob_conv.view(batch_size, -1).size()))
 
-        adv_score = self.adversarial(blob_conv.view(batch_size, -1))
+        blob_conv_flattened = blob_conv.view(batch_size, -1)
 
-        box_feat = self.Box_Head(blob_conv.view(batch_size, -1))
+        adv_score = self.adversarial(blob_conv_flattened)
+
+        box_feat = self.Box_Head(blob_conv_flattened)
         cls_score, bbox_pred = self.Box_Outs(box_feat)
 
         if self.training:
