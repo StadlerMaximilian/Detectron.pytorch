@@ -69,7 +69,7 @@ GAN:
     SNAPSHOT_ITERS: 5000
     k: 1
     IGNORE_BG_ADV_LOSS: False
-    TRAIN.TRAIN_FULL_DIS: True
+    TRAIN_FULL_DIS: True
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
