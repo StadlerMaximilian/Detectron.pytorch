@@ -300,25 +300,20 @@ def _sample_rois_gan(roidb, im_scale, batch_idx, flags):
         fg_inds = npr.choice(
             fg_inds, size=fg_rois_per_this_image, replace=False)
 
-    # only use background RoI, if generator is trained, or not enough fg samples can be found
-    if flags.train_generator or flags.train_pre or fg_rois_per_this_image < fg_rois_per_image:
-        # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
-        bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
-                           (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
-        # Compute number of background RoIs to take from this image (guarding
-        # against there being fewer than desired)
-        bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
-        bg_rois_per_this_image = np.minimum(bg_rois_per_this_image, bg_inds.size)
-        # Sample foreground regions without replacement
-        if bg_inds.size > 0:
-            bg_inds = npr.choice(
-                bg_inds, size=bg_rois_per_this_image, replace=False)
+    # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+    bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
+                       (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
+    # Compute number of background RoIs to take from this image (guarding
+    # against there being fewer than desired)
+    bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
+    bg_rois_per_this_image = np.minimum(bg_rois_per_this_image, bg_inds.size)
+    # Sample foreground regions without replacement
+    if bg_inds.size > 0:
+        bg_inds = npr.choice(
+            bg_inds, size=bg_rois_per_this_image, replace=False)
 
-        # The indices that we're selecting (both fg and bg)
-        keep_inds = np.append(fg_inds, bg_inds)
-    elif flags.train_discriminator:
-        # keep only foreground indices when using discriminator mode
-        keep_inds = np.append(fg_inds, []).astype(int)
+    # The indices that we're selecting (both fg and bg)
+    keep_inds = np.append(fg_inds, bg_inds)
 
     # Label is the class each RoI has max overlap with
     sampled_labels = roidb['max_classes'][keep_inds]
