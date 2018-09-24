@@ -67,7 +67,7 @@ GAN:
     BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
     SNAPSHOT_ITERS: 5000
-    k: 1
+    k: 2
     IGNORE_BG_ADV_LOSS: False
     TRAIN_FULL_DIS: False
   SOLVER:
