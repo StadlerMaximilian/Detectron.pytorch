@@ -67,7 +67,7 @@ GAN:
     BATCH_SIZE_PER_IM_G: 128
     FG_FRACTION_G: 0.25
     SNAPSHOT_ITERS: 5000
-    k: 1
+    k: 2
     IGNORE_BG_ADV_LOSS: False
     TRAIN_FULL_DIS: False
   SOLVER:
@@ -80,14 +80,14 @@ GAN:
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 1e-4
-    BASE_LR_G: 1e-4
+    BASE_LR_D: 1e-5
+    BASE_LR_G: 1e-5
     BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
-    MAX_ITER: 600
-    WARM_UP_ITERS: 50
+    MAX_ITER: 800
+    WARM_UP_ITERS: 0 #50
     STEPS: [0, 300]
     PRE_ITER: 1100
     PRE_WARM_UP_ITERS: 50
