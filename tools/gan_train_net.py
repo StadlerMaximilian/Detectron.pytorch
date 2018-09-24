@@ -659,14 +659,8 @@ def main():
     logger.info("Parameters during pre-training")
     logger.info(param_names_pre)
 
-    # train generator only on generator network (generator block)
-    if cfg.GAN.TRAIN.GENERATOR_PATH_UPDATE:
-        generator_params = list(gan.generator.Generator_Block.parameters()) + list(gan.discriminator.parameters())
-        generator_named_params = chain(gan.generator.Generator_Block.named_parameters(),
-                                       gan.discriminator.named_parameters())
-    else:
-        generator_params = gan.generator.Generator_Block.parameters()
-        generator_named_params = gan.generator.Generator_Block.named_parameters()
+    generator_params = gan.generator.Generator_Block.parameters()
+    generator_named_params = gan.generator.Generator_Block.named_parameters()
 
     param_names_G = []
     for key, value in generator_named_params:

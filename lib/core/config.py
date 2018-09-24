@@ -1044,7 +1044,6 @@ __C.GAN.TRAIN.SNAPSHOT_ITERS = 5000
 # Flag if update of discriminator during adversarial training should be carried out on both
 # perceptual and adversarial branch
 __C.GAN.TRAIN.TRAIN_FULL_DIS = False
-__C.GAN.TRAIN.GENERATOR_PATH_UPDATE = False
 
 __C.GAN.TRAIN.TRANSFER_LEARNING = False
 
