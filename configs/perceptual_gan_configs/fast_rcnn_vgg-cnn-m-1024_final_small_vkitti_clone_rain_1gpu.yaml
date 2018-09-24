@@ -58,14 +58,14 @@ GAN:
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
     IMS_PER_BATCH_D: 2
-    BATCH_SIZE_PER_IM_D: 8
-    FG_FRACTION_D: 1.0
+    BATCH_SIZE_PER_IM_D: 16
+    FG_FRACTION_D: 0.5
     IMS_PER_BATCH_G: 2
     BATCH_SIZE_PER_IM_G: 64
-    FG_FRACTION_G: 0.25
+    FG_FRACTION_G: 0.55
     SNAPSHOT_ITERS: 5000
-    k: 1
-    IGNORE_BG_ADV_LOSS: True
+    k: 2
+    IGNORE_BG_ADV_LOSS: False
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
@@ -76,15 +76,15 @@ GAN:
     LR_POLICY_G: steps_with_decay
     LR_POLICY_D: steps_with_decay
     LR_POLICY_PRE: steps_with_decay
-    BASE_LR_D: 1e-4
-    BASE_LR_G: 1e-4
+    BASE_LR_D: 1e-5
+    BASE_LR_G: 1e-5
     BASE_LR_PRE: 0.00125
     GAMMA_D: 0.1
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 20000
     WARM_UP_ITERS: 500
-    STEPS: [0, 10000]
+    STEPS: [0, 20000]
     PRE_ITER: 30000
     STEPS_PRE: [0, 18000, 24000]
     PRE_WARM_UP_ITERS: 500
