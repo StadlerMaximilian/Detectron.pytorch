@@ -95,7 +95,7 @@ class TrainingStats(object):
 
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
-        self.WIN_SZ = 20
+        self.WIN_SZ = 10 #20
 
         def create_smoothed_value():
             return SmoothedValue(self.WIN_SZ)

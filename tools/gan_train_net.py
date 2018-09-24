@@ -866,25 +866,23 @@ def main():
                 training_stats_pre.IterToc()
                 training_stats_pre.LogIterStatsReal(step, lr=lr_pre)
 
-            if args.use_tfboard and not args.no_save:
-                tblogger_pre.close()
+                del input_data_pre
+                del loss_pre
+                del outputs_pre
 
+        # CLEAN-UP !!
+        logger.info("clean-up after pre-training ...")
+        if args.use_tfboard and not args.no_save:
+            tblogger_pre.close()
+        del dataiterator_pre
+        del dataloader_pre
+        del batchSampler_pre
+        del dataset_pre
+        del training_stats_pre
+        del optimizer_pre
+        torch.cuda.empty_cache()
 
-            # CLEAN-UP !!
-            logger.info("clean-up after pre-training ...")
-            optimizer_pre.zero_grad()
-            del dataiterator_pre
-            del dataloader_pre
-            del batchSampler_pre
-            del dataset_pre
-            del training_stats_pre
-            del input_data_pre
-            del loss_pre
-            del outputs_pre
-            del optimizer_pre
-            torch.cuda.empty_cache()
-
-            logger.info("clean-up finished.")
+        logger.info("clean-up finished.")
 
         # save model after pre-training
         final_model = save_ckpt_gan(output_dir_pre, args, step, train_size_gen=train_size_G, train_size_dis=train_size_D,
@@ -933,18 +931,20 @@ def main():
             if final_model is not None:
                 if args.multi_gpu_testing:
                     args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
-                                          load_ckpt='{}'.format(args.load_pretrained),
+                                          load_ckpt='{}'.format(final_model),
                                           load_dis=None, load_gen=None,
                                           multi_gpu_testing=True, output_dir='{}'.format(test_output_dir),
                                           range=None, set_cfgs=test_pre_cfgs, vis=False)
                 else:
                     args_test = Namespace(cfg_file='{}'.format(args.cfg_file),
-                                          load_ckpt='{}'.format(args.load_pretrained),
+                                          load_ckpt='{}'.format(final_model),
                                           load_dis=None, load_gen=None,
                                           multi_gpu_testing=False, output_dir='{}'.format(test_output_dir),
                                           range=None, set_cfgs=test_pre_cfgs, vis=False)
 
                 test_net_routine(args_test)
+
+        torch.cuda.empty_cache()
 
 
 ##################################################################################################################
@@ -1057,10 +1057,8 @@ def main():
                 outputs_real = gan(**input_data)
 
                 training_stats_dis.UpdateIterStats(out=outputs_real)
-                training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
 
                 training_stats_dis_fake.UpdateIterStats(out=outputs_fake)
-                training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
 
                 if cfg.GAN.TRAIN.TRAIN_FULL_DIS:
                     loss_fake = cfg.GAN.TRAIN.ADV_LOSS_WEIGHT * outputs_fake['losses']['loss_adv']
@@ -1079,6 +1077,9 @@ def main():
                 loss_D = loss_real + loss_fake
                 loss_D.backward()
                 optimizer_D.step()
+
+                training_stats_dis.tb_log_stats(training_stats_dis.GetStats(step, lr_D), step)
+                training_stats_dis_fake.tb_log_stats(training_stats_dis_fake.GetStats(step, lr_D), step)
 
                 # clean-up to save memory
                 if args.online_cleanup:
@@ -1107,7 +1108,6 @@ def main():
                               )
             outputs = gan(**input_data)
             training_stats_gen.UpdateIterStats(out=outputs)
-            training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             # train generator on Faster R-CNN loss and adversarial loss
             if cfg.GAN.TRAIN.TRANSFER_LEARNING:
@@ -1126,6 +1126,8 @@ def main():
                                    training_stats_dis=training_stats_dis,
                                    training_stats_dis_fake=training_stats_dis_fake,
                                    training_stats_gen=training_stats_gen)
+
+            training_stats_gen.tb_log_stats(training_stats_gen.GetStats(step, lr_G), step)
 
             if args.online_cleanup:
                 # clean-up to save memory
