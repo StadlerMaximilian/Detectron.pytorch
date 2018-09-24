@@ -53,6 +53,8 @@ GAN:
     PROPOSAL_FILES_REAL: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
     DATASETS_FAKE: ('vkitti_clone_trainval',)
     PROPOSAL_FILES_FAKE: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
+    DATASETS_GEN: ('vkitti_clone_trainval',)
+    PROPOSAL_FILES_GEN: ('data/proposals/vkitti_clone_trainval/rpn_proposals.pkl',)
     IMS_PER_BATCH_PRE: 1
     BATCH_SIZE_PER_IM_PRE: 128
     FG_FRACTION_PRE: 0.25
@@ -61,10 +63,10 @@ GAN:
     FG_FRACTION_D: 1.0
     IMS_PER_BATCH_G: 2
     BATCH_SIZE_PER_IM_G: 64
-    FG_FRACTION_G: 0.25
+    FG_FRACTION_G: 0.75
     SNAPSHOT_ITERS: 5000
     k: 3
-    IGNORE_BG_ADV_LOSS: True
+    IGNORE_BG_ADV_LOSS: False
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
