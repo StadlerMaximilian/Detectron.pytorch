@@ -64,7 +64,8 @@ GAN:
     FG_FRACTION_G: 0.25
     SNAPSHOT_ITERS: 5000
     k: 4
-    IGNORE_BG_ADV_LOSS: True
+    IGNORE_BG_ADV_LOSS: False
+    ADV_LOSS_WEIGHT: 1.0
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
