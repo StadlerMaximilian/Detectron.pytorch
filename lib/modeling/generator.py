@@ -253,11 +253,11 @@ class GeneratorBlock(nn.Module):
         self.orphans_in_detectron = None
         self.gen_base = nn.Sequential(nn.Conv2d(dim_out_base, 256, 3, padding=1, stride=2),
                                       nn.ReLU(),
-                                      nn.Conv2d(256, dim_out, 1, padding=0, stride=1),
+                                      nn.Conv2d(256, dim_out, 1, padding=1, stride=3), #padding=0, stride=1
                                       nn.ReLU()
                                       )
 
-        self.spatial_scale = spatial_scale_base * (1. / 2.)
+        self.spatial_scale = spatial_scale_base * (1. / 4.)
 
         self.roi_xform = net_utils.roiPoolingLayer(roi_xform_func, self.spatial_scale, resolution)
 
@@ -305,8 +305,8 @@ class GeneratorBlock(nn.Module):
         d_orphan = []
         d_wmap['gen_base.0.weight'] = 'baseConv1_w'
         d_wmap['gen_base.0.bias'] = 'baseConv1_b'
-        d_wmap['gen_base.2.weight'] = 'baseConv2_w'
-        d_wmap['gen_base.2.bias'] = 'baseConv2_b'
+#        d_wmap['gen_base.2.weight'] = 'baseConv2_w'
+#        d_wmap['gen_base.2.bias'] = 'baseConv2_b'
 
         for name, m_child in self.named_children():
             if name in ['gen_base']:  # skip gen_base
