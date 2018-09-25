@@ -83,7 +83,7 @@ GAN:
     GAMMA_G: 0.1
     GAMMA_PRE: 0.1
     MAX_ITER: 10000
-    WARM_UP_ITERS: 500
+    WARM_UP_ITERS: 0 #500 no warmup for Adam
     STEPS: [0, 10000]
     PRE_ITER: 30000
     STEPS_PRE: [0, 18000, 24000]
