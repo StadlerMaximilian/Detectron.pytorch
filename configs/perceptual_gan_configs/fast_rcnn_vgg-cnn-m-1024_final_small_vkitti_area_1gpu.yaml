@@ -67,7 +67,7 @@ GAN:
     SNAPSHOT_ITERS: 5000
     k: 2
     IGNORE_BG_ADV_LOSS: False
-    ADV_LOSS_WEIGHT: 0
+    ADV_LOSS_WEIGHT: 0.0
   SOLVER:
     TYPE_G: 'Adam'
     TYPE_D: 'Adam'
