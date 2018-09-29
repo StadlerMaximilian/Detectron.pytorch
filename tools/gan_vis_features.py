@@ -154,7 +154,7 @@ def vis_features():
         im = cv2.imread(entry['image'])
 
         box_proposals = None
-        if args.proposal_files is not None:
+        if args.proposal_file is not None:
             box_proposals = entry['boxes'][entry['gt_classes'] == 0]
 
         inputs, im_scale = _get_blobs(im, box_proposals, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
