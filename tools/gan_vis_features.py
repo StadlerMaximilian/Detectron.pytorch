@@ -166,7 +166,7 @@ def vis_features():
                 hashes, return_index=True, return_inverse=True
             )
             inputs['rois'] = [inputs['rois'][index, :]]
-            
+
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
             inputs['im_info'] = [Variable(torch.from_numpy(inputs['im_info']), volatile=True)]
