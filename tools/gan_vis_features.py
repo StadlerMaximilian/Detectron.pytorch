@@ -162,7 +162,7 @@ def vis_features():
         for key, value in inputs.items():
             print(key)
             for entry in range(value.shape[0]):
-                print(entry)
+                print(value[entry])
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
