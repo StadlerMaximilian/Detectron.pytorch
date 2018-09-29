@@ -167,11 +167,6 @@ def vis_features():
             )
             inputs['rois'] = [inputs['rois'][index, :]]
             
-        for key, value in inputs.items():
-            print(key)
-            for entry in range(value.shape[0]):
-                print(value[entry])
-
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
             inputs['im_info'] = [Variable(torch.from_numpy(inputs['im_info']), volatile=True)]
