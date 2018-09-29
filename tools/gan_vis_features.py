@@ -161,7 +161,7 @@ def vis_features():
 
         for key, value in inputs.items():
             print(key)
-            for entry in value.shape[0]:
+            for entry in range(value.shape[0]):
                 print(entry)
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
