@@ -159,6 +159,14 @@ def vis_features():
 
         inputs, im_scale = _get_blobs(im, box_proposals, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
 
+        if cfg.DEDUP_BOXES > 0 and not cfg.MODEL.FASTER_RCNN:
+            v = np.array([1, 1e3, 1e6, 1e9, 1e12])
+            hashes = np.round(inputs['rois'] * cfg.DEDUP_BOXES).dot(v)
+            _, index, inv_index = np.unique(
+                hashes, return_index=True, return_inverse=True
+            )
+            inputs['rois'] = [inputs['rois'][index, :]]
+            
         for key, value in inputs.items():
             print(key)
             for entry in range(value.shape[0]):
