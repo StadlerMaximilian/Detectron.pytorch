@@ -88,7 +88,7 @@ def test_net_routine(args):
     if args.set_cfgs is not None:
         merge_cfg_from_list(args.set_cfgs)
 
-    assert_and_infer_cfg()
+    assert_and_infer_cfg(make_immutable=False)
 
     logger.info('Testing with config:')
     logger.info(pprint.pformat(cfg))
