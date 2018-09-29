@@ -156,10 +156,11 @@ def vis_features():
         box_proposals = None
         if args.proposal_file is not None:
             box_proposals = entry['boxes'][entry['gt_classes'] == 0]
-            for box in range(box_proposals.shape[0]):
-                print(box_proposals[box])
 
         inputs, im_scale = _get_blobs(im, box_proposals, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
+
+        for key, value in inputs.items():
+            print(value)
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
