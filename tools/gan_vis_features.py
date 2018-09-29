@@ -160,7 +160,9 @@ def vis_features():
         inputs, im_scale = _get_blobs(im, box_proposals, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
 
         for key, value in inputs.items():
-            print(value)
+            print(key)
+            for entry in value.shape[0]:
+                print(entry)
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
