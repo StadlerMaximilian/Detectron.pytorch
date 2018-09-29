@@ -84,7 +84,7 @@ def get_roidb_and_dataset(dataset_name, ind_range, proposal_file=None):
     restrict it to a range of indices if ind_range is a pair of integers.
     """
     dataset = JsonDataset(dataset_name)
-    if not proposal_file:
+    if proposal_file:
         roidb = dataset.get_roidb(
             proposal_file=proposal_file,
             proposal_limit=cfg.TEST.PROPOSAL_LIMIT
