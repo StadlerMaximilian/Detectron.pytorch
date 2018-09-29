@@ -60,6 +60,10 @@ def parse_args():
         default="infer_outputs")
 
     parser.add_argument(
+        '--proposal_file',
+        help='path to proposal files (for Fast R-CNN)')
+
+    parser.add_argument(
         '--range',
         help='start (inclusive) and end (exclusive) indices',
         type=int, nargs=2)
@@ -75,12 +79,18 @@ def parse_args():
     return args
 
 
-def get_roidb_and_dataset(dataset_name, ind_range):
+def get_roidb_and_dataset(dataset_name, ind_range, proposal_file=None):
     """Get the roidb for the dataset specified in the global cfg. Optionally
     restrict it to a range of indices if ind_range is a pair of integers.
     """
     dataset = JsonDataset(dataset_name)
-    roidb = dataset.get_roidb()
+    if not proposal_file:
+        roidb = dataset.get_roidb(
+            proposal_file=proposal_file,
+            proposal_limit=cfg.TEST.PROPOSAL_LIMIT
+        )
+    else:
+        roidb = dataset.get_roidb()
 
     if ind_range is not None:
         total_num_images = len(roidb)
@@ -129,7 +139,7 @@ def vis_features():
         cfg_from_list(args.set_cfgs)
 
     roidb, dataset, start_ind, end_ind, total_num_images = get_roidb_and_dataset(
-        args.dataset, args.range
+        args.dataset, args.range, proposal_file=args.proposal_file
     )
 
     assert_and_infer_cfg()
