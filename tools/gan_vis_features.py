@@ -153,7 +153,7 @@ def vis_features():
 
         im = cv2.imread(entry['image'])
 
-        inputs, im_scale = _get_blobs(im, roidb['rois'], cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
+        inputs, im_scale = _get_blobs(im, entry['rois'], cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
