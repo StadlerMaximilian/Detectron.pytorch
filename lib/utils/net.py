@@ -206,43 +206,8 @@ def load_ckpt(model, ckpt):
         mapping, _ = model.detectron_weight_mapping
     state_dict = {}
     for name in ckpt:
-        if "fc_head" in name:
-            try:
-                if mapping[name]:
-                    state_dict[name] = ckpt[name]
-            except KeyError:
-                name_parts = name.split('.')
-                name_parts = [x for x in name_parts if x != "fc_head"]
-                name_modified = '.'.join(name_parts)
-                try:
-                    if mapping[name_modified]:
-                        state_dict[name_modified] = ckpt[name]
-                except KeyError as e:
-                    if cfg.MODEL.RPN_ONLY and ("Box_Head" in name or "Box_Outs" in name):
-                        pass
-                    else:
-                        raise e
-        else:
-            try:
-                if mapping[name]:
-                    state_dict[name] = ckpt[name]
-            except KeyError:
-                name_parts = name.split('.')
-                i = 0
-                for name_m in name_parts:
-                    i += 1
-                    if name_m == "Box_Head":
-                        break
-                name_parts.insert(i, "fc_head")
-                name_modified = '.'.join(name_parts)
-                try:
-                    if mapping[name_modified]:
-                        state_dict[name_modified] = ckpt[name]
-                except KeyError as e:
-                    if cfg.MODEL.RPN_ONLY and ("Box_Head" in name or "Box_Outs" in name):
-                        pass
-                    else:
-                        raise e
+        if mapping[name]:
+            state_dict[name] = ckpt[name]
 
     model.load_state_dict(state_dict, strict=False)
 
