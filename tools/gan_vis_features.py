@@ -153,7 +153,11 @@ def vis_features():
 
         im = cv2.imread(entry['image'])
 
-        inputs, im_scale = _get_blobs(im, entry['boxes'], cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
+        box_proposals = None
+        if args.proposal_files is not None:
+            box_proposals = entry['boxes'][entry['gt_classes'] == 0]
+
+        inputs, im_scale = _get_blobs(im, box_proposals, cfg.TEST.SCALE, cfg.TEST.MAX_SIZE)
 
         if cfg.PYTORCH_VERSION_LESS_THAN_040:
             inputs['data'] = [Variable(torch.from_numpy(inputs['data']), volatile=True)]
