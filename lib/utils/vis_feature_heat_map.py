@@ -103,6 +103,6 @@ def show_heat_maps(blob_real, blob_fake, blob_residual, output_dir, im_name, blo
             plt.show()
             plt.title('Residual RoI')
 
-        output_name = os.path.basename(im_name) + '_batch_{}.'.format(batch) + ext
+        output_name = os.path.basename(im_name) + '_batch_{:04d}.'.format(batch) + ext
         fig.savefig(os.path.join(output_dir, '{}'.format(output_name)))
         plt.close('all')
