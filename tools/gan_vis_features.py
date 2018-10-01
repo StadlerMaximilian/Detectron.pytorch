@@ -151,7 +151,9 @@ def vis_features():
     for i, entry in enumerate(roidb):
         print("\t Image {} from {} ...".format(i + 1, len(roidb)))
 
-        im_out_dir = os.path.join(args.output_dir, "image_{}".format(i+1))
+        im_out_dir = os.path.join(args.output_dir, "image_{}".format(i))
+        if not os.path.exists(im_out_dir):
+            os.makedirs(im_out_dir)
 
         im = cv2.imread(entry['image'])
 
