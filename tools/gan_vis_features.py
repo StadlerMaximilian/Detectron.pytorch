@@ -151,6 +151,8 @@ def vis_features():
     for i, entry in enumerate(roidb):
         print("\t Image {} from {} ...".format(i + 1, len(roidb)))
 
+        im_out_dir = os.path.join(args.output_dir, "image_{}".format(i+1))
+
         im = cv2.imread(entry['image'])
 
         box_proposals = None
@@ -198,7 +200,7 @@ def vis_features():
         else:
             raise ValueError('shape of rois is unexpected')
         show_heat_maps(output_np['blob_conv_pooled'], output_np['blob_fake'], output_np['blob_conv_residual'],
-                       args.output_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg", pos=args.pos)
+                       im_out_dir, "image_{}".format(i), blob_image=crop_img, ext="jpg", pos=args.pos)
 
 
 if __name__ == '__main__':
