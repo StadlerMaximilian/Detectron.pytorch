@@ -21,8 +21,8 @@ FAST_RCNN:
   ROI_BOX_HEAD: VGG_CNN_M_1024.VGG_CNN_M_1024_roi_fc_head
   ROI_XFORM_METHOD: RoIAlign
 TRAIN:
-  DATASETS: ('vkitti_rain_test', 'vkitti_clone_test', 'vkitti_fog_test', 'kitti_test_ignore_complete')
-  PROPOSAL_FILES: ('data/proposals/vkitti_rain_test/rpn_proposals.pkl', 'data/proposals/vkitti_clone_test/rpn_proposals.pkl', 'data/proposals/vkitti_fog_test/rpn_proposals.pkl', 'data/proposals/kitti_test_ignore_complete/rpn_proposals.pkl')
+  DATASETS: ('vkitti_rain_test', 'vkitti_clone_test', 'vkitti_fog_test',)
+  PROPOSAL_FILES: ('data/proposals/vkitti_rain_test/rpn_proposals.pkl', 'data/proposals/vkitti_clone_test/rpn_proposals.pkl', 'data/proposals/vkitti_fog_test/rpn_proposals.pkl', )
   SCALES: (370,)
   MAX_SIZE: 1242
   IMS_PER_BATCH: 1
@@ -30,8 +30,8 @@ TRAIN:
   SNAPSHOT_ITERS: 20000
   USE_FLIPPED: False
 TEST:
-  DATASETS: ('vkitti_rain_test', 'vkitti_clone_test', 'vkitti_fog_test', 'kitti_test_ignore_complete',)
-  PROPOSAL_FILES: ('data/proposals/vkitti_rain_test/rpn_proposals.pkl', 'data/proposals/vkitti_clone_test/rpn_proposals.pkl', 'data/proposals/vkitti_fog_test/rpn_proposals.pkl', 'data/proposals/kitti_test_ignore_complete/rpn_proposals.pkl',)
+  DATASETS: ('vkitti_rain_test', 'vkitti_clone_test', 'vkitti_fog_test', )
+  PROPOSAL_FILES: ('data/proposals/vkitti_rain_test/rpn_proposals.pkl', 'data/proposals/vkitti_clone_test/rpn_proposals.pkl', 'data/proposals/vkitti_fog_test/rpn_proposals.pkl', )
   SCALE: 370
   MAX_SIZE: 1242
   NMS: 0.3
