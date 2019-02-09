@@ -1,3 +1,5 @@
+## Small Object Detection with Generative Adversarial Networks, based on a reimplementation of Detection in PyTorch
+
 # A Pytorch Implementation of Detectron
 
 [![Build Status](https://travis-ci.com/roytseng-tw/Detectron.pytorch.svg?branch=master)](https://travis-ci.com/roytseng-tw/Detectron.pytorch)
